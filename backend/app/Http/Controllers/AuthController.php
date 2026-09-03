@@ -2,26 +2,27 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\User;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
-    // Registro de nuevos usuarios
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
             'role' => 'user',
         ]);
 
@@ -33,43 +34,54 @@ class AuthController extends Controller
         ], 201);
     }
 
-    // Login
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
-        $request->validate([
-            'email' => 'required|string|email',
-            'password' => 'required|string',
+        $validated = $request->validate([
+            'email' => ['required', 'string', 'email'],
+            'password' => ['required', 'string'],
+            'remember' => ['sometimes', 'boolean'],
         ]);
 
-        $user = User::where('email', $request->email)->first();
+        $credentials = [
+            'email' => mb_strtolower($validated['email']),
+            'password' => $validated['password'],
+        ];
 
-        if (! $user || ! Hash::check($request->password, $user->password)) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => ['Las credenciales son incorrectas.'],
             ]);
         }
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $request->session()->regenerate();
 
         return response()->json([
-            'user' => $user,
-            'token' => $token,
+            'message' => 'Sesión iniciada correctamente.',
+            'user' => $request->user(),
         ]);
     }
 
-    // Logout
-    public function logout(Request $request)
+    public function logout(Request $request): JsonResponse
     {
-        $request->user()->currentAccessToken()->delete();
+        $accessToken = $request->user()?->currentAccessToken();
+
+        if ($accessToken instanceof PersonalAccessToken) {
+            $accessToken->delete();
+        } else {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json([
             'message' => 'Sesión cerrada correctamente.',
         ]);
     }
 
-    // Ver usuario autenticado
-    public function me(Request $request)
+    public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        return response()->json([
+            'user' => $request->user(),
+        ]);
     }
 }
