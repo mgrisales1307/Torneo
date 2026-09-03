@@ -1,5 +1,5 @@
 <?php
-
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 
@@ -14,6 +14,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Rutas solo para admin y empleado
     Route::middleware('role:admin,empleado')->group(function () {
+        Route::middleware('role:admin,empleado')->group(function () {
+    Route::get('/usuarios', [UserController::class, 'index']);
+});
         // aquí irán rutas de administración de la página
         // ejemplo: Route::post('/torneos', [TorneoController::class, 'store']);
     });
