@@ -1,11 +1,13 @@
 :root {
-  --ink: #10281f;
-  --ink-soft: #1a382c;
-  --paper: #f1efe8;
-  --paper-deep: #e8e5dc;
-  --lime: #ddec55;
+  --ink: #0b1d17;
+  --ink-soft: #143026;
+  --paper: #f2efe6;
+  --paper-deep: #e8e4d9;
+  --accent: #eab857;
+  --accent-soft: #f2d79a;
+  --pitch: #7fae44;
   --muted: #6a746f;
-  --line: rgba(16, 40, 31, 0.16);
+  --line: rgba(11, 29, 23, 0.16);
   --error: #a23b2a;
 }
 
@@ -26,9 +28,45 @@
   overflow: hidden;
   padding: clamp(2rem, 3.7vw, 4.25rem);
   color: #f6f3e9;
+  background: var(--ink);
+}
+
+.brand-photo {
+  position: absolute;
+  z-index: -4;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 58%;
+  filter: saturate(1.06) contrast(1.05) brightness(0.96);
+  transform: scale(1.03);
+  animation: photo-in 1200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.brand-scrim {
+  position: absolute;
+  z-index: -3;
+  inset: 0;
+  pointer-events: none;
   background:
-    linear-gradient(125deg, rgba(255, 255, 255, 0.025), transparent 42%),
-    var(--ink);
+    linear-gradient(
+      to top,
+      var(--ink) 3%,
+      rgba(11, 29, 23, 0.9) 26%,
+      rgba(11, 29, 23, 0.5) 58%,
+      rgba(11, 29, 23, 0.42) 82%,
+      rgba(11, 29, 23, 0.62) 100%
+    ),
+    linear-gradient(
+      104deg,
+      rgba(9, 24, 19, 0.94) 0%,
+      rgba(9, 24, 19, 0.74) 34%,
+      rgba(9, 24, 19, 0.3) 68%,
+      rgba(9, 24, 19, 0.1) 100%
+    ),
+    radial-gradient(115% 75% at 72% 10%, rgba(234, 184, 87, 0.18), transparent 62%),
+    radial-gradient(90% 60% at 18% 88%, rgba(127, 174, 68, 0.14), transparent 70%);
 }
 
 .brand-panel::before {
@@ -36,7 +74,7 @@
   position: absolute;
   z-index: -2;
   inset: 0;
-  opacity: 0.22;
+  opacity: 0.1;
   background-image:
     linear-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
@@ -51,11 +89,11 @@
   inset: auto -14% -30% auto;
   width: min(46vw, 44rem);
   aspect-ratio: 1;
-  border: 1px solid rgba(221, 236, 85, 0.22);
+  border: 1px solid rgba(234, 184, 87, 0.26);
   border-radius: 50%;
   box-shadow:
-    0 0 0 8vw rgba(221, 236, 85, 0.022),
-    0 0 0 17vw rgba(221, 236, 85, 0.016);
+    0 0 0 8vw rgba(234, 184, 87, 0.022),
+    0 0 0 17vw rgba(234, 184, 87, 0.016);
 }
 
 .brand-topline,
@@ -82,9 +120,11 @@
   width: 2.75rem;
   aspect-ratio: 1;
   place-items: center;
-  border: 1px solid rgba(246, 243, 233, 0.3);
+  border: 1px solid rgba(246, 243, 233, 0.38);
   border-radius: 50%;
-  color: var(--lime);
+  background: rgba(9, 24, 19, 0.35);
+  backdrop-filter: blur(6px);
+  color: var(--accent);
   font-size: 0.72rem;
   font-weight: 760;
   letter-spacing: -0.08em;
@@ -94,8 +134,7 @@
 .access-number,
 .section-index,
 .eyebrow,
-.access-footer,
-.competition-strip span {
+.access-footer {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.64rem;
@@ -103,7 +142,7 @@
 }
 
 .edition {
-  color: rgba(246, 243, 233, 0.48);
+  color: rgba(246, 243, 233, 0.62);
 }
 
 .brand-copy {
@@ -118,7 +157,8 @@
   align-items: center;
   gap: 0.75rem;
   margin: 0 0 clamp(1.6rem, 3vh, 2.5rem);
-  color: var(--lime);
+  color: var(--accent);
+  text-shadow: 0 0.1em 0.9rem rgba(6, 18, 14, 0.6);
 }
 
 .eyebrow span {
@@ -129,50 +169,30 @@
 
 .brand-copy h1 {
   margin: 0;
-  font-size: clamp(4.2rem, 7.25vw, 8.1rem);
-  font-weight: 560;
-  line-height: 0.82;
-  letter-spacing: -0.07em;
+  font-size: clamp(3.8rem, 5.7vw, 6.75rem);
+  font-weight: 540;
+  line-height: 0.92;
+  letter-spacing: -0.055em;
+  text-shadow: 0 0.15em 1.6rem rgba(6, 18, 14, 0.55);
 }
 
 .brand-copy h1 em {
   display: inline-block;
-  margin-top: 0.12em;
-  color: var(--lime);
-  font-family: 'Instrument Serif', Georgia, serif;
+  margin-top: 0.08em;
+  color: var(--accent);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: normal;
   font-weight: 400;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.045em;
 }
 
 .brand-description {
   max-width: 32rem;
   margin: 2.5rem 0 0;
-  color: rgba(246, 243, 233, 0.58);
+  color: rgba(246, 243, 233, 0.74);
   font-size: clamp(0.92rem, 1.25vw, 1.08rem);
   line-height: 1.7;
-}
-
-.competition-strip {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  border-top: 1px solid rgba(246, 243, 233, 0.16);
-}
-
-.competition-strip div {
-  display: grid;
-  gap: 0.5rem;
-  padding: 1.2rem 0 0;
-}
-
-.competition-strip span {
-  color: rgba(246, 243, 233, 0.36);
-}
-
-.competition-strip strong {
-  font-size: clamp(0.72rem, 0.9vw, 0.84rem);
-  font-weight: 560;
+  text-shadow: 0 0.1em 1rem rgba(6, 18, 14, 0.5);
 }
 
 .orb {
@@ -188,17 +208,8 @@
   right: -5rem;
   width: 14rem;
   aspect-ratio: 1;
-  background: rgba(51, 111, 78, 0.34);
-  box-shadow: 0 0 9rem rgba(51, 111, 78, 0.75);
-}
-
-.orb-two {
-  bottom: 13%;
-  left: 38%;
-  width: 0.42rem;
-  aspect-ratio: 1;
-  background: var(--lime);
-  box-shadow: 0 0 3rem 1.2rem rgba(221, 236, 85, 0.12);
+  background: rgba(240, 204, 132, 0.16);
+  box-shadow: 0 0 9rem rgba(234, 184, 87, 0.42);
 }
 
 .access-panel {
@@ -207,7 +218,7 @@
   grid-template-rows: auto 1fr auto;
   padding: clamp(1.75rem, 3.7vw, 4.25rem);
   background:
-    radial-gradient(circle at 80% 16%, rgba(221, 236, 85, 0.11), transparent 23%),
+    radial-gradient(circle at 80% 16%, rgba(234, 184, 87, 0.11), transparent 23%),
     var(--paper);
 }
 
@@ -240,11 +251,11 @@
 .session-view h2 {
   margin: 0;
   color: var(--ink);
-  font-family: 'Instrument Serif', Georgia, serif;
-  font-size: clamp(3.2rem, 4.4vw, 4.7rem);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(2.8rem, 3.7vw, 4rem);
   font-weight: 400;
-  line-height: 0.9;
-  letter-spacing: -0.045em;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
 }
 
 .form-header > p:last-child,
@@ -369,8 +380,8 @@
 }
 
 .remember-control input:checked + .custom-checkbox {
-  border-color: var(--lime);
-  background: var(--lime);
+  border-color: var(--accent);
+  background: var(--accent);
 }
 
 .remember-control input:checked + .custom-checkbox svg {
@@ -379,7 +390,7 @@
 }
 
 .remember-control input:focus-visible + .custom-checkbox {
-  outline: 2px solid #a8bd29;
+  outline: 2px solid #c99327;
   outline-offset: 3px;
 }
 
@@ -448,7 +459,7 @@
   margin-bottom: 2.25rem;
   border-radius: 50%;
   color: var(--ink);
-  background: var(--lime);
+  background: var(--accent);
 }
 
 .profile-card {
@@ -469,7 +480,7 @@
   aspect-ratio: 1;
   place-items: center;
   border-radius: 50%;
-  color: var(--lime);
+  color: var(--accent);
   background: var(--ink);
   font-size: 0.68rem;
   font-weight: 760;
@@ -532,6 +543,11 @@
   to { transform: rotate(360deg); }
 }
 
+@keyframes photo-in {
+  from { opacity: 0; transform: scale(1.08); }
+  to { opacity: 1; transform: scale(1.03); }
+}
+
 @keyframes session-in {
   from { opacity: 0; transform: translateY(0.8rem); }
   to { opacity: 1; transform: translateY(0); }
@@ -547,19 +563,31 @@
     padding: 1.5rem;
   }
 
+  .brand-photo {
+    object-position: 50% 62%;
+  }
+
+  .brand-scrim {
+    background:
+      linear-gradient(
+        to top,
+        var(--ink) 2%,
+        rgba(11, 29, 23, 0.9) 32%,
+        rgba(11, 29, 23, 0.55) 70%,
+        rgba(11, 29, 23, 0.6) 100%
+      ),
+      radial-gradient(120% 90% at 75% 8%, rgba(234, 184, 87, 0.2), transparent 62%);
+  }
+
   .brand-copy {
     margin: clamp(3.5rem, 9vh, 5.5rem) 0 3rem;
   }
 
   .brand-copy h1 {
-    font-size: clamp(3.65rem, 14vw, 6.5rem);
+    font-size: clamp(3.4rem, 11vw, 5.25rem);
   }
 
   .brand-description {
-    display: none;
-  }
-
-  .competition-strip {
     display: none;
   }
 
@@ -595,7 +623,7 @@
   }
 
   .brand-copy h1 {
-    font-size: clamp(3.25rem, 16vw, 5rem);
+    font-size: clamp(3rem, 13vw, 4.2rem);
   }
 
   .access-panel {

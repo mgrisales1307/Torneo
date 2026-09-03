@@ -1,10 +1,9 @@
 @import '@fontsource-variable/manrope';
-@import '@fontsource/instrument-serif';
 
 :root {
   font-family: 'Manrope Variable', system-ui, sans-serif;
-  color: #14231d;
-  background: #f1efe8;
+  color: #12241d;
+  background: #f2efe6;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -17,7 +16,7 @@
 
 html {
   min-width: 320px;
-  background: #f1efe8;
+  background: #f2efe6;
 }
 
 body {
@@ -34,7 +33,7 @@ input {
 button:focus-visible,
 input:focus-visible,
 a:focus-visible {
-  outline: 2px solid #a8bd29;
+  outline: 2px solid #c99327;
   outline-offset: 3px;
 }
 
@@ -46,6 +45,6 @@ label {
 }
 
 ::selection {
-  color: #10281f;
-  background: #ddec55;
+  color: #0b1d17;
+  background: #eab857;
 }

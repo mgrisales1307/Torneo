@@ -1,0 +1,15 @@
+# Normaliza los finales de línea para que los scripts de Docker funcionen
+# también cuando el repositorio se clona en Windows.
+* text=auto eol=lf
+
+*.sh text eol=lf
+*.bat text eol=crlf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.woff binary
+*.woff2 binary

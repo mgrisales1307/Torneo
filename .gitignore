@@ -1,0 +1,12 @@
+# Editores
+.vscode/
+.idea/
+*.code-workspace
+
+# Herramientas locales de IA
+.claude/settings.local.json
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini

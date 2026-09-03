@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Artefactos de Windows (Alternate Data Streams)
+*:Zone.Identifier

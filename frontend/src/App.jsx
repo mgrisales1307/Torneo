@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { getCurrentUser, getLoginError, isUnauthenticated, login, logout } from './lib/api'
+import stadiumImage from './assets/estadio-hinchada.jpg'
 import './App.css'
 
 const roleLabels = {
@@ -115,6 +116,9 @@ function App() {
   return (
     <main className="login-shell">
       <section className="brand-panel" aria-label="Juegos Zone Torneos">
+        <img className="brand-photo" src={stadiumImage} alt="" aria-hidden="true" loading="eager" fetchPriority="high" />
+        <span className="brand-scrim" aria-hidden="true" />
+
         <div className="brand-topline">
           <a className="brand-lockup" href="/" aria-label="Juegos Zone, inicio">
             <span className="brand-mark" aria-hidden="true">JZ</span>
@@ -134,14 +138,7 @@ function App() {
           </p>
         </div>
 
-        <div className="competition-strip" aria-label="Funciones de la plataforma">
-          <div><span>01</span><strong>Partidos</strong></div>
-          <div><span>02</span><strong>Posiciones</strong></div>
-          <div><span>03</span><strong>Estadísticas</strong></div>
-        </div>
-
         <span className="orb orb-one" aria-hidden="true" />
-        <span className="orb orb-two" aria-hidden="true" />
       </section>
 
       <section className="access-panel">
