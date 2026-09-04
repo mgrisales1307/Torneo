@@ -43,12 +43,20 @@ arrancar, y lo vuelve a comprobar cada vez.
 
 ### Credenciales de desarrollo
 
-| Rol | Correo | Contraseña |
-| --- | --- | --- |
-| Administrador | `admin@juegoszone.com` | `CambiaEstaClave123` |
-| Usuario | `test@example.com` | `password` |
+| Rol | Correo | Contraseña | Puede |
+| --- | --- | --- | --- |
+| `admin` | `admin@juegoszone.com` | `admin123` | Todo, incluida la gestión de usuarios |
+| `empleado` | `empleado@juegoszone.com` | `trabajador123` | Organizar el torneo y ver los usuarios |
+| `user` | `test@example.com` | `password` | Participar; no accede a la gestión |
 
-Se crean solas. Son **exclusivamente para desarrollo local**.
+Se crean solas al levantar el contenedor, y volver a ejecutar los seeders no
+las duplica. Son **exclusivamente para desarrollo local**.
+
+Para crearlas de nuevo sin tocar el resto de los datos:
+
+```bash
+docker compose exec api php artisan db:seed
+```
 
 ---
 
@@ -156,6 +164,28 @@ lsof -i :5173
 ```
 Vite falla a propósito en vez de cambiarse de puerto en silencio: el backend
 espera el 5173, y un cambio de puerto rompería el login más adelante.
+
+**`npm install` tarda minutos, o Vite arranca sin leer `vite.config.js`**
+Se está usando el Node de **Windows** sobre la carpeta de WSL. Compruébalo
+desde la terminal de Ubuntu:
+```bash
+which -a node npm
+```
+Si alguna línea empieza por `/mnt/c/`, ese es el problema: los archivos viajan
+por el recurso de red `\\wsl.localhost`, y npm instala los binarios nativos
+de Windows, que en Linux no sirven. Instala Node dentro de Ubuntu:
+```bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+exec bash
+nvm install 22
+```
+Y reinstala limpio, porque lo que hay quedó con los binarios equivocados:
+```bash
+cd frontend && rm -rf node_modules && npm install
+```
+Señales de que es esto: `npm install` que tarda minutos, un mensaje sobre
+`CMD.EXE` y rutas UNC, o que Vite diga `Network: use --host to expose` (indica
+que no leyó `vite.config.js`, así que tampoco tiene el proxy hacia la API).
 
 **La página no carga en `localhost:5173`**
 Mira la línea `➜  Local:` de la terminal de Vite: ahí está la dirección real.

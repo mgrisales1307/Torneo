@@ -19,8 +19,8 @@ export default defineConfig([
     },
   },
   {
-    // Los archivos de configuración corren en Node, no en el navegador.
-    files: ['*.config.js'],
+    // La configuración y los scripts corren en Node, no en el navegador.
+    files: ['*.config.js', 'scripts/**/*.js'],
     languageOptions: {
       globals: globals.node,
     },

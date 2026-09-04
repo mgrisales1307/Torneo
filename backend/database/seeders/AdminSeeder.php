@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
 class AdminSeeder extends Seeder
@@ -14,7 +14,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@juegoszone.com'],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make('CambiaEstaClave123'),
+                'password' => Hash::make('admin123'),
                 'role' => 'admin',
             ]
         );

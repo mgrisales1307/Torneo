@@ -7,6 +7,8 @@
     "node": ">=20.19"
   },
   "scripts": {
+    "preinstall": "node scripts/check-entorno.js",
+    "predev": "node scripts/check-entorno.js",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
