@@ -45,8 +45,8 @@ arrancar, y lo vuelve a comprobar cada vez.
 
 | Rol | Correo | Contraseña | Puede |
 | --- | --- | --- | --- |
-| `admin` | `admin@juegoszone.com` | `CambiaEstaClave123` | Todo, incluida la gestión de usuarios |
-| `empleado` | `empleado@juegoszone.com` | `CambiaEstaClave123` | Organizar el torneo y ver los usuarios |
+| `admin` | `admin@juegoszone.com` | `admin123` | Todo, incluida la gestión de usuarios |
+| `empleado` | `empleado@juegoszone.com` | `trabajador123` | Organizar el torneo y ver los usuarios |
 | `user` | `test@example.com` | `password` | Participar; no accede a la gestión |
 
 Se crean solas al levantar el contenedor, y volver a ejecutar los seeders no

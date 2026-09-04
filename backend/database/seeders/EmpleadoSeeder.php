@@ -14,7 +14,7 @@ class EmpleadoSeeder extends Seeder
             ['email' => 'empleado@juegoszone.com'],
             [
                 'name' => 'Empleado de Torneo',
-                'password' => Hash::make('CambiaEstaClave123'),
+                'password' => Hash::make('trabajador123'),
                 'role' => 'empleado',
             ]
         );

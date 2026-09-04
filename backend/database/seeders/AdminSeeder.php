@@ -14,7 +14,7 @@ class AdminSeeder extends Seeder
             ['email' => 'admin@juegoszone.com'],
             [
                 'name' => 'Administrador',
-                'password' => Hash::make('CambiaEstaClave123'),
+                'password' => Hash::make('admin123'),
                 'role' => 'admin',
             ]
         );
