@@ -150,6 +150,19 @@ Falta la `APP_KEY`. Ejecútalo y reinicia el contenedor:
 cd backend && docker compose exec laravel.test php artisan key:generate
 ```
 
+**`npm run dev` arranca bien pero el navegador dice "no se pudo encontrar la página"**
+Lee con cuidado la línea `➜  Local:` de la terminal: ahí está el puerto real. Si el 5173 estuviera ocupado, Vite ahora falla con `Port 5173 is already in use` en lugar de cambiarse de puerto en silencio (el backend solo autoriza el 5173, así que un cambio de puerto rompería el login por CORS). Para ver qué lo está ocupando:
+```bash
+lsof -i :5173
+```
+
+**El navegador de Windows no alcanza a `localhost` aunque el proceso corra en WSL**
+Se rompió el reenvío de puertos de WSL2. Cierra las terminales de Ubuntu y, en PowerShell:
+```powershell
+wsl --shutdown
+```
+Espera unos segundos y vuelve a abrir Ubuntu.
+
 **El login responde 419 (CSRF token mismatch)**
 Los orígenes no coinciden. Revisa la tabla de arriba y asegúrate de entrar por `localhost`, no por `127.0.0.1`.
 
