@@ -1,9 +1,10 @@
 import axios from 'axios'
 
-const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost').replace(/\/$/, '')
-
+// Todas las rutas son relativas: el navegador solo habla con el origen desde
+// el que se sirvió la página. Vite reenvía /api y /sanctum a la API (ver
+// vite.config.js), así que no hay ninguna URL que configurar ni que pueda
+// quedar desactualizada.
 const api = axios.create({
-  baseURL,
   withCredentials: true,
   withXSRFToken: true,
   headers: {

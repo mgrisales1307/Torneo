@@ -2,201 +2,186 @@
 
 Aplicación de gestión de torneos.
 
-- **backend/** — API en Laravel 13 con autenticación por Sanctum (cookies de sesión), servida en Docker.
+- **backend/** — API en Laravel 13 con autenticación por Sanctum. Corre en Docker.
 - **frontend/** — SPA en React 19 + Vite.
 
 ---
 
 ## Requisitos
 
-| Herramienta | Versión | Notas |
-| --- | --- | --- |
-| **Docker Desktop** | actual | Debe estar **abierto y corriendo** antes de empezar. |
-| **Node.js** | 20.19 o superior | Compruébalo con `node -v`. |
-| **Git** | cualquiera | |
+Solo dos cosas:
 
-PHP y Composer **no son obligatorios**: si no los tienes, la instalación los ejecuta dentro de un contenedor temporal.
+- **Docker Desktop**, abierto y corriendo.
+- **Node.js 20.19 o superior** (`node -v`).
 
-En **Windows**: usa la terminal de **WSL (Ubuntu)** o **Git Bash** en VS Code. En PowerShell puro, sigue la instalación manual de más abajo.
+PHP, Composer y las extensiones de PHP **no hacen falta**: van dentro de la imagen de Docker.
 
 ---
 
-## Instalación (primera vez)
+## Cómo se arranca
+
+Dos comandos, en dos terminales. La primera vez, el paso 1 tarda unos minutos
+mientras Docker construye la imagen e instala las dependencias.
+
+**Terminal 1 — la API:**
 
 ```bash
-git clone https://github.com/mgrisales1307/Torneo.git
-cd Torneo
-./setup.sh
+docker compose up
 ```
 
-El script se encarga de todo: crea los archivos `.env`, instala las dependencias de PHP, genera la `APP_KEY`, construye y levanta el contenedor, espera a que la API responda, y instala las dependencias de Node.
-
-Cuando termine, arranca el frontend:
+**Terminal 2 — el frontend:**
 
 ```bash
-cd frontend && npm run dev
+cd frontend && npm install && npm run dev
 ```
 
 Abre <http://localhost:5173>.
 
----
+Eso es todo. No hay que copiar archivos `.env`, ni generar claves, ni correr
+migraciones, ni instalar dependencias de PHP: el contenedor lo hace solo al
+arrancar, y lo vuelve a comprobar cada vez.
 
-## Uso diario
-
-Una vez instalado, para trabajar solo necesitas dos comandos:
-
-```bash
-cd backend && docker compose up -d
-```
-
-```bash
-cd frontend && npm run dev
-```
-
-Para apagar el backend al terminar:
-
-```bash
-cd backend && docker compose down
-```
-
----
-
-## Credenciales de desarrollo
+### Credenciales de desarrollo
 
 | Rol | Correo | Contraseña |
 | --- | --- | --- |
 | Administrador | `admin@juegoszone.com` | `CambiaEstaClave123` |
 | Usuario | `test@example.com` | `password` |
 
-Se crean solas al levantar el contenedor. Son **exclusivamente para desarrollo local**.
+Se crean solas. Son **exclusivamente para desarrollo local**.
 
 ---
 
-## Instalación manual
+## Uso diario
 
-Si prefieres no usar `setup.sh` (o estás en PowerShell), estos son los mismos pasos, uno a uno.
-
-### Backend
+Para dejar la API corriendo en segundo plano y recuperar la terminal:
 
 ```bash
-cd backend
-cp .env.example .env
-composer install
-php artisan key:generate
-docker compose up -d --build
+docker compose up -d
 ```
 
-Sin PHP/Composer locales, reemplaza los dos comandos del medio por:
+Apagarla al terminar:
 
 ```bash
-docker run --rm -v "$PWD":/app -w /app composer:2 composer install
-docker run --rm -v "$PWD":/app -w /app composer:2 php artisan key:generate
+docker compose down
 ```
 
-La API queda en <http://localhost>. Verifica con <http://localhost/up>.
-
-Al arrancar, el contenedor crea la base SQLite, ejecuta las migraciones, carga los usuarios de desarrollo y corrige los permisos de `storage`, `bootstrap/cache` y `database` — sin importar el UID/GID del equipo que clonó el repositorio.
-
-### Frontend
-
-En otra terminal:
+Ver qué está haciendo:
 
 ```bash
-cd frontend
-cp .env.example .env.local
-npm install
-npm run dev
-```
-
-Queda en <http://localhost:5173>.
-
----
-
-## Arquitectura
-
-El frontend autentica con **cookies de sesión**, no con tokens en `localStorage`. El flujo es:
-
-1. `GET /sanctum/csrf-cookie` deja la cookie `XSRF-TOKEN`.
-2. `POST /api/login` con esa cookie abre la sesión.
-3. Las peticiones siguientes viajan con `withCredentials`.
-
-Por eso los orígenes tienen que coincidir exactamente. Si cambias un puerto, actualiza **los tres** valores:
-
-| Archivo | Variable | Valor por defecto |
-| --- | --- | --- |
-| `backend/.env` | `APP_PORT` | `80` |
-| `backend/.env` | `FRONTEND_URL` | `http://localhost:5173` |
-| `backend/.env` | `SANCTUM_STATEFUL_DOMAINS` | `localhost:5173,127.0.0.1:5173` |
-| `frontend/.env.local` | `VITE_API_URL` | `http://localhost` |
-
-Usa siempre `localhost` en el navegador, no `127.0.0.1`: mezclarlos rompe las cookies de sesión.
-
-Tras editar `backend/.env`, recarga la configuración:
-
-```bash
-cd backend && docker compose restart laravel.test
+docker compose logs -f api
 ```
 
 ---
 
-## Problemas frecuentes
+## Cómo está armado
 
-**`port is already allocated` al levantar Docker**
-El puerto 80 está ocupado. En `backend/.env` añade `APP_PORT=8080`, pon `VITE_API_URL=http://localhost:8080` en `frontend/.env.local`, y vuelve a levantar con `docker compose up -d`.
+El navegador habla **con un solo origen**: `http://localhost:5173`. Vite reenvía
+por detrás las rutas `/api` y `/sanctum` al contenedor de la API.
 
-**`No application encryption key has been specified`**
-Falta la `APP_KEY`. Ejecútalo y reinicia el contenedor:
-```bash
-cd backend && docker compose exec laravel.test php artisan key:generate
+```
+navegador  ──►  Vite (5173)  ──►  Docker: Laravel (8000)
+                     └── sirve la SPA
 ```
 
-**`npm run dev` arranca bien pero el navegador dice "no se pudo encontrar la página"**
-Lee con cuidado la línea `➜  Local:` de la terminal: ahí está el puerto real. Si el 5173 estuviera ocupado, Vite ahora falla con `Port 5173 is already in use` en lugar de cambiarse de puerto en silencio (el backend solo autoriza el 5173, así que un cambio de puerto rompería el login por CORS). Para ver qué lo está ocupando:
+Esto no es un detalle de implementación, es lo que evita la mayoría de los
+errores: al no haber dos dominios, no hay CORS que configurar, ni cookies de
+sesión que se pierdan entre orígenes, ni URLs de API que se queden
+desactualizadas en un archivo `.env`. Por eso el frontend no tiene ninguna
+variable de entorno que configurar.
+
+Los valores que la API necesita para reconocer al frontend están fijados en
+[`compose.yaml`](compose.yaml), no en `backend/.env`, porque las variables de
+entorno del contenedor tienen prioridad. Así no pueden quedar desalineados.
+
+### Estructura
+
+```
+compose.yaml          Levanta la API. Es el único archivo que hay que ejecutar.
+docker/api/           Imagen de la API: trae PHP, Composer y el arranque.
+backend/              Laravel. Su .env se genera solo la primera vez.
+frontend/             React + Vite.
+```
+
+### Si el puerto 8000 está ocupado
+
+```bash
+API_PORT=8010 docker compose up
+```
+
+Y en la otra terminal, para que Vite sepa a dónde reenviar:
+
+```bash
+cd frontend && API_PORT=8010 npm run dev
+```
+
+---
+
+## Comandos del backend
+
+Se ejecutan dentro del contenedor, con la API levantada:
+
+```bash
+docker compose exec api php artisan test
+```
+
+```bash
+docker compose exec api php artisan migrate:fresh --seed
+```
+
+```bash
+docker compose exec api php artisan route:list
+```
+
+Para una terminal dentro del contenedor:
+
+```bash
+docker compose exec api bash
+```
+
+---
+
+## Problemas
+
+**`Cannot connect to the Docker daemon`**
+Docker Desktop no está corriendo. Ábrelo y espera a que termine de arrancar.
+
+**`port is already allocated`**
+Algo ocupa el 8000. Levanta con otro puerto, como se explica arriba.
+
+**`Port 5173 is already in use`**
+Quedó vivo un `npm run dev` de antes. Encuéntralo y ciérralo:
 ```bash
 lsof -i :5173
 ```
+Vite falla a propósito en vez de cambiarse de puerto en silencio: el backend
+espera el 5173, y un cambio de puerto rompería el login más adelante.
+
+**La página no carga en `localhost:5173`**
+Mira la línea `➜  Local:` de la terminal de Vite: ahí está la dirección real.
+Si el proceso ya volvió al prompt, es que murió — el error está justo encima.
 
 **El navegador de Windows no alcanza a `localhost` aunque el proceso corra en WSL**
-Se rompió el reenvío de puertos de WSL2. Cierra las terminales de Ubuntu y, en PowerShell:
+Se rompió el reenvío de puertos de WSL2. Cierra las terminales de Ubuntu y, en
+PowerShell:
 ```powershell
 wsl --shutdown
 ```
 Espera unos segundos y vuelve a abrir Ubuntu.
 
-**El login responde 419 (CSRF token mismatch)**
-Los orígenes no coinciden. Revisa la tabla de arriba y asegúrate de entrar por `localhost`, no por `127.0.0.1`.
-
-**El login responde 401 o "No pudimos conectar con el servidor"**
-Comprueba que la API está viva: <http://localhost/up> debe devolver una página. Si no, mira los registros:
+**Cambié algo en `backend/.env` y no surte efecto**
+Reinicia el contenedor:
 ```bash
-cd backend && docker compose logs -f laravel.test
+docker compose restart api
 ```
+Ten en cuenta que las variables definidas en `compose.yaml` (`APP_URL`,
+`FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS`, `DB_CONNECTION`) tienen prioridad
+sobre `backend/.env` a propósito.
 
-**`docker compose up` falla con `vendor/laravel/sail/runtimes/8.5: no such file`**
-Falta `composer install`. La imagen de Docker se construye desde `vendor/`, así que las dependencias de PHP tienen que instalarse **antes** de levantar el contenedor.
-
-**`bash\r: command not found` o `docker/start-dev.sh: bad interpreter`**
-Finales de línea de Windows. El `.gitattributes` del repositorio lo previene, pero si ya te pasó, corrige el script y vuelve a levantar:
+**Quiero empezar de cero**
+Borra la base y las dependencias, y vuelve a levantar:
 ```bash
-sed -i 's/\r$//' backend/docker/start-dev.sh
-cd backend && docker compose up -d --force-recreate
-```
-
-**Errores de permisos en `storage/` o `database/`**
-Reconstruye el contenedor, que corrige los permisos al arrancar:
-```bash
-cd backend && docker compose down && docker compose up -d --build
-```
-
-**Quiero empezar de cero con la base de datos**
-```bash
-cd backend && docker compose exec laravel.test php artisan migrate:fresh --seed
-```
-
----
-
-## Pruebas
-
-```bash
-cd backend && docker compose exec laravel.test php artisan test
+docker compose down
+rm -rf backend/vendor backend/.env backend/database/database.sqlite
+docker compose up
 ```

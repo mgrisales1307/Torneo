@@ -1,0 +1,32 @@
+# Levanta la API de Laravel.
+#
+#     docker compose up -d
+#
+# No hace falta tener PHP ni Composer instalados: la imagen los trae, e
+# instala las dependencias, crea la base de datos y aplica las migraciones
+# la primera vez que arranca.
+
+services:
+    api:
+        build:
+            context: .
+            dockerfile: docker/api/Dockerfile
+        restart: unless-stopped
+        ports:
+            - '${API_PORT:-8000}:8000'
+        volumes:
+            - './backend:/app'
+        environment:
+            # Fijar aquí los valores que deben coincidir con el frontend evita
+            # que queden desalineados en backend/.env. Las variables de entorno
+            # tienen prioridad sobre ese archivo.
+            APP_URL: 'http://localhost:${API_PORT:-8000}'
+            FRONTEND_URL: 'http://localhost:5173'
+            SANCTUM_STATEFUL_DOMAINS: 'localhost:5173,127.0.0.1:5173'
+            DB_CONNECTION: sqlite
+        healthcheck:
+            test: ['CMD', 'php', '-r', 'exit(@file_get_contents("http://127.0.0.1:8000/up") ? 0 : 1);']
+            interval: 10s
+            timeout: 5s
+            retries: 12
+            start_period: 180s
