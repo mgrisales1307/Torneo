@@ -43,12 +43,20 @@ arrancar, y lo vuelve a comprobar cada vez.
 
 ### Credenciales de desarrollo
 
-| Rol | Correo | Contraseña |
-| --- | --- | --- |
-| Administrador | `admin@juegoszone.com` | `CambiaEstaClave123` |
-| Usuario | `test@example.com` | `password` |
+| Rol | Correo | Contraseña | Puede |
+| --- | --- | --- | --- |
+| `admin` | `admin@juegoszone.com` | `CambiaEstaClave123` | Todo, incluida la gestión de usuarios |
+| `empleado` | `empleado@juegoszone.com` | `CambiaEstaClave123` | Organizar el torneo y ver los usuarios |
+| `user` | `test@example.com` | `password` | Participar; no accede a la gestión |
 
-Se crean solas. Son **exclusivamente para desarrollo local**.
+Se crean solas al levantar el contenedor, y volver a ejecutar los seeders no
+las duplica. Son **exclusivamente para desarrollo local**.
+
+Para crearlas de nuevo sin tocar el resto de los datos:
+
+```bash
+docker compose exec api php artisan db:seed
+```
 
 ---
 
