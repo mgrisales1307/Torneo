@@ -6,6 +6,7 @@ services:
             args:
                 WWWGROUP: '${WWWGROUP:-1000}'
         image: 'sail-8.5/app'
+        restart: unless-stopped
         extra_hosts:
             - 'host.docker.internal:host-gateway'
         ports:
