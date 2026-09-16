@@ -49,6 +49,10 @@ as_host mkdir -p \
 
 as_host touch database/database.sqlite
 
+# Enlace público del disco de imágenes (escudos, uniformes y fotos). Es
+# idempotente: si ya existe, no hace nada.
+as_host php artisan storage:link --quiet || true
+
 as_host php artisan migrate --seed --force
 
 echo "→ API lista"

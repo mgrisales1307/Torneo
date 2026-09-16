@@ -24,6 +24,11 @@ services:
             FRONTEND_URL: 'http://localhost:5173'
             SANCTUM_STATEFUL_DOMAINS: 'localhost:5173,127.0.0.1:5173'
             DB_CONNECTION: sqlite
+            # La aplicación habla español: mensajes de validación, errores y
+            # datos de ejemplo. Se fija aquí para que valga igual en un clon
+            # nuevo que en un backend/.env creado antes de este cambio.
+            APP_LOCALE: es
+            APP_FAKER_LOCALE: es_ES
         healthcheck:
             test: ['CMD', 'php', '-r', 'exit(@file_get_contents("http://127.0.0.1:8000/up") ? 0 : 1);']
             interval: 10s

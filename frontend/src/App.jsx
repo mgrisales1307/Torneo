@@ -1,268 +1,89 @@
-import { useEffect, useId, useState } from 'react'
-import {
-  ArrowUpRight,
-  Check,
-  Eye,
-  EyeOff,
-  LoaderCircle,
-  LockKeyhole,
-  LogOut,
-  Mail,
-  ShieldCheck,
-} from 'lucide-react'
-import { getCurrentUser, getLoginError, isUnauthenticated, login, logout } from './lib/api'
-import stadiumImage from './assets/estadio-hinchada.jpg'
-import './App.css'
+import { useEffect } from 'react'
+import { Route, Routes, useLocation } from 'react-router-dom'
+import { Sitio } from './componentes/diseno/Sitio'
+import { RutaProtegida } from './componentes/diseno/RutaProtegida'
 
-const roleLabels = {
-  admin: 'Administración',
-  empleado: 'Organización',
-  user: 'Participante',
+import Inicio from './paginas/publico/Inicio'
+import Torneos from './paginas/publico/Torneos'
+import Torneo from './paginas/publico/Torneo'
+import Equipo from './paginas/publico/Equipo'
+import Partido from './paginas/publico/Partido'
+import NoEncontrada from './paginas/publico/NoEncontrada'
+
+import Ingreso from './paginas/acceso/Ingreso'
+import Registro from './paginas/acceso/Registro'
+
+import MisEquipos from './paginas/panel/MisEquipos'
+import EquipoDelDueno from './paginas/panel/EquipoDelDueno'
+import Inscripciones from './paginas/panel/Inscripciones'
+import Pago from './paginas/panel/Pago'
+
+import ResumenOrganizacion from './paginas/admin/ResumenOrganizacion'
+import TorneosAdmin from './paginas/admin/TorneosAdmin'
+import TorneoAdmin from './paginas/admin/TorneoAdmin'
+import InscripcionesAdmin from './paginas/admin/InscripcionesAdmin'
+import UsuariosAdmin from './paginas/admin/UsuariosAdmin'
+
+/**
+ * Mapa de la aplicación.
+ *
+ *   /               portada, torneos, equipos y partidos: abierto a cualquiera
+ *   /ingreso        entrada y registro, a pantalla completa
+ *   /panel          el dueño gestiona sus equipos, plantillas, inscripciones y pagos
+ *   /organizacion   la organización gestiona torneos, calendario y resultados
+ *
+ * Las rutas con sesión pasan por RutaProtegida. Eso es comodidad de navegación:
+ * quien la saltee desde el navegador solo verá pantallas vacías, porque la
+ * autorización de verdad la hace el backend en cada petición.
+ */
+const ROLES_CON_EQUIPOS = ['dueno', 'admin', 'empleado']
+const ROLES_DE_ORGANIZACION = ['admin', 'empleado']
+
+function AlCambiarDePagina() {
+  const { pathname } = useLocation()
+
+  // Al navegar, la página nueva empieza arriba y no a media altura.
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [pathname])
+
+  return null
 }
 
-function App() {
-  const errorId = useId()
-  const [credentials, setCredentials] = useState({ email: '', password: '', remember: false })
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
-  const [status, setStatus] = useState('checking')
-  const [user, setUser] = useState(null)
-  const [error, setError] = useState('')
-
-  useEffect(() => {
-    let isActive = true
-
-    getCurrentUser()
-      .then((currentUser) => {
-        if (isActive) {
-          setUser(currentUser)
-        }
-      })
-      .catch((requestError) => {
-        if (isActive && !isUnauthenticated(requestError)) {
-          setError('El servicio no está disponible en este momento. Puedes intentar acceder de nuevo.')
-        }
-      })
-      .finally(() => {
-        if (isActive) {
-          setStatus('idle')
-        }
-      })
-
-    return () => {
-      isActive = false
-    }
-  }, [])
-
-  function handleFieldChange(event) {
-    const { name, type, checked, value } = event.target
-
-    setCredentials((current) => ({
-      ...current,
-      [name]: type === 'checkbox' ? checked : value,
-    }))
-
-    if (error) {
-      setError('')
-    }
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault()
-    setError('')
-
-    if (!credentials.email.trim() || !credentials.password) {
-      setError('Ingresa tu correo y contraseña para continuar.')
-      return
-    }
-
-    setStatus('submitting')
-
-    try {
-      const authenticatedUser = await login({
-        email: credentials.email.trim(),
-        password: credentials.password,
-        remember: credentials.remember,
-      })
-
-      setUser(authenticatedUser)
-      setCredentials((current) => ({ ...current, password: '' }))
-    } catch (requestError) {
-      setError(getLoginError(requestError))
-    } finally {
-      setStatus('idle')
-    }
-  }
-
-  async function handleLogout() {
-    setStatus('submitting')
-    setError('')
-
-    try {
-      await logout()
-      setUser(null)
-    } catch (requestError) {
-      if (isUnauthenticated(requestError)) {
-        setUser(null)
-      } else {
-        setError('No pudimos cerrar la sesión. Inténtalo nuevamente.')
-      }
-    } finally {
-      setStatus('idle')
-    }
-  }
-
-  const isBusy = status === 'checking' || status === 'submitting'
-
+export default function App() {
   return (
-    <main className="login-shell">
-      <section className="brand-panel" aria-label="Juegos Zone Torneos">
-        <img className="brand-photo" src={stadiumImage} alt="" aria-hidden="true" loading="eager" fetchPriority="high" />
-        <span className="brand-scrim" aria-hidden="true" />
+    <>
+      <AlCambiarDePagina />
 
-        <div className="brand-topline">
-          <a className="brand-lockup" href="/" aria-label="Juegos Zone, inicio">
-            <span className="brand-mark" aria-hidden="true">JZ</span>
-            <span>Juegos Zone</span>
-          </a>
-          <span className="edition">Torneos / 2026</span>
-        </div>
+      <Routes>
+        <Route path="/ingreso" element={<Ingreso />} />
+        <Route path="/registro" element={<Registro />} />
 
-        <div className="brand-copy">
-          <p className="eyebrow"><span /> El fútbol se vive aquí</p>
-          <h1>
-            Cada partido.<br />
-            <em>Cada historia.</em>
-          </h1>
-          <p className="brand-description">
-            La competencia en un solo lugar. Sigue el ritmo del torneo desde la primera fecha hasta la final.
-          </p>
-        </div>
+        <Route element={<Sitio />}>
+          <Route index element={<Inicio />} />
+          <Route path="torneos" element={<Torneos />} />
+          <Route path="torneos/:slug" element={<Torneo />} />
+          <Route path="equipos/:slug" element={<Equipo />} />
+          <Route path="partidos/:id" element={<Partido />} />
 
-        <span className="orb orb-one" aria-hidden="true" />
-      </section>
+          <Route element={<RutaProtegida rolesPermitidos={ROLES_CON_EQUIPOS} />}>
+            <Route path="panel" element={<MisEquipos />} />
+            <Route path="panel/equipos/:slug" element={<EquipoDelDueno />} />
+            <Route path="panel/inscripciones" element={<Inscripciones />} />
+            <Route path="panel/pagos/:referencia" element={<Pago />} />
+          </Route>
 
-      <section className="access-panel">
-        <div className="access-topline">
-          <span className="secure-note"><ShieldCheck size={15} strokeWidth={1.8} /> Acceso seguro</span>
-          <span className="access-number">JZ — 01</span>
-        </div>
+          <Route element={<RutaProtegida rolesPermitidos={ROLES_DE_ORGANIZACION} />}>
+            <Route path="organizacion" element={<ResumenOrganizacion />} />
+            <Route path="organizacion/torneos" element={<TorneosAdmin />} />
+            <Route path="organizacion/torneos/:slug" element={<TorneoAdmin />} />
+            <Route path="organizacion/inscripciones" element={<InscripcionesAdmin />} />
+            <Route path="organizacion/usuarios" element={<UsuariosAdmin />} />
+          </Route>
 
-        <div className="access-card">
-          {user ? (
-            <section className="session-view" aria-labelledby="session-title">
-              <div className="session-check" aria-hidden="true"><Check size={22} strokeWidth={2} /></div>
-              <p className="section-index">Sesión activa</p>
-              <h2 id="session-title">Todo listo,<br />{user.name}.</h2>
-              <p className="session-description">Tu acceso a Juegos Zone está confirmado.</p>
-
-              <div className="profile-card">
-                <div className="avatar" aria-hidden="true">
-                  {user.name?.split(' ').map((part) => part[0]).slice(0, 2).join('').toUpperCase() || 'JZ'}
-                </div>
-                <div>
-                  <strong>{user.name}</strong>
-                  <span>{user.email}</span>
-                </div>
-                <span className="role-badge">{roleLabels[user.role] ?? user.role}</span>
-              </div>
-
-              {error && <p className="form-error" role="alert">{error}</p>}
-
-              <button className="secondary-button" type="button" onClick={handleLogout} disabled={isBusy}>
-                {status === 'submitting' ? <LoaderCircle className="spinner" size={18} /> : <LogOut size={18} />}
-                Cerrar sesión
-              </button>
-            </section>
-          ) : (
-            <section aria-labelledby="login-title">
-              <header className="form-header">
-                <p className="section-index">Acceso a plataforma</p>
-                <h2 id="login-title">Bienvenido<br />de nuevo.</h2>
-                <p>Ingresa tus datos para continuar al torneo.</p>
-              </header>
-
-              <form className="login-form" onSubmit={handleSubmit} noValidate aria-busy={isBusy}>
-                <div className="field-group">
-                  <label htmlFor="email">Correo electrónico</label>
-                  <div className="input-shell">
-                    <Mail size={18} aria-hidden="true" />
-                    <input
-                      id="email"
-                      name="email"
-                      type="email"
-                      value={credentials.email}
-                      onChange={handleFieldChange}
-                      placeholder="nombre@equipo.com"
-                      autoComplete="email"
-                      inputMode="email"
-                      aria-describedby={error ? errorId : undefined}
-                      aria-invalid={Boolean(error)}
-                      disabled={isBusy}
-                    />
-                  </div>
-                </div>
-
-                <div className="field-group">
-                  <label htmlFor="password">Contraseña</label>
-                  <div className="input-shell">
-                    <LockKeyhole size={18} aria-hidden="true" />
-                    <input
-                      id="password"
-                      name="password"
-                      type={isPasswordVisible ? 'text' : 'password'}
-                      value={credentials.password}
-                      onChange={handleFieldChange}
-                      placeholder="Tu contraseña"
-                      autoComplete="current-password"
-                      aria-describedby={error ? errorId : undefined}
-                      aria-invalid={Boolean(error)}
-                      disabled={isBusy}
-                    />
-                    <button
-                      className="password-toggle"
-                      type="button"
-                      onClick={() => setIsPasswordVisible((visible) => !visible)}
-                      aria-label={isPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                      aria-pressed={isPasswordVisible}
-                      disabled={isBusy}
-                    >
-                      {isPasswordVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-
-                <label className="remember-control">
-                  <input
-                    name="remember"
-                    type="checkbox"
-                    checked={credentials.remember}
-                    onChange={handleFieldChange}
-                    disabled={isBusy}
-                  />
-                  <span className="custom-checkbox" aria-hidden="true"><Check size={12} /></span>
-                  Mantener mi sesión
-                </label>
-
-                <div className="feedback-slot" aria-live="polite">
-                  {error && <p id={errorId} className="form-error" role="alert">{error}</p>}
-                </div>
-
-                <button className="primary-button" type="submit" disabled={isBusy}>
-                  <span>{status === 'submitting' ? 'Validando acceso' : status === 'checking' ? 'Comprobando sesión' : 'Entrar al torneo'}</span>
-                  {isBusy ? <LoaderCircle className="spinner" size={19} /> : <ArrowUpRight size={19} />}
-                </button>
-              </form>
-            </section>
-          )}
-        </div>
-
-        <footer className="access-footer">
-          <span>Gestión de competencia</span>
-          <span>© 2026 Juegos Zone</span>
-        </footer>
-      </section>
-    </main>
+          <Route path="*" element={<NoEncontrada />} />
+        </Route>
+      </Routes>
+    </>
   )
 }
-
-export default App

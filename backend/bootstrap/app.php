@@ -1,6 +1,7 @@
 <?php
 
-use App\Http\Middleware\CheckRole;
+use App\Http\Middleware\AgregaCabecerasDeSeguridad;
+use App\Http\Middleware\VerificaRol;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -14,10 +15,21 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Sanctum en modo SPA: las peticiones que llegan desde el frontend
+        // declarado en SANCTUM_STATEFUL_DOMAINS usan la sesión por cookie y
+        // pasan por la verificación CSRF, como cualquier formulario web.
         $middleware->statefulApi();
 
+        $middleware->api(append: [
+            AgregaCabecerasDeSeguridad::class,
+        ]);
+
+        $middleware->web(append: [
+            AgregaCabecerasDeSeguridad::class,
+        ]);
+
         $middleware->alias([
-            'role' => CheckRole::class,
+            'rol' => VerificaRol::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

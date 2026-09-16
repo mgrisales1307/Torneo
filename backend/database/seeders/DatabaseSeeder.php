@@ -2,33 +2,20 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 
+/**
+ * Ojo: aquí no se usa WithoutModelEvents. El seeder de demostración necesita
+ * los eventos de los modelos, que son los que generan los slugs de torneos y
+ * equipos.
+ */
 class DatabaseSeeder extends Seeder
 {
-    use WithoutModelEvents;
-
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        User::firstOrCreate(
-            ['email' => 'test@example.com'],
-            [
-                'name' => 'Test User',
-                'email_verified_at' => now(),
-                'password' => Hash::make('password'),
-                'role' => 'user',
-            ],
-        );
-
         $this->call([
-            AdminSeeder::class,
-            EmpleadoSeeder::class,
+            UsuariosSeeder::class,
+            TorneoDeDemostracionSeeder::class,
         ]);
     }
 }

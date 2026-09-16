@@ -1,0 +1,584 @@
+/*
+ * Componentes reutilizables: botones, campos, tarjetas, tablas, insignias.
+ *
+ * Cada bloque de aquí tiene su componente en src/componentes/ui. Si una pantalla
+ * necesita algo que no está en este archivo, probablemente el componente
+ * también falta: es la señal de que hay que crearlo en vez de repetir estilos.
+ */
+
+/* ---------------------------------------------------------------- Botones */
+
+.boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 2.85rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 0 1.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease,
+    border-color 160ms ease, color 160ms ease;
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.boton:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.boton--solido {
+  color: #f8f6ed;
+  background: var(--tinta);
+  box-shadow: var(--sombra-baja);
+}
+
+.boton--solido:not(:disabled):hover {
+  background: var(--tinta-suave);
+  box-shadow: var(--sombra-media);
+}
+
+.boton--acento {
+  color: var(--tinta);
+  background: var(--acento);
+  box-shadow: var(--sombra-baja);
+}
+
+.boton--acento:not(:disabled):hover {
+  background: var(--acento-suave);
+  box-shadow: var(--sombra-media);
+}
+
+.boton--contorno {
+  border-color: var(--linea);
+  color: var(--tinta);
+  background: transparent;
+}
+
+.boton--contorno:not(:disabled):hover {
+  border-color: rgba(11, 29, 23, 0.32);
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.boton--fantasma {
+  color: var(--apagado);
+  background: transparent;
+}
+
+.boton--fantasma:not(:disabled):hover {
+  color: var(--tinta);
+  background: rgba(11, 29, 23, 0.06);
+}
+
+.boton--peligro {
+  border-color: rgba(162, 59, 42, 0.3);
+  color: var(--error);
+  background: rgba(162, 59, 42, 0.06);
+}
+
+.boton--peligro:not(:disabled):hover {
+  color: var(--blanco);
+  background: var(--error);
+}
+
+.boton--chico {
+  min-height: 2.25rem;
+  padding: 0 0.85rem;
+  font-size: 0.72rem;
+}
+
+.boton--ancho {
+  width: 100%;
+}
+
+/* ---------------------------------------------------------------- Campos */
+
+.campo {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.campo__etiqueta {
+  color: #526058;
+  font-size: 0.68rem;
+  font-weight: 720;
+  letter-spacing: 0.02em;
+}
+
+.campo__control {
+  width: 100%;
+  min-height: 2.9rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  padding: 0.6rem 0.85rem;
+  color: var(--tinta);
+  background: var(--blanco);
+  font-size: 0.85rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.campo__control:focus {
+  border-color: var(--tinta);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(234, 184, 87, 0.28);
+}
+
+.campo__control:disabled {
+  color: var(--apagado);
+  background: var(--papel-hondo);
+  cursor: not-allowed;
+}
+
+textarea.campo__control {
+  min-height: 6rem;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.campo__pista {
+  color: var(--apagado-claro);
+  font-size: 0.7rem;
+  line-height: 1.5;
+}
+
+.campo__error {
+  color: var(--error);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.campo--invalido .campo__control {
+  border-color: var(--error);
+}
+
+.campo-color {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.campo-color input[type='color'] {
+  width: 2.9rem;
+  height: 2.9rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  padding: 0.2rem;
+  background: var(--blanco);
+  cursor: pointer;
+}
+
+.campo-interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--tinta);
+  font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.campo-interruptor input {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--acento);
+  cursor: pointer;
+}
+
+.rejilla-campos {
+  display: grid;
+  gap: 1.1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+/* --------------------------------------------------------------- Tarjetas */
+
+.tarjeta {
+  border: 1px solid var(--linea-suave);
+  border-radius: var(--radio);
+  padding: 1.35rem;
+  background: var(--blanco);
+  box-shadow: var(--sombra-baja);
+}
+
+.tarjeta--plana {
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: none;
+}
+
+.tarjeta__titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.tarjeta__titulo h2,
+.tarjeta__titulo h3 {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* --------------------------------------------------------------- Insignias */
+
+.insignia {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.66rem;
+  font-weight: 720;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.insignia--neutra {
+  color: #526058;
+  background: var(--papel-hondo);
+}
+
+.insignia--exito {
+  color: #1f5138;
+  background: rgba(47, 111, 79, 0.14);
+}
+
+.insignia--aviso {
+  color: #7d5209;
+  background: rgba(183, 121, 31, 0.16);
+}
+
+.insignia--error {
+  color: #7e2a1d;
+  background: rgba(162, 59, 42, 0.13);
+}
+
+.insignia--info {
+  color: #234a64;
+  background: rgba(46, 92, 125, 0.13);
+}
+
+.insignia--acento {
+  color: var(--tinta);
+  background: var(--acento);
+}
+
+/* ----------------------------------------------------------------- Avisos */
+
+.aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-chico);
+  padding: 0.85rem 1rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+}
+
+.aviso svg {
+  flex: none;
+  margin-top: 0.1rem;
+}
+
+.aviso--error {
+  border-color: rgba(162, 59, 42, 0.28);
+  color: #7e2a1d;
+  background: rgba(162, 59, 42, 0.07);
+}
+
+.aviso--exito {
+  border-color: rgba(47, 111, 79, 0.3);
+  color: #1f5138;
+  background: rgba(47, 111, 79, 0.08);
+}
+
+.aviso--info {
+  border-color: rgba(46, 92, 125, 0.25);
+  color: #234a64;
+  background: rgba(46, 92, 125, 0.07);
+}
+
+.aviso--atencion {
+  border-color: rgba(183, 121, 31, 0.32);
+  color: #7d5209;
+  background: rgba(183, 121, 31, 0.09);
+}
+
+/* ----------------------------------------------------------------- Tablas */
+
+.tabla-envoltura {
+  overflow-x: auto;
+  border: 1px solid var(--linea-suave);
+  border-radius: var(--radio);
+  background: var(--blanco);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.tabla th {
+  padding: 0.85rem 0.9rem;
+  color: #6f7a75;
+  background: rgba(232, 228, 217, 0.5);
+  font-size: 0.64rem;
+  font-weight: 730;
+  letter-spacing: 0.1em;
+  text-align: left;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.tabla td {
+  border-top: 1px solid var(--linea-suave);
+  padding: 0.8rem 0.9rem;
+  vertical-align: middle;
+}
+
+.tabla tbody tr:hover {
+  background: rgba(242, 239, 230, 0.6);
+}
+
+.tabla .numerico {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.tabla__destacada td {
+  background: rgba(234, 184, 87, 0.09);
+}
+
+/* ---------------------------------------------------------------- Escudos */
+
+.escudo {
+  display: grid;
+  flex: none;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid var(--linea-suave);
+  border-radius: 50%;
+  color: var(--acento);
+  background: var(--tinta);
+  font-weight: 760;
+  letter-spacing: -0.04em;
+  text-transform: uppercase;
+}
+
+.escudo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.escudo--chico {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: 0.55rem;
+}
+
+.escudo--medio {
+  width: 2.5rem;
+  height: 2.5rem;
+  font-size: 0.68rem;
+}
+
+.escudo--grande {
+  width: 4.5rem;
+  height: 4.5rem;
+  font-size: 1.1rem;
+}
+
+.escudo--enorme {
+  width: 7rem;
+  height: 7rem;
+  font-size: 1.7rem;
+}
+
+/* -------------------------------------------------------------- Pestañas */
+
+.pestanas {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--linea);
+  scrollbar-width: none;
+}
+
+.pestanas::-webkit-scrollbar {
+  display: none;
+}
+
+.pestana {
+  position: relative;
+  border: 0;
+  padding: 0.85rem 1rem;
+  color: var(--apagado);
+  background: transparent;
+  font-size: 0.82rem;
+  font-weight: 680;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+
+.pestana:hover {
+  color: var(--tinta);
+}
+
+.pestana--activa {
+  color: var(--tinta);
+}
+
+.pestana--activa::after {
+  content: '';
+  position: absolute;
+  inset: auto 0.7rem -1px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--acento);
+}
+
+/* --------------------------------------------------- Vacíos y cargadores */
+
+.estado-vacio {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+  border: 1px dashed var(--linea);
+  border-radius: var(--radio);
+  padding: 3rem 1.5rem;
+  text-align: center;
+}
+
+.estado-vacio svg {
+  color: var(--apagado-claro);
+}
+
+.estado-vacio h3 {
+  font-size: 0.95rem;
+}
+
+.estado-vacio p {
+  max-width: 28rem;
+  color: var(--apagado);
+  font-size: 0.82rem;
+}
+
+.cargando {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  padding: 3rem 1rem;
+  color: var(--apagado);
+  font-size: 0.8rem;
+}
+
+.girador {
+  animation: girar 800ms linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.esqueleto {
+  border-radius: var(--radio-chico);
+  background: linear-gradient(
+    90deg,
+    var(--papel-hondo) 25%,
+    rgba(255, 253, 248, 0.8) 37%,
+    var(--papel-hondo) 63%
+  );
+  background-size: 400% 100%;
+  animation: brillo 1.4s ease infinite;
+}
+
+@keyframes brillo {
+  from {
+    background-position: 100% 50%;
+  }
+  to {
+    background-position: 0 50%;
+  }
+}
+
+/* --------------------------------------------------------------- Diálogo */
+
+.dialogo-fondo {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(11, 29, 23, 0.55);
+  backdrop-filter: blur(3px);
+  animation: aparecer 160ms ease both;
+}
+
+.dialogo {
+  width: min(100%, 34rem);
+  max-height: 88vh;
+  overflow-y: auto;
+  border-radius: var(--radio-grande);
+  padding: 1.6rem;
+  background: var(--papel);
+  box-shadow: var(--sombra-alta);
+  animation: subir 200ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.dialogo--ancho {
+  width: min(100%, 46rem);
+}
+
+.dialogo__encabezado {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.dialogo__encabezado h2 {
+  font-size: 1.15rem;
+}
+
+.dialogo__encabezado p {
+  margin-top: 0.35rem;
+  color: var(--apagado);
+  font-size: 0.8rem;
+}
+
+.dialogo__acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}

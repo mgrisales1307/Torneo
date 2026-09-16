@@ -19,6 +19,9 @@ export default defineConfig({
     proxy: {
       '/api': `http://localhost:${apiPort}`,
       '/sanctum': `http://localhost:${apiPort}`,
+      // Escudos, uniformes y fotos de jugadores: los sirve Laravel desde
+      // public/storage, y se piden con rutas relativas como todo lo demás.
+      '/storage': `http://localhost:${apiPort}`,
     },
   },
 })

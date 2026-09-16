@@ -1,50 +1,6 @@
 @import '@fontsource-variable/manrope';
-
-:root {
-  font-family: 'Manrope Variable', system-ui, sans-serif;
-  color: #12241d;
-  background: #f2efe6;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  min-width: 320px;
-  background: #f2efe6;
-}
-
-body {
-  min-width: 320px;
-  min-height: 100vh;
-  margin: 0;
-}
-
-button,
-input {
-  font: inherit;
-}
-
-button:focus-visible,
-input:focus-visible,
-a:focus-visible {
-  outline: 2px solid #c99327;
-  outline-offset: 3px;
-}
-
-button,
-a,
-input,
-label {
-  -webkit-tap-highlight-color: transparent;
-}
-
-::selection {
-  color: #0b1d17;
-  background: #eab857;
-}
+@import './estilos/tokens.css';
+@import './estilos/base.css';
+@import './estilos/componentes.css';
+@import './estilos/paginas.css';
+@import './estilos/acceso.css';
