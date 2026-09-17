@@ -94,10 +94,12 @@ export function Cabecera() {
     >
       <div className="contenedor cabecera__fila">
         <Link className="logo" to="/" aria-label="Juegos Zone, inicio">
+          {/* Solo el sello. El nombre escrito al lado competía con el titular
+              de la portada; el sello sigue siendo el enlace al inicio, y el
+              nombre viaja en el aria-label para quien navegue con lector. */}
           <span className="logo__sello" aria-hidden="true">
             JZ
           </span>
-          Juegos Zone
         </Link>
 
         <button

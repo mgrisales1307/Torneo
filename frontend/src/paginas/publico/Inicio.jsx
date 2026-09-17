@@ -19,9 +19,6 @@ export default function Inicio() {
         <FondoDeEstadio />
 
         <div className="portada__texto">
-          <p className="antetitulo-claro">
-            <span aria-hidden="true" /> El fútbol se vive aquí
-          </p>
           <h1>
             Cada partido.
             <br />

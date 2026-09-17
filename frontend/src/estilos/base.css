@@ -4,6 +4,20 @@
   box-sizing: border-box;
 }
 
+/*
+ * Se reserva siempre el hueco de la barra de desplazamiento.
+ *
+ * La portada se sale del contenedor con `100vw`, que incluye la barra, y
+ * main.jsx publica su ancho en `--barra` para restarlo. Pero sin esto la
+ * medida se tomaba con el documento todavía vacío —sin barra, por tanto 0— y
+ * al renderizar el contenido aparecía la barra y la portada sobresalía justo
+ * esos píxeles: de ahí el scroll horizontal en todo el sitio. Con el hueco
+ * reservado desde el principio, la medida es correcta desde el primer momento.
+ */
+html {
+  scrollbar-gutter: stable;
+}
+
 html {
   min-width: 320px;
   background: var(--papel);

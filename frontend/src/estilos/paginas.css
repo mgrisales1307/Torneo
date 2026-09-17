@@ -406,27 +406,32 @@
 }
 
 /*
- * Instrument Serif ya es estrecha y de alto contraste: no necesita que se le
- * cierre el interletraje como pedía Georgia, y agradece un poco más de
- * interlínea para que los remates no se toquen.
+ * El titular.
+ *
+ * Archivo en 900 y estrechada al 76%, en versales y con la interlínea cerrada
+ * por debajo del uno: las dos líneas forman un bloque macizo. Es la misma
+ * receta de un cartel de partido, y es lo contrario de lo que hacía la serif
+ * que había antes, que era fina y se deshacía sobre el vídeo.
  *
  * La sombra es el seguro: el velo ya garantiza el contraste, pero el fondo se
  * mueve, y una sombra suave asegura el borde de las letras en cualquier
  * fotograma sin que se note que está ahí.
  */
 .portada h1 {
-  max-width: 20ch;
+  max-width: 15ch;
   font-family: var(--titulares);
-  font-size: clamp(3rem, 7.5vw, 6.5rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.012em;
-  text-shadow: 0 0.05em 0.7em rgba(2, 8, 6, 0.6);
+  font-size: clamp(3.1rem, 8.4vw, 7.4rem);
+  font-weight: 900;
+  font-stretch: 76%;
+  line-height: 0.9;
+  letter-spacing: -0.022em;
+  text-transform: uppercase;
+  text-shadow: 0 0.04em 0.6em rgba(2, 8, 6, 0.62);
 }
 
 .portada h1 em {
   color: var(--acento);
-  font-style: italic;
+  font-style: normal;
 }
 
 .portada__texto > p {
@@ -509,25 +514,6 @@
   }
 }
 
-.antetitulo-claro {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  margin-bottom: 1.5rem;
-  color: var(--acento);
-  font-size: 0.68rem;
-  font-weight: 600;
-  font-stretch: 88%;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-}
-
-.antetitulo-claro span {
-  width: 1.5rem;
-  height: 1px;
-  background: currentColor;
-}
-
 .cifras {
   display: grid;
   gap: 1px;
@@ -546,11 +532,12 @@
 .cifra strong {
   display: block;
   font-family: var(--titulares);
-  font-size: 2.3rem;
-  font-weight: 400;
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-stretch: 82%;
   font-variant-numeric: tabular-nums;
-  line-height: 1.05;
-  letter-spacing: -0.01em;
+  line-height: 1;
+  letter-spacing: -0.02em;
 }
 
 .cifra span {
@@ -577,12 +564,15 @@
   flex-wrap: wrap;
 }
 
+/* Los titulares de sección van pesados y estrechos como el de la portada, pero
+   sin versales: en un texto que se lee de corrido las mayúsculas cansan. */
 .seccion__encabezado h2 {
   font-family: var(--titulares);
-  font-size: clamp(1.6rem, 2.7vw, 2.25rem);
-  font-weight: 400;
-  line-height: 1.08;
-  letter-spacing: -0.008em;
+  font-size: clamp(1.7rem, 2.9vw, 2.4rem);
+  font-weight: 800;
+  font-stretch: 84%;
+  line-height: 1.04;
+  letter-spacing: -0.018em;
 }
 
 .seccion__encabezado p {
@@ -684,10 +674,11 @@
 
 .torneo-cabecera h1 {
   font-family: var(--titulares);
-  font-size: clamp(2.1rem, 4.3vw, 3.4rem);
-  font-weight: 400;
-  line-height: 1.06;
-  letter-spacing: -0.01em;
+  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
+  font-weight: 800;
+  font-stretch: 82%;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
 }
 
 .torneo-cabecera__datos {
@@ -890,10 +881,11 @@
 
 .panel-cabecera h1 {
   font-family: var(--titulares);
-  font-size: clamp(2rem, 3.5vw, 2.7rem);
-  font-weight: 400;
-  line-height: 1.06;
-  letter-spacing: -0.01em;
+  font-size: clamp(2rem, 3.6vw, 2.8rem);
+  font-weight: 800;
+  font-stretch: 84%;
+  line-height: 1.04;
+  letter-spacing: -0.018em;
 }
 
 .panel-cabecera p {

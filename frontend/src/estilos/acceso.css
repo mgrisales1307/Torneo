@@ -165,29 +165,24 @@
   background: currentColor;
 }
 
-/*
- * El titular grande, ya en Instrument Serif: se le quita el tracking cerrado
- * que necesitaba Manrope y se le da algo más de interlínea, porque los remates
- * de una serif de alto contraste se tocan si se aprietan.
- */
+/* Misma voz que el titular de la portada: Archivo en 900, estrechada y en
+   versales, para que entrar al sitio y la portada se sientan de la misma casa. */
 .marca-texto h1 {
   margin: 0;
   font-family: var(--titulares);
-  font-size: clamp(3.6rem, 5.5vw, 6.5rem);
-  font-weight: 400;
-  line-height: 1;
-  letter-spacing: -0.012em;
-  text-shadow: 0 0.15em 1.6rem rgba(6, 18, 14, 0.55);
+  font-size: clamp(3.4rem, 5.6vw, 6.4rem);
+  font-weight: 900;
+  font-stretch: 76%;
+  line-height: 0.9;
+  letter-spacing: -0.022em;
+  text-transform: uppercase;
+  text-shadow: 0 0.12em 1.4rem rgba(6, 18, 14, 0.58);
 }
 
 .marca-texto h1 em {
   display: inline-block;
-  margin-top: 0.08em;
   color: var(--acento);
-  font-family: var(--titulares);
-  font-style: italic;
-  font-weight: 400;
-  letter-spacing: -0.008em;
+  font-style: normal;
 }
 
 .marca-descripcion {
@@ -256,10 +251,11 @@
   margin: 0;
   color: var(--tinta);
   font-family: var(--titulares);
-  font-size: clamp(2.9rem, 3.8vw, 4.1rem);
-  font-weight: 400;
-  line-height: 1.02;
-  letter-spacing: -0.01em;
+  font-size: clamp(2.5rem, 3.4vw, 3.5rem);
+  font-weight: 800;
+  font-stretch: 82%;
+  line-height: 1;
+  letter-spacing: -0.022em;
 }
 
 .formulario-encabezado > p:last-child,

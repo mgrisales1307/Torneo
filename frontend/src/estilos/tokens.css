@@ -46,21 +46,20 @@
 
   /* Tipografía
    *
-   * Dos familias que dan tres voces:
+   * Una sola familia, Archivo, y tres voces sacadas de sus dos ejes —peso y
+   * ancho—. Antes había además una serif de display; se quitó porque para un
+   * torneo resultaba delgada y demasiado formal: el titular perdía fuerza.
    *
-   *   --titulares  Instrument Serif. Alto contraste, de aire editorial. Solo
-   *                para titulares grandes: es una fuente de display y a tamaño
-   *                de párrafo se cansa la vista.
-   *   --interfaz   Archivo, la grotesca de Omnibus-Type hecha para prensa.
-   *                Todo el texto de la interfaz. Trae cifras tabulares de
-   *                verdad, que es lo que necesita una tabla de posiciones.
-   *   (datos)      La misma Archivo estrechada con su eje de ancho, con la
-   *                clase .datos. Así se compone una tabla en un periódico
-   *                deportivo: entra más en la columna y las cifras se alinean.
+   *   --titulares  Archivo en 900 y estrechada al 76%, en versales. Es la voz
+   *                del cartel: pesada, apretada, con presencia. Así titula la
+   *                prensa deportiva.
+   *   --interfaz   Archivo en 400–600 y ancho normal. Todo el texto.
+   *   (datos)      Archivo en 84% con cifras tabulares, con la clase .datos.
+   *                Tablas, marcadores, minutos y dorsales.
    *
-   * Las dos van en el repositorio; no se pide nada a ningún servidor ajeno.
+   * Las tres son el mismo woff2: cambiar de voz no cuesta una descarga más.
    */
-  --titulares: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --titulares: 'Archivo Variable', system-ui, 'Segoe UI', Arial, sans-serif;
   --interfaz: 'Archivo Variable', system-ui, 'Segoe UI', Arial, sans-serif;
 
   /* Ancho al que se estrechan las cifras y las tablas. */
