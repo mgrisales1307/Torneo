@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
-import estadio from '../../assets/estadio-hinchada.jpg'
+import estadio from '../../assets/estadio-cartel.jpg'
 
 /**
  * Armazón de las pantallas de ingreso y registro: a la izquierda la marca, a la

@@ -13,7 +13,7 @@
 
 .sitio__contenido {
   flex: 1;
-  padding-block: clamp(1.75rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
+  padding-block: var(--aire-contenido) clamp(3rem, 6vw, 5rem);
 }
 
 /* ------------------------------------------------------------- Cabecera */
@@ -25,6 +25,49 @@
   border-bottom: 1px solid var(--linea-suave);
   background: rgba(242, 239, 230, 0.88);
   backdrop-filter: blur(12px);
+  transition: background 320ms ease, border-color 320ms ease, color 320ms ease;
+}
+
+/*
+ * Sobre la portada. No lleva fondo: la imagen pasa por detrás y el velo
+ * superior del propio fondo es el que garantiza que se lean el logotipo y los
+ * enlaces, así que aquí solo hay que aclarar los colores.
+ */
+.cabecera--sobre-portada {
+  border-bottom-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
+  color: #f6f3e9;
+}
+
+.cabecera--sobre-portada .logo,
+.cabecera--sobre-portada .navegacion__enlace,
+.cabecera--sobre-portada .menu-usuario__boton {
+  color: #f6f3e9;
+}
+
+.cabecera--sobre-portada .navegacion {
+  border-color: rgba(246, 243, 233, 0.22);
+  background: rgba(8, 20, 16, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.cabecera--sobre-portada .navegacion__enlace[aria-current='page'] {
+  color: var(--tinta);
+  background: rgba(246, 243, 233, 0.92);
+}
+
+.cabecera--sobre-portada .navegacion__enlace:hover {
+  background: rgba(246, 243, 233, 0.16);
+}
+
+.cabecera--sobre-portada .menu-usuario__boton {
+  border-color: rgba(246, 243, 233, 0.26);
+  background: rgba(8, 20, 16, 0.36);
+}
+
+.cabecera--sobre-portada .boton-menu {
+  color: #f6f3e9;
 }
 
 .cabecera__fila {
@@ -208,47 +251,177 @@
 
 /* -------------------------------------------------------------- Portada */
 
+/*
+ * La portada ocupa la pantalla entera, así que tiene que salirse del
+ * contenedor centrado en el que vive el resto de la página.
+ *
+ * Se usa `100vw` menos el ancho real de la barra de desplazamiento, que
+ * main.jsx mide y publica en `--barra`. Sin esa resta, en los navegadores con
+ * barra clásica la portada sobresale y aparece un scroll horizontal en todo el
+ * sitio.
+ */
 .portada {
   position: relative;
   isolation: isolate;
-  overflow: hidden;
-  border-radius: var(--radio-grande);
-  padding: clamp(2.5rem, 6vw, 5rem);
+  display: grid;
+  align-content: center;
+  width: calc(100vw - var(--barra, 0px));
+  margin-inline: calc(50% - (100vw - var(--barra, 0px)) / 2);
+  /* svh, no vh: en el móvil la barra del navegador aparece y desaparece, y con
+     vh la portada da un salto de alto al desplazarse. */
+  min-height: 100svh;
+  /* Se sube para empezar detrás de la cabecera y comerse el aire del
+     contenedor: así llena la pantalla de borde a borde. La cabecera va con
+     z-index mayor, así que sigue pintándose encima. */
+  margin-top: calc(-1 * (var(--alto-cabecera, 4.6rem) + var(--aire-contenido)));
+  padding-block: calc(var(--alto-cabecera, 4.6rem) + clamp(2.5rem, 8vh, 6rem))
+    clamp(5rem, 12vh, 8rem);
+  padding-inline: clamp(1.25rem, 7vw, 7rem);
+  overflow: clip;
   color: #f6f3e9;
-  background: var(--tinta);
+  background: #060f0c;
 }
 
-.portada__foto {
+/* --- Las capas del fondo, de atrás hacia delante --- */
+
+.fondo-estadio {
   position: absolute;
-  z-index: -2;
+  inset: 0;
+  overflow: clip;
+}
+
+/*
+ * El cartel es un fotograma del propio vídeo. Está debajo para que la portada
+ * tenga imagen desde el primer pintado: el vídeo tarda, y sin esto se vería un
+ * rectángulo negro. También es lo único que se ve si alguien pidió movimiento
+ * reducido o navega con ahorro de datos.
+ */
+.fondo-estadio__cartel,
+.fondo-estadio__video {
+  position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 58%;
+  object-position: 50% 46%;
 }
 
-.portada__velo {
+.fondo-estadio__cartel {
+  z-index: 1;
+}
+
+.fondo-estadio__video {
+  z-index: 2;
+  /* Un acercamiento lentísimo. El plano ya tiene su propia panorámica; esto
+     solo evita que el reinicio del bucle se sienta como una foto quieta. */
+  animation: respiro-de-camara 54s ease-in-out infinite alternate;
+}
+
+@keyframes respiro-de-camara {
+  from {
+    transform: scale(1.02);
+  }
+
+  to {
+    transform: scale(1.1);
+  }
+}
+
+/*
+ * El velo.
+ *
+ * Los valores no son a ojo. Se midió el brillo del vídeo fotograma a fotograma
+ * y se compuso este degradado encima para calcular el contraste real del texto
+ * crema en el peor momento del bucle:
+ *
+ *     sin velo ............  1,28:1   ilegible
+ *     con este velo .......  8,54:1   cumple AA (4,5:1) y AAA (7:1)
+ *
+ * Es degradado y no plano por una razón: para llegar a 4,5:1 un velo uniforme
+ * tendría que oscurecer el 78% de TODA la imagen, y entonces el vídeo no se
+ * vería. Así se carga la mano donde hay letras y se levanta donde solo hay
+ * estadio.
+ *
+ * Si se mueve el texto de sitio o se cambia el metraje, hay que volver a medir:
+ * estos números valen para este plano.
+ */
+.fondo-estadio__velo {
   position: absolute;
-  z-index: -1;
+  z-index: 3;
   inset: 0;
   background:
-    linear-gradient(105deg, rgba(9, 24, 19, 0.95) 8%, rgba(9, 24, 19, 0.6) 55%, rgba(9, 24, 19, 0.25) 100%),
-    radial-gradient(110% 80% at 80% 0%, rgba(234, 184, 87, 0.22), transparent 60%);
+    linear-gradient(
+      97deg,
+      rgba(4, 12, 10, 0.82) 0%,
+      rgba(4, 12, 10, 0.78) 28%,
+      rgba(4, 12, 10, 0.68) 44%,
+      rgba(4, 12, 10, 0.4) 62%,
+      rgba(4, 12, 10, 0.18) 80%,
+      rgba(4, 12, 10, 0.1) 100%
+    ),
+    linear-gradient(to bottom, rgba(4, 12, 10, 0.66) 0%, rgba(4, 12, 10, 0) 20%),
+    linear-gradient(to top, rgba(4, 12, 10, 0.78) 0%, rgba(4, 12, 10, 0) 34%);
+}
+
+/* La luz de los focos, respirando. Va en `screen` para que sume luz en vez de
+   pintar un velo claro encima. */
+.fondo-estadio__luz {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  background:
+    radial-gradient(58% 42% at 70% 10%, rgba(255, 226, 168, 0.3), transparent 62%),
+    radial-gradient(34% 26% at 32% 2%, rgba(255, 238, 205, 0.15), transparent 70%);
+  mix-blend-mode: screen;
+  animation: respiro-de-luz 11s ease-in-out infinite alternate;
+}
+
+@keyframes respiro-de-luz {
+  from {
+    opacity: 0.55;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1.07) translate3d(-1.4%, 1%, 0);
+  }
+}
+
+.portada__confeti {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* --- El texto, por encima de todo --- */
+
+.portada__texto {
+  position: relative;
+  z-index: 6;
+  max-width: min(46rem, 52%);
 }
 
 /*
  * Instrument Serif ya es estrecha y de alto contraste: no necesita que se le
  * cierre el interletraje como pedía Georgia, y agradece un poco más de
  * interlínea para que los remates no se toquen.
+ *
+ * La sombra es el seguro: el velo ya garantiza el contraste, pero el fondo se
+ * mueve, y una sombra suave asegura el borde de las letras en cualquier
+ * fotograma sin que se note que está ahí.
  */
 .portada h1 {
   max-width: 20ch;
   font-family: var(--titulares);
-  font-size: clamp(2.7rem, 5.6vw, 4.9rem);
+  font-size: clamp(3rem, 7.5vw, 6.5rem);
   font-weight: 400;
-  line-height: 1.02;
+  line-height: 1;
   letter-spacing: -0.012em;
+  text-shadow: 0 0.05em 0.7em rgba(2, 8, 6, 0.6);
 }
 
 .portada h1 em {
@@ -256,18 +429,84 @@
   font-style: italic;
 }
 
-.portada p {
-  max-width: 46ch;
-  margin-top: 1.4rem;
-  color: rgba(246, 243, 233, 0.78);
-  font-size: clamp(0.9rem, 1.2vw, 1.05rem);
+.portada__texto > p {
+  max-width: 44ch;
+  margin-top: 1.6rem;
+  color: rgba(246, 243, 233, 0.82);
+  font-size: clamp(0.95rem, 1.25vw, 1.12rem);
+  line-height: 1.65;
+  text-shadow: 0 0.06em 0.6em rgba(2, 8, 6, 0.55);
 }
 
 .portada__acciones {
   display: flex;
   gap: 0.75rem;
-  margin-top: 2.2rem;
+  margin-top: 2.4rem;
   flex-wrap: wrap;
+}
+
+/* Indicador de que hay más abajo: sin él, una portada a pantalla completa
+   parece el final de la página. */
+.portada__bajar {
+  position: absolute;
+  z-index: 6;
+  bottom: clamp(1.5rem, 4vh, 2.75rem);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  transform: translateX(-50%);
+  border: 0;
+  padding: 0.5rem 0.9rem;
+  color: rgba(246, 243, 233, 0.72);
+  background: transparent;
+  font-size: 0.66rem;
+  font-weight: 600;
+  font-stretch: 86%;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 200ms ease;
+}
+
+.portada__bajar:hover {
+  color: var(--acento);
+}
+
+.portada__bajar svg {
+  animation: bajar-flecha 2.4s ease-in-out infinite;
+}
+
+@keyframes bajar-flecha {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(0.3rem);
+  }
+}
+
+@media (max-width: 860px) {
+  .portada__texto {
+    max-width: 100%;
+  }
+
+  /* En vertical el degradado lateral no sirve: el texto ocupa todo el ancho,
+     así que el velo pasa a ser de abajo hacia arriba. */
+  .fondo-estadio__velo {
+    background:
+      linear-gradient(
+        to top,
+        rgba(4, 12, 10, 0.95) 0%,
+        rgba(4, 12, 10, 0.9) 42%,
+        rgba(4, 12, 10, 0.72) 64%,
+        rgba(4, 12, 10, 0.5) 82%,
+        rgba(4, 12, 10, 0.42) 100%
+      ),
+      linear-gradient(to bottom, rgba(4, 12, 10, 0.7) 0%, rgba(4, 12, 10, 0) 22%);
+  }
 }
 
 .antetitulo-claro {

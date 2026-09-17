@@ -78,6 +78,19 @@
   background: rgba(11, 29, 23, 0.06);
 }
 
+/* Contorno claro, para usarse sobre la portada oscura. */
+.boton--claro {
+  border-color: rgba(246, 243, 233, 0.34);
+  color: #f6f3e9;
+  background: rgba(246, 243, 233, 0.06);
+  backdrop-filter: blur(6px);
+}
+
+.boton--claro:hover {
+  border-color: rgba(246, 243, 233, 0.6);
+  background: rgba(246, 243, 233, 0.14);
+}
+
 .boton--peligro {
   border-color: rgba(162, 59, 42, 0.3);
   color: var(--error);

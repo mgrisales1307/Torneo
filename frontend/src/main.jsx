@@ -6,6 +6,23 @@ import { ProveedorDeSesion } from './contexto/ProveedorDeSesion'
 import App from './App.jsx'
 import './index.css'
 
+/*
+ * Ancho real de la barra de desplazamiento, publicado como variable CSS.
+ *
+ * La portada se sale del contenedor centrado con `100vw`, y `100vw` incluye la
+ * barra. En los navegadores con barra clásica —Windows, casi todo Linux— eso
+ * hace que la portada sobresalga y aparezca un scroll horizontal en el sitio
+ * entero. Restando esta medida, encaja al píxel en cualquier navegador.
+ */
+function medirLaBarraDeDesplazamiento() {
+  const ancho = window.innerWidth - document.documentElement.clientWidth
+
+  document.documentElement.style.setProperty('--barra', `${Math.max(ancho, 0)}px`)
+}
+
+medirLaBarraDeDesplazamiento()
+window.addEventListener('resize', medirLaBarraDeDesplazamiento)
+
 /**
  * Configuración de la caché de datos.
  *

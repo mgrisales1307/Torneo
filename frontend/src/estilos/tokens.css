@@ -65,4 +65,9 @@
 
   /* Ancho al que se estrechan las cifras y las tablas. */
   --ancho-datos: 84%;
+
+  /* Aire entre la cabecera y el contenido. Está aquí, y no suelto en la regla
+     de `.sitio__contenido`, porque la portada necesita restarlo para poder
+     subirse hasta el borde de la pantalla. */
+  --aire-contenido: clamp(1.75rem, 4vw, 3rem);
 }

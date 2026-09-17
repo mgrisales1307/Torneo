@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowUpRight, CalendarDays, Trophy } from 'lucide-react'
+import { ArrowDown, ArrowUpRight, CalendarDays, Trophy } from 'lucide-react'
 import { obtenerInicio } from '../../lib/api'
 import { Aviso, Cargando } from '../../componentes/ui/Basicos'
 import { TarjetaDeTorneo } from '../../componentes/torneo/TarjetaDeTorneo'
 import { TarjetaDePartido } from '../../componentes/torneo/TarjetaDePartido'
-import estadio from '../../assets/estadio-hinchada.jpg'
+import { FondoDeEstadio } from '../../componentes/portada/FondoDeEstadio'
 
 export default function Inicio() {
   const { data, isPending, isError } = useQuery({
@@ -16,30 +16,41 @@ export default function Inicio() {
   return (
     <>
       <section className="portada">
-        <img className="portada__foto" src={estadio} alt="" aria-hidden="true" fetchPriority="high" />
-        <span className="portada__velo" aria-hidden="true" />
+        <FondoDeEstadio />
 
-        <p className="antetitulo-claro">
-          <span aria-hidden="true" /> El fútbol se vive aquí
-        </p>
-        <h1>
-          Cada partido.
-          <br />
-          <em>Cada historia.</em>
-        </h1>
-        <p>
-          Sigue la tabla, el calendario y los goleadores de cada torneo en tiempo real. Y si tienes equipo,
-          inscríbelo, arma tu plantilla y sal a competir.
-        </p>
+        <div className="portada__texto">
+          <p className="antetitulo-claro">
+            <span aria-hidden="true" /> El fútbol se vive aquí
+          </p>
+          <h1>
+            Cada partido.
+            <br />
+            <em>Cada historia.</em>
+          </h1>
+          <p>
+            Sigue la tabla, el calendario y los goleadores de cada torneo en tiempo real. Y si tienes
+            equipo, inscríbelo, arma tu plantilla y sal a competir.
+          </p>
 
-        <div className="portada__acciones">
-          <Link className="boton boton--acento" to="/torneos">
-            <Trophy size={16} /> Ver torneos
-          </Link>
-          <Link className="boton boton--contorno" to="/registro" style={{ color: '#f6f3e9', borderColor: 'rgba(246,243,233,.32)' }}>
-            Inscribir mi equipo <ArrowUpRight size={16} />
-          </Link>
+          <div className="portada__acciones">
+            <Link className="boton boton--acento" to="/torneos">
+              <Trophy size={16} /> Ver torneos
+            </Link>
+            <Link className="boton boton--claro" to="/registro">
+              Inscribir mi equipo <ArrowUpRight size={16} />
+            </Link>
+          </div>
         </div>
+
+        <button
+          className="portada__bajar"
+          type="button"
+          onClick={() =>
+            document.getElementById('lo-que-pasa')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+          }
+        >
+          Ver la competencia <ArrowDown size={14} aria-hidden="true" />
+        </button>
       </section>
 
       {isError && (
@@ -55,7 +66,7 @@ export default function Inicio() {
 
       {data && (
         <>
-          <div className="cifras">
+          <div className="cifras" id="lo-que-pasa">
             <div className="cifra">
               <strong>{data.cifras.torneos}</strong>
               <span>Torneos</span>

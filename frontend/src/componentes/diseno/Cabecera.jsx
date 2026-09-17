@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, LogOut, Menu, ShieldCheck, Trophy, X } from 'lucide-react'
 import { useSesion } from '../../contexto/contextoDeSesion'
 import { iniciales } from '../../lib/formato'
@@ -14,7 +14,56 @@ export function Cabecera() {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [menuUsuario, setMenuUsuario] = useState(false)
   const contenedorDelMenu = useRef(null)
+  const elementoCabecera = useRef(null)
   const navegar = useNavigate()
+  const { pathname } = useLocation()
+
+  /*
+   * El alto de la cabecera se publica como variable CSS porque la portada
+   * necesita subirse exactamente esa distancia para empezar detrás de ella y
+   * llenar la pantalla. Se mide en vez de fijarse a mano: depende de la fuente,
+   * del zoom y de si el menú móvil está abierto, así que cualquier constante se
+   * desajustaría.
+   */
+  useEffect(() => {
+    const elemento = elementoCabecera.current
+
+    if (!elemento) return undefined
+
+    const observador = new ResizeObserver(([entrada]) => {
+      document.documentElement.style.setProperty(
+        '--alto-cabecera',
+        `${entrada.target.getBoundingClientRect().height}px`,
+      )
+    })
+
+    observador.observe(elemento)
+
+    return () => observador.disconnect()
+  }, [])
+
+  /*
+   * Sobre la portada a pantalla completa la cabecera va transparente, para no
+   * cortar la imagen con una banda clara; en cuanto se desplaza un poco,
+   * recupera su fondo para que los enlaces sigan legibles sobre el contenido.
+   *
+   * El estado se inicializa leyendo el scroll actual en vez de dentro de un
+   * efecto: si se recarga la página a media altura, la cabecera ya nace sólida
+   * y no se ve el cambio.
+   */
+  const [desplazada, setDesplazada] = useState(() => window.scrollY > 48)
+
+  useEffect(() => {
+    function alDesplazar() {
+      setDesplazada(window.scrollY > 48)
+    }
+
+    window.addEventListener('scroll', alDesplazar, { passive: true })
+
+    return () => window.removeEventListener('scroll', alDesplazar)
+  }, [])
+
+  const sobreLaPortada = pathname === '/' && !desplazada
 
   function cerrarMenus() {
     setMenuAbierto(false)
@@ -39,7 +88,10 @@ export function Cabecera() {
   }
 
   return (
-    <header className="cabecera">
+    <header
+      className={`cabecera ${sobreLaPortada ? 'cabecera--sobre-portada' : ''}`}
+      ref={elementoCabecera}
+    >
       <div className="contenedor cabecera__fila">
         <Link className="logo" to="/" aria-label="Juegos Zone, inicio">
           <span className="logo__sello" aria-hidden="true">

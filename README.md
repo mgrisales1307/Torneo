@@ -142,6 +142,52 @@ Dos detalles que conviene no deshacer:
   `font-weight: 730` o tracking cerrado en el texto corrido son lo que le da a
   una interfaz ese aire de plantilla generada.
 
+### La portada animada
+
+El home abre con el estadio a pantalla completa, en vídeo. Se apila en cinco
+capas, de atrás hacia delante: el cartel (un fotograma, para que haya imagen en
+el primer pintado), el vídeo en bucle, el velo degradado, los rayos de luz y el
+confeti.
+
+**Procedencia del metraje.** Es un clip de [Pexels]
+(https://www.pexels.com/video/exciting-night-football-match-in-stadium-35002181/),
+bajo licencia Pexels: libre para uso comercial y no comercial, sin atribución
+obligatoria. Se sustituyó la imagen anterior, que era una previsualización de
+Adobe Stock con la marca de agua visible y sin licencia.
+
+**Cómo se preparó**, por si hay que rehacerlo con otro plano:
+
+1. El original viene en 2560 × 1440. Las versiones 4K de Pexels están tras
+   descarga firmada, así que **el máster es de 1440p, no de 4K**.
+2. Se recortó a 10,5 s y se hizo un bucle sin costura mezclando la cola con la
+   cabeza con un cruce de 1,5 s. La diferencia entre el primer y el último
+   fotograma quedó en el 2,2%: el salto no se percibe.
+3. Se codificó sin reducción de ruido —el denoise borraba los destellos de los
+   móviles en la tribuna, que es lo más bonito del plano— y con CRF 34, que
+   compensa el peso.
+4. Salen tres archivos: 1440p para escritorio (3,5 MB), 720p para móviles
+   (1,5 MB) y el cartel en JPEG (0,15 MB). Quien pide movimiento reducido, quien
+   navega con ahorro de datos y quien está en 2G recibe solo el cartel.
+
+**Por qué no es 4K servido al navegador.** Ese mismo plano en 4K pesa 52 MB por
+diez segundos. Un fondo que va oscurecido bajo un velo y detrás de un texto no
+gana nada perceptible con esa resolución, y sí perdería a cualquiera con una
+conexión normal.
+
+**La legibilidad del texto está medida, no estimada.** Se muestreó el brillo del
+vídeo fotograma a fotograma y se compuso el velo encima para calcular el
+contraste real del texto crema en el peor momento del bucle:
+
+| | Contraste | WCAG |
+| --- | --- | --- |
+| Sin velo | 1,28:1 | ilegible |
+| Con el velo actual | 8,54:1 | cumple AA (4,5:1) y AAA (7:1) |
+
+El velo es degradado y no plano porque un velo uniforme necesitaría oscurecer el
+78% de toda la imagen para alcanzar el mínimo, y entonces el vídeo no se vería.
+**Si se cambia el metraje o se mueve el texto de sitio, hay que volver a medir**:
+esos números valen para este plano.
+
 ### Convención de nombres
 
 **Todo el código del proyecto está en español**: clases, métodos, tablas,
