@@ -67,16 +67,33 @@ docker compose exec api php artisan migrate:fresh --seed
 Hay dos dueños más (`dueno2@` y `dueno3@juegoszone.com`, misma contraseña) para
 probar que nadie puede tocar el equipo de otro.
 
-Se crean solas al levantar el contenedor y volver a sembrar no las duplica. Son
-**exclusivamente para desarrollo local**.
+Son **exclusivamente para desarrollo local**. `admin` y `empleado` se aseguran
+en cada arranque, porque sin ellas nadie puede entrar al panel de organización.
+Las demás —los tres dueños y el espectador— solo se crean en una base de datos
+recién nacida.
 
 ### Datos de demostración
 
 La primera vez que arranca, la base se llena con un torneo completo: ocho
 equipos con plantilla, calendario generado y las primeras cuatro jornadas ya
 jugadas, más un segundo torneo con las inscripciones abiertas para probar el
-flujo de pago. Solo se siembra si todavía no hay ningún torneo, así que nunca
-pisa lo que hayas creado a mano.
+flujo de pago.
+
+Se siembra **solo en una base recién creada**. Esto importa: el arranque del
+contenedor ejecuta `migrate --seed` cada vez, así que si la condición fuera
+más laxa, un reinicio le devolvería los datos de prueba a quien acaba de
+borrarlos, y hasta le crearía equipos de demostración a nombre de su propia
+cuenta.
+
+Para vaciar la base y volver a empezar con la demostración:
+
+```bash
+docker compose exec api php artisan migrate:fresh --seed
+```
+
+Y para trabajar con la base limpia, sin datos de prueba, basta borrar lo que
+sobre: los reinicios respetan ese estado y solo se aseguran de que existan
+`admin` y `empleado`.
 
 ---
 
