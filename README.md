@@ -411,13 +411,32 @@ lsof -i :5173
 Vite falla a propósito en vez de cambiarse de puerto en silencio: el backend
 espera el 5173, y un cambio de puerto rompería el login.
 
-**Los escudos y las fotos no se ven**
-Falta el enlace del disco público. Se crea solo al arrancar el contenedor, pero
-se puede forzar:
+**Los escudos y las fotos no se ven (salen como imagen rota, o dan 403)**
+El enlace `backend/public/storage` está roto. Pasa cuando se crea desde el host
+—por ejemplo al correr `php artisan storage:link` fuera de Docker—, porque
+entonces apunta a una ruta absoluta del host que dentro del contenedor no
+existe; y también al revés. El arranque del contenedor lo rehace en cada
+inicio como enlace *relativo*, que sí vale en los dos sitios, así que basta
+reiniciar:
 
 ```bash
-docker compose exec api php artisan storage:link
+docker compose restart api
 ```
+
+Si prefieres arreglarlo sin reiniciar, desde la carpeta del proyecto:
+
+```bash
+ln -sfn ../storage/app/public backend/public/storage
+```
+
+Para comprobar que quedó bien, el enlace tiene que verse relativo:
+
+```bash
+ls -l backend/public/storage
+```
+
+Debe decir `storage -> ../storage/app/public`. Si dice una ruta que empieza por
+`/home/...` o `/var/www/...`, está mal.
 
 **`npm install` tarda minutos, o Vite arranca sin leer `vite.config.js`**
 Se está usando el Node de **Windows** sobre la carpeta de WSL. Compruébalo

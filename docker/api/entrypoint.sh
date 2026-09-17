@@ -49,9 +49,17 @@ as_host mkdir -p \
 
 as_host touch database/database.sqlite
 
-# Enlace público del disco de imágenes (escudos, uniformes y fotos). Es
-# idempotente: si ya existe, no hace nada.
-as_host php artisan storage:link --quiet || true
+# Enlace público del disco de imágenes (escudos, uniformes y fotos).
+#
+# Va con `--relative` a propósito: el enlace queda como `../storage/app/public`
+# y así es válido tanto dentro del contenedor como en la carpeta del host, que
+# son el mismo directorio montado en rutas distintas. Con un enlace absoluto,
+# el que crea uno de los dos entornos queda roto en el otro, y las imágenes
+# responden 403.
+#
+# Y va con `--force` porque, si el enlace ya existe pero apunta a donde no debe,
+# Laravel lo deja como está: hay que rehacerlo en cada arranque para repararlo.
+as_host php artisan storage:link --relative --force --quiet || true
 
 as_host php artisan migrate --seed --force
 
