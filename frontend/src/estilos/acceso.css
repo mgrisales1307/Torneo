@@ -105,9 +105,9 @@
   align-items: center;
   gap: 0.8rem;
   color: inherit;
-  font-size: 0.84rem;
-  font-weight: 720;
-  letter-spacing: -0.01em;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
   text-decoration: none;
 }
 
@@ -121,9 +121,10 @@
   background: rgba(9, 24, 19, 0.35);
   backdrop-filter: blur(6px);
   color: var(--acento);
-  font-size: 0.72rem;
-  font-weight: 760;
-  letter-spacing: -0.08em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  font-stretch: 78%;
+  letter-spacing: 0.02em;
 }
 
 .edicion,
@@ -132,9 +133,10 @@
 .antetitulo,
 .acceso-pie {
   text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.64rem;
-  font-weight: 710;
+  letter-spacing: 0.15em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-stretch: 88%;
 }
 
 .edicion {
@@ -163,12 +165,18 @@
   background: currentColor;
 }
 
+/*
+ * El titular grande, ya en Instrument Serif: se le quita el tracking cerrado
+ * que necesitaba Manrope y se le da algo más de interlínea, porque los remates
+ * de una serif de alto contraste se tocan si se aprietan.
+ */
 .marca-texto h1 {
   margin: 0;
-  font-size: clamp(3.8rem, 5.7vw, 6.75rem);
-  font-weight: 540;
-  line-height: 0.92;
-  letter-spacing: -0.055em;
+  font-family: var(--titulares);
+  font-size: clamp(3.6rem, 5.5vw, 6.5rem);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -0.012em;
   text-shadow: 0 0.15em 1.6rem rgba(6, 18, 14, 0.55);
 }
 
@@ -176,10 +184,10 @@
   display: inline-block;
   margin-top: 0.08em;
   color: var(--acento);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-style: normal;
+  font-family: var(--titulares);
+  font-style: italic;
   font-weight: 400;
-  letter-spacing: -0.045em;
+  letter-spacing: -0.008em;
 }
 
 .marca-descripcion {
@@ -223,9 +231,9 @@
   align-items: center;
   gap: 0.45rem;
   color: #53635b;
-  font-size: 0.68rem;
-  font-weight: 670;
-  letter-spacing: 0.015em;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 .acceso-numero {
@@ -247,11 +255,11 @@
 .sesion-vista h2 {
   margin: 0;
   color: var(--tinta);
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(2.8rem, 3.7vw, 4rem);
+  font-family: var(--titulares);
+  font-size: clamp(2.9rem, 3.8vw, 4.1rem);
   font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  line-height: 1.02;
+  letter-spacing: -0.01em;
 }
 
 .formulario-encabezado > p:last-child,
@@ -274,9 +282,9 @@
   display: block;
   margin: 0 0 0.55rem;
   color: #526058;
-  font-size: 0.68rem;
-  font-weight: 720;
-  letter-spacing: 0.025em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .campo-caja {
@@ -411,8 +419,8 @@
   gap: 0.75rem;
   border: 0;
   border-radius: 999px;
-  font-size: 0.78rem;
-  font-weight: 720;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
 }
@@ -478,8 +486,9 @@
   border-radius: 50%;
   color: var(--acento);
   background: var(--tinta);
-  font-size: 0.68rem;
-  font-weight: 760;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-stretch: 80%;
 }
 
 .tarjeta-perfil > div:nth-child(2) {
@@ -513,8 +522,10 @@
   padding: 0.38rem 0.58rem;
   color: #526058;
   background: var(--papel-hondo);
-  font-size: 0.56rem;
-  font-weight: 730;
+  font-size: 0.62rem;
+  font-weight: 600;
+  font-stretch: 88%;
+  letter-spacing: 0.01em;
 }
 
 .boton-secundario {

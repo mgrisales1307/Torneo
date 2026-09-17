@@ -16,18 +16,35 @@ body {
   margin: 0;
   color: var(--tinta);
   background: var(--papel);
-  font-family: var(--sans);
-  font-synthesis: none;
+  font-family: var(--interfaz);
+  font-size: 1rem;
+  line-height: 1.55;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*
+ * Archivo tiene una altura de x alta y formas estrechas, así que no necesita
+ * que se le cierre el interletraje. El tracking negativo se reserva para los
+ * titulares grandes, donde sí hace falta.
+ */
 h1, h2, h3, h4 {
   margin: 0;
-  font-weight: 620;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+
+/*
+ * La voz de los datos: la misma Archivo estrechada, con cifras tabulares para
+ * que las columnas de números queden a plomo. Se usa en tablas, marcadores,
+ * minutos y dorsales.
+ */
+.datos {
+  font-stretch: var(--ancho-datos);
+  font-variant-numeric: tabular-nums;
 }
 
 p {

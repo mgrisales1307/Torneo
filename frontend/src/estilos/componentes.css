@@ -18,8 +18,8 @@
   border-radius: 999px;
   padding: 0 1.25rem;
   font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-weight: 600;
+  letter-spacing: 0;
   white-space: nowrap;
   cursor: pointer;
   transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease,
@@ -108,9 +108,9 @@
 
 .campo__etiqueta {
   color: #526058;
-  font-size: 0.68rem;
-  font-weight: 720;
-  letter-spacing: 0.02em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .campo__control {
@@ -235,8 +235,9 @@ textarea.campo__control {
   gap: 0.35rem;
   border-radius: 999px;
   padding: 0.3rem 0.65rem;
-  font-size: 0.66rem;
-  font-weight: 720;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-stretch: 92%;
   letter-spacing: 0.01em;
   white-space: nowrap;
 }
@@ -329,12 +330,13 @@ textarea.campo__control {
 }
 
 .tabla th {
-  padding: 0.85rem 0.9rem;
+  padding: 0.8rem 0.9rem;
   color: #6f7a75;
   background: rgba(232, 228, 217, 0.5);
-  font-size: 0.64rem;
-  font-weight: 730;
-  letter-spacing: 0.1em;
+  font-size: 0.66rem;
+  font-weight: 600;
+  font-stretch: 80%;
+  letter-spacing: 0.09em;
   text-align: left;
   text-transform: uppercase;
   white-space: nowrap;
@@ -350,7 +352,14 @@ textarea.campo__control {
   background: rgba(242, 239, 230, 0.6);
 }
 
+/*
+ * Las columnas de cifras van estrechas y tabulares. Hace falta de verdad: los
+ * dígitos de Archivo son proporcionales por omisión (575, 576 y 577 unidades
+ * según el caso), así que sin `tabular-nums` las columnas se desalinean unas
+ * décimas por fila. Con la característica `tnum` activada, todos miden igual.
+ */
 .tabla .numerico {
+  font-stretch: var(--ancho-datos);
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
@@ -370,8 +379,9 @@ textarea.campo__control {
   border-radius: 50%;
   color: var(--acento);
   background: var(--tinta);
-  font-weight: 760;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  font-stretch: 78%;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 
@@ -425,8 +435,8 @@ textarea.campo__control {
   padding: 0.85rem 1rem;
   color: var(--apagado);
   background: transparent;
-  font-size: 0.82rem;
-  font-weight: 680;
+  font-size: 0.84rem;
+  font-weight: 500;
   white-space: nowrap;
   cursor: pointer;
   transition: color 160ms ease;

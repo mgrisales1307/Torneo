@@ -44,7 +44,25 @@
   --radio-grande: 1.4rem;
   --ancho-contenido: 76rem;
 
-  /* Tipografía */
-  --serif: Georgia, 'Times New Roman', serif;
-  --sans: 'Manrope Variable', system-ui, sans-serif;
+  /* Tipografía
+   *
+   * Dos familias que dan tres voces:
+   *
+   *   --titulares  Instrument Serif. Alto contraste, de aire editorial. Solo
+   *                para titulares grandes: es una fuente de display y a tamaño
+   *                de párrafo se cansa la vista.
+   *   --interfaz   Archivo, la grotesca de Omnibus-Type hecha para prensa.
+   *                Todo el texto de la interfaz. Trae cifras tabulares de
+   *                verdad, que es lo que necesita una tabla de posiciones.
+   *   (datos)      La misma Archivo estrechada con su eje de ancho, con la
+   *                clase .datos. Así se compone una tabla en un periódico
+   *                deportivo: entra más en la columna y las cifras se alinean.
+   *
+   * Las dos van en el repositorio; no se pide nada a ningún servidor ajeno.
+   */
+  --titulares: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --interfaz: 'Archivo Variable', system-ui, 'Segoe UI', Arial, sans-serif;
+
+  /* Ancho al que se estrechan las cifras y las tablas. */
+  --ancho-datos: 84%;
 }

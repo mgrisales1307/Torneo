@@ -134,20 +134,11 @@ export function DialogoDeResultado({ partido, alCerrar }) {
         <Cargando texto="Cargando las plantillas…" />
       ) : (
         <form style={{ display: 'grid', gap: '1.2rem' }} onSubmit={alEnviar}>
-          <div
-            style={{
-              display: 'grid',
-              placeItems: 'center',
-              gap: '.35rem',
-              borderRadius: 'var(--radio)',
-              padding: '1.1rem',
-              background: 'var(--papel-hondo)',
-            }}
-          >
-            <strong style={{ fontFamily: 'var(--serif)', fontSize: '2.2rem', fontWeight: 400 }}>
+          <div className="tablero">
+            <strong className="tablero__marcador">
               {marcador.local} – {marcador.visitante}
             </strong>
-            <span style={{ color: 'var(--apagado)', fontSize: '.74rem' }}>
+            <span className="tablero__equipos">
               {partido.equipo_local.abreviatura} vs {partido.equipo_visitante.abreviatura}
             </span>
           </div>

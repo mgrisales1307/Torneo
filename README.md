@@ -99,6 +99,32 @@ Los valores que la API necesita para reconocer al frontend están fijados en
 [`compose.yaml`](compose.yaml), no en `backend/.env`, porque las variables de
 entorno del contenedor tienen prioridad.
 
+### Tipografía
+
+Dos familias, las dos alojadas en el propio proyecto (paquetes de Fontsource en
+`node_modules`), nunca pedidas a Google Fonts: así la aplicación no depende de
+un tercero y no se filtra la IP de quien nos visita.
+
+| Voz | Familia | Dónde |
+| --- | --- | --- |
+| Titulares | **Instrument Serif** | Portadas, nombres de torneo, títulos de sección |
+| Interfaz | **Archivo** | Todo el texto, botones, formularios |
+| Datos | **Archivo estrechada** (clase `.datos`) | Tablas, marcadores, minutos, dorsales |
+
+La tercera voz no es una tercera fuente: Archivo es variable y trae un **eje de
+ancho** (62 %–125 %), así que la misma familia se estrecha para las columnas de
+cifras, como se compone una tabla de posiciones en un periódico deportivo.
+
+Dos detalles que conviene no deshacer:
+
+- Las cifras de las tablas llevan `font-variant-numeric: tabular-nums`. Hace
+  falta de verdad: los dígitos de Archivo miden 575, 576 o 577 unidades según
+  el caso, y sin esa propiedad las columnas se desalinean fila a fila.
+- Los pesos son los de la escala (400, 500, 600, 700) y el interletraje
+  negativo se reserva para los titulares grandes. Valores intermedios del tipo
+  `font-weight: 730` o tracking cerrado en el texto corrido son lo que le da a
+  una interfaz ese aire de plantilla generada.
+
 ### Convención de nombres
 
 **Todo el código del proyecto está en español**: clases, métodos, tablas,

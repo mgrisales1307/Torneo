@@ -38,9 +38,9 @@
   display: inline-flex;
   align-items: center;
   gap: 0.65rem;
-  font-size: 0.88rem;
-  font-weight: 760;
-  letter-spacing: -0.02em;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
 }
 
 .logo__sello {
@@ -51,8 +51,10 @@
   border-radius: 50%;
   color: var(--acento);
   background: var(--tinta);
-  font-size: 0.68rem;
-  letter-spacing: -0.06em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-stretch: 78%;
+  letter-spacing: 0.02em;
 }
 
 .navegacion {
@@ -66,8 +68,8 @@
   border-radius: 999px;
   padding: 0.5rem 0.85rem;
   color: var(--apagado);
-  font-size: 0.82rem;
-  font-weight: 640;
+  font-size: 0.84rem;
+  font-weight: 500;
   transition: color 160ms ease, background 160ms ease;
 }
 
@@ -100,8 +102,8 @@
   padding: 0.35rem 0.75rem 0.35rem 0.35rem;
   color: var(--tinta);
   background: var(--blanco);
-  font-size: 0.78rem;
-  font-weight: 660;
+  font-size: 0.8rem;
+  font-weight: 500;
   cursor: pointer;
   transition: border-color 160ms ease;
 }
@@ -173,8 +175,9 @@
   border-radius: 50%;
   color: var(--acento);
   background: var(--tinta);
-  font-size: 0.64rem;
-  font-weight: 760;
+  font-size: 0.66rem;
+  font-weight: 700;
+  font-stretch: 80%;
 }
 
 .boton-menu {
@@ -234,18 +237,23 @@
     radial-gradient(110% 80% at 80% 0%, rgba(234, 184, 87, 0.22), transparent 60%);
 }
 
+/*
+ * Instrument Serif ya es estrecha y de alto contraste: no necesita que se le
+ * cierre el interletraje como pedía Georgia, y agradece un poco más de
+ * interlínea para que los remates no se toquen.
+ */
 .portada h1 {
-  max-width: 18ch;
-  font-family: var(--serif);
-  font-size: clamp(2.6rem, 5.4vw, 4.6rem);
+  max-width: 20ch;
+  font-family: var(--titulares);
+  font-size: clamp(2.7rem, 5.6vw, 4.9rem);
   font-weight: 400;
-  line-height: 0.98;
-  letter-spacing: -0.04em;
+  line-height: 1.02;
+  letter-spacing: -0.012em;
 }
 
 .portada h1 em {
   color: var(--acento);
-  font-style: normal;
+  font-style: italic;
 }
 
 .portada p {
@@ -268,9 +276,10 @@
   gap: 0.7rem;
   margin-bottom: 1.5rem;
   color: var(--acento);
-  font-size: 0.64rem;
-  font-weight: 710;
-  letter-spacing: 0.16em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  font-stretch: 88%;
+  letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
@@ -297,17 +306,20 @@
 
 .cifra strong {
   display: block;
-  font-family: var(--serif);
-  font-size: 2rem;
+  font-family: var(--titulares);
+  font-size: 2.3rem;
   font-weight: 400;
-  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+  letter-spacing: -0.01em;
 }
 
 .cifra span {
   color: var(--apagado);
   font-size: 0.7rem;
-  font-weight: 640;
-  letter-spacing: 0.06em;
+  font-weight: 600;
+  font-stretch: 86%;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -327,10 +339,11 @@
 }
 
 .seccion__encabezado h2 {
-  font-family: var(--serif);
-  font-size: clamp(1.5rem, 2.6vw, 2.1rem);
+  font-family: var(--titulares);
+  font-size: clamp(1.6rem, 2.7vw, 2.25rem);
   font-weight: 400;
-  letter-spacing: -0.035em;
+  line-height: 1.08;
+  letter-spacing: -0.008em;
 }
 
 .seccion__encabezado p {
@@ -431,10 +444,11 @@
 }
 
 .torneo-cabecera h1 {
-  font-family: var(--serif);
-  font-size: clamp(2rem, 4.2vw, 3.2rem);
+  font-family: var(--titulares);
+  font-size: clamp(2.1rem, 4.3vw, 3.4rem);
   font-weight: 400;
-  letter-spacing: -0.04em;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
 }
 
 .torneo-cabecera__datos {
@@ -476,8 +490,8 @@
   align-items: center;
   gap: 0.6rem;
   min-width: 0;
-  font-size: 0.85rem;
-  font-weight: 640;
+  font-size: 0.86rem;
+  font-weight: 500;
 }
 
 .partido__equipo--visitante {
@@ -498,18 +512,24 @@
   min-width: 5.5rem;
 }
 
+/*
+ * El marcador se compone como un tablero, no como un titular: Archivo
+ * estrechada, peso fuerte y cifras tabulares. Así «10 – 0» y «1 – 1» ocupan
+ * exactamente lo mismo y la columna del centro no se mueve entre partidos.
+ */
 .partido__marcador {
-  font-family: var(--serif);
-  font-size: 1.5rem;
-  font-weight: 400;
-  letter-spacing: -0.03em;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-stretch: 78%;
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
 }
 
 .partido__hora {
   color: var(--apagado);
-  font-size: 0.72rem;
-  font-weight: 660;
+  font-size: 0.74rem;
+  font-weight: 500;
+  font-stretch: 92%;
 }
 
 .partido__pie {
@@ -524,15 +544,47 @@
   font-size: 0.7rem;
 }
 
+/*
+ * Tablero del diálogo de carga de resultados. Misma voz que el marcador de la
+ * lista de partidos, para que la organización vea el mismo número que verá el
+ * público.
+ */
+.tablero {
+  display: grid;
+  place-items: center;
+  gap: 0.35rem;
+  border-radius: var(--radio);
+  padding: 1.1rem;
+  background: var(--papel-hondo);
+}
+
+.tablero__marcador {
+  font-size: 2.2rem;
+  font-weight: 700;
+  font-stretch: 76%;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.tablero__equipos {
+  color: var(--apagado);
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-stretch: 86%;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .jornada-titulo {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin: 1.75rem 0 0.9rem;
   color: var(--apagado);
-  font-size: 0.66rem;
-  font-weight: 730;
-  letter-spacing: 0.14em;
+  font-size: 0.7rem;
+  font-weight: 600;
+  font-stretch: 84%;
+  letter-spacing: 0.13em;
   text-transform: uppercase;
 }
 
@@ -546,6 +598,13 @@
 .lista-partidos {
   display: grid;
   gap: 0.7rem;
+}
+
+/* Las abreviaturas de la tabla (PJ, G, E, P, GF, GC, DG) llevan su significado
+   en el title, pero sin el subrayado punteado que añade el navegador. */
+.tabla abbr[title] {
+  text-decoration: none;
+  cursor: help;
 }
 
 /* ---------------------------------------------------------------- Forma */
@@ -562,8 +621,9 @@
   place-items: center;
   border-radius: 0.3rem;
   color: var(--blanco);
-  font-size: 0.6rem;
-  font-weight: 760;
+  font-size: 0.64rem;
+  font-weight: 700;
+  font-stretch: 80%;
 }
 
 .forma__marca--V {
@@ -590,10 +650,11 @@
 }
 
 .panel-cabecera h1 {
-  font-family: var(--serif);
-  font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+  font-family: var(--titulares);
+  font-size: clamp(2rem, 3.5vw, 2.7rem);
   font-weight: 400;
-  letter-spacing: -0.04em;
+  line-height: 1.06;
+  letter-spacing: -0.01em;
 }
 
 .panel-cabecera p {
@@ -621,8 +682,8 @@
   padding: 0.5rem 0.95rem;
   color: var(--apagado);
   background: var(--blanco);
-  font-size: 0.78rem;
-  font-weight: 660;
+  font-size: 0.8rem;
+  font-weight: 500;
   white-space: nowrap;
   transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
 }
@@ -730,7 +791,8 @@
 
 .detalle-lista strong {
   text-align: right;
-  font-weight: 700;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .evento-fila {
@@ -749,9 +811,10 @@
 
 .evento-fila__minuto {
   color: var(--apagado);
-  font-size: 0.72rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  font-stretch: var(--ancho-datos);
   font-variant-numeric: tabular-nums;
-  font-weight: 700;
 }
 
 /* ------------------------------------------------------------ Adaptable */
