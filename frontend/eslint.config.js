@@ -25,4 +25,12 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  {
+    // Las pruebas montan componentes de apoyo que no se exportan, y la regla
+    // de recarga en caliente no tiene nada que decir sobre ellas.
+    files: ['src/pruebas/**/*.{js,jsx}'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

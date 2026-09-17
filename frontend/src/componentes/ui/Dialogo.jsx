@@ -11,11 +11,28 @@ import { Boton } from './Basicos'
 export function Dialogo({ abierto, titulo, descripcion, ancho = false, alCerrar, children }) {
   const contenedor = useRef(null)
 
+  /*
+   * La función de cierre se guarda en una referencia, y el efecto de abajo
+   * depende solo de `abierto`.
+   *
+   * No es un adorno: quien usa este componente le pasa a `alCerrar` una
+   * función declarada en el cuerpo de su propio componente, así que es una
+   * función distinta en cada render. Si el efecto dependiera de ella, cada
+   * tecla escrita en un campo del formulario re-renderizaría al padre,
+   * volvería a ejecutar el efecto y el `focus()` de abajo le quitaría el foco
+   * al campo. El resultado era que solo entraba la primera letra.
+   */
+  const alCerrarRef = useRef(alCerrar)
+
+  useEffect(() => {
+    alCerrarRef.current = alCerrar
+  }, [alCerrar])
+
   useEffect(() => {
     if (!abierto) return undefined
 
     function alPulsarTecla(evento) {
-      if (evento.key === 'Escape') alCerrar()
+      if (evento.key === 'Escape') alCerrarRef.current()
     }
 
     document.addEventListener('keydown', alPulsarTecla)
@@ -26,7 +43,7 @@ export function Dialogo({ abierto, titulo, descripcion, ancho = false, alCerrar,
       document.removeEventListener('keydown', alPulsarTecla)
       document.body.style.overflow = ''
     }
-  }, [abierto, alCerrar])
+  }, [abierto])
 
   if (!abierto) return null
 

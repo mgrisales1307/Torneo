@@ -6,6 +6,13 @@ const apiPort = process.env.API_PORT ?? '8000'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    globals: false,
+    setupFiles: ['./src/pruebas/preparacion.js'],
+    include: ['src/**/*.prueba.jsx'],
+  },
+
   server: {
     host: '0.0.0.0',
     port: 5173,

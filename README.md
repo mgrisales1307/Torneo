@@ -302,12 +302,21 @@ docker compose exec api bash
 ### Comandos del frontend
 
 ```bash
+cd frontend && npm test
+```
+
+```bash
 cd frontend && npm run lint
 ```
 
 ```bash
 cd frontend && npm run build
 ```
+
+Las pruebas del frontend viven en `src/pruebas` y corren con Vitest sobre un
+DOM simulado. Son pocas y van al grano: cubren el comportamiento que no se ve
+en el código pero se sufre al usarlo —por ejemplo, que un campo dentro de un
+modal deje escribir seguido sin perder el foco—.
 
 ---
 
