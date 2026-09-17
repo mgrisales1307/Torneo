@@ -46,10 +46,13 @@
   color: #f6f3e9;
 }
 
+/* Sobre la portada los enlaces van sueltos, sin la píldora de fondo: el velo
+   superior del vídeo ya los deja legibles y la caja oscura solo ensuciaba la
+   imagen. La marca de la página activa se mantiene. */
 .cabecera--sobre-portada .navegacion {
-  border-color: rgba(246, 243, 233, 0.22);
-  background: rgba(8, 20, 16, 0.32);
-  backdrop-filter: blur(10px);
+  border-color: transparent;
+  background: transparent;
+  backdrop-filter: none;
 }
 
 .cabecera--sobre-portada .navegacion__enlace[aria-current='page'] {
@@ -68,6 +71,35 @@
 
 .cabecera--sobre-portada .boton-menu {
   color: #f6f3e9;
+}
+
+/*
+ * Los dos botones, sobre la portada.
+ *
+ * El sólido es tinta sobre tinta, así que ahí se invierte: crema con letra
+ * oscura, que es lo que más resalta sobre la imagen. Y «Entrar» pasa de
+ * fantasma —casi invisible— a un contorno claro, para que se lea como la
+ * segunda opción y no como un texto perdido.
+ */
+.cabecera--sobre-portada .boton--solido {
+  color: var(--tinta);
+  background: #f6f3e9;
+}
+
+.cabecera--sobre-portada .boton--solido:hover {
+  background: #fffdf8;
+}
+
+.cabecera--sobre-portada .boton--contorno {
+  border-color: rgba(246, 243, 233, 0.5);
+  color: #f6f3e9;
+  background: rgba(246, 243, 233, 0.08);
+  backdrop-filter: blur(6px);
+}
+
+.cabecera--sobre-portada .boton--contorno:hover {
+  border-color: #f6f3e9;
+  background: rgba(246, 243, 233, 0.18);
 }
 
 .cabecera__fila {
@@ -274,8 +306,8 @@
      contenedor: así llena la pantalla de borde a borde. La cabecera va con
      z-index mayor, así que sigue pintándose encima. */
   margin-top: calc(-1 * (var(--alto-cabecera, 4.6rem) + var(--aire-contenido)));
-  padding-block: calc(var(--alto-cabecera, 4.6rem) + clamp(2.5rem, 8vh, 6rem))
-    clamp(5rem, 12vh, 8rem);
+  padding-block: calc(var(--alto-cabecera, 4.6rem) + clamp(1.5rem, 5vh, 3.5rem))
+    clamp(4rem, 9vh, 6rem);
   padding-inline: clamp(1.25rem, 7vw, 7rem);
   overflow: clip;
   color: #f6f3e9;
@@ -399,10 +431,17 @@
 
 /* --- El texto, por encima de todo --- */
 
+/*
+ * La columna del texto es más ancha que antes porque el titular en versales
+ * estrechas ocupa mucho más de lo que parece: «CADA PARTIDO.» mide casi nueve
+ * eses de ancho, y con la columna estrecha partía en dos, de modo que el
+ * titular pasaba de dos líneas a cuatro y empujaba fuera de la pantalla el
+ * párrafo y los botones.
+ */
 .portada__texto {
   position: relative;
   z-index: 6;
-  max-width: min(46rem, 52%);
+  max-width: min(62rem, 70%);
 }
 
 /*

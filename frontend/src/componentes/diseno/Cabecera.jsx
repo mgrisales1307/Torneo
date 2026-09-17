@@ -203,7 +203,9 @@ export function Cabecera() {
             </div>
           ) : (
             <>
-              <Link className="boton boton--fantasma boton--chico" to="/ingreso">
+              {/* Contorno, no fantasma: en fantasma se perdía sobre la
+                  portada y no parecía pulsable. */}
+              <Link className="boton boton--contorno boton--chico" to="/ingreso">
                 Entrar
               </Link>
               <Link className="boton boton--solido boton--chico" to="/registro">
