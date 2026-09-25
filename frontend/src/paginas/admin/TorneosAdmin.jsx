@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Trophy } from 'lucide-react'
+import { ChevronRight, Plus, Settings, Trophy } from 'lucide-react'
 import { crearTorneo, erroresPorCampo, listarTorneosAdmin, mensajeDeError } from '../../lib/api'
 import { aCentavos, fechaCorta } from '../../lib/formato'
 import {
@@ -131,14 +131,18 @@ export default function TorneosAdmin() {
                 </th>
                 <th scope="col">Inicia</th>
                 <th scope="col">Inscripción</th>
+                <th scope="col" className="numerico">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
               {torneos.data.data.map((torneo) => (
-                <tr key={torneo.id}>
+                <tr key={torneo.id} className="fila-torneo">
                   <td>
-                    <Link to={`/organizacion/torneos/${torneo.slug}`}>
+                    <Link to={`/organizacion/torneos/${torneo.slug}`} className="enlace-torneo">
                       <strong>{torneo.nombre}</strong>
+                      <ChevronRight size={14} className="enlace-torneo__icono" />
                     </Link>
                     <div style={{ color: 'var(--apagado-claro)', fontSize: '.72rem' }}>
                       {torneo.formato.etiqueta}
@@ -153,6 +157,13 @@ export default function TorneosAdmin() {
                   <td className="numerico">{torneo.partidos_count ?? 0}</td>
                   <td>{fechaCorta(torneo.fechas.inicia_en)}</td>
                   <td>{torneo.inscripcion.costo_formateado}</td>
+                  <td className="numerico">
+                    <Link to={`/organizacion/torneos/${torneo.slug}`}>
+                      <Boton tamano="chico" iconoIzquierda={<Settings size={14} />}>
+                        Ajustes
+                      </Boton>
+                    </Link>
+                  </td>
                 </tr>
               ))}
             </tbody>
