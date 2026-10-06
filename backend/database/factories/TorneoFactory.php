@@ -4,10 +4,14 @@ namespace Database\Factories;
 
 use App\Enumeraciones\EstadoTorneo;
 use App\Enumeraciones\FormatoTorneo;
+use App\Enumeraciones\Juego;
 use App\Models\Torneo;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
+ * Por defecto, una copa de Valorant en eliminación simple, con las
+ * inscripciones abiertas y sin check-in.
+ *
  * @extends Factory<Torneo>
  */
 class TorneoFactory extends Factory
@@ -19,26 +23,35 @@ class TorneoFactory extends Factory
      */
     public function definition(): array
     {
-        $nombre = 'Copa '.fake()->unique()->city();
-
         return [
-            'nombre' => $nombre,
-            'temporada' => (string) now()->year,
-            'categoria' => fake()->randomElement(['Libre', 'Sub-20', 'Sub-17', 'Veteranos']),
-            'descripcion' => fake()->paragraph(),
-            'formato' => FormatoTorneo::LigaIda,
+            'juego' => Juego::Valorant,
+            'nombre' => 'Copa '.fake()->unique()->city(),
+            'formato' => FormatoTorneo::EliminacionSimple,
             'estado' => EstadoTorneo::InscripcionesAbiertas,
-            'ciudad' => fake()->city(),
-            'sede' => 'Cancha '.fake()->numberBetween(1, 9),
+            'reglas' => fake()->paragraph(),
             'cupo_maximo_equipos' => 8,
-            'minimo_jugadores_por_equipo' => 7,
-            'maximo_jugadores_por_equipo' => 20,
-            'costo_inscripcion_centavos' => 15_000_000,
+            'mejor_de' => 1,
+            'mejor_de_final' => 3,
+            'check_in_minutos' => 0,
+            'costo_inscripcion_centavos' => 5_000_000,
             'moneda' => 'COP',
             'inscripciones_abren_en' => now()->subWeek(),
             'inscripciones_cierran_en' => now()->addWeeks(2),
             'inicia_en' => now()->addWeeks(3),
         ];
+    }
+
+    public function deJuego(Juego $juego): static
+    {
+        return $this->state([
+            'juego' => $juego,
+            'formato' => $juego->esBattleRoyale() ? FormatoTorneo::BattleRoyale : FormatoTorneo::EliminacionSimple,
+        ]);
+    }
+
+    public function conFormato(FormatoTorneo $formato): static
+    {
+        return $this->state(['formato' => $formato]);
     }
 
     public function gratuito(): static
@@ -51,11 +64,16 @@ class TorneoFactory extends Factory
         return $this->state(['estado' => EstadoTorneo::Borrador]);
     }
 
+    public function inscripcionesCerradas(): static
+    {
+        return $this->state(['estado' => EstadoTorneo::InscripcionesCerradas]);
+    }
+
     public function enCurso(): static
     {
         return $this->state([
             'estado' => EstadoTorneo::EnCurso,
-            'inicia_en' => now()->subWeek(),
+            'inicia_en' => now()->subDay(),
         ]);
     }
 
@@ -64,13 +82,8 @@ class TorneoFactory extends Factory
         return $this->state(['estado' => EstadoTorneo::Finalizado]);
     }
 
-    public function inscripcionesCerradas(): static
+    public function conCheckIn(int $minutos = 30): static
     {
-        return $this->state(['estado' => EstadoTorneo::InscripcionesCerradas]);
-    }
-
-    public function conIdaYVuelta(): static
-    {
-        return $this->state(['formato' => FormatoTorneo::LigaIdaVuelta]);
+        return $this->state(['check_in_minutos' => $minutos]);
     }
 }

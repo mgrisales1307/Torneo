@@ -24,8 +24,7 @@ class RolesYAccesoTest extends TestCase
         return [
             'administrador entra' => [RolUsuario::Administrador->value, 200],
             'empleado entra' => [RolUsuario::Empleado->value, 200],
-            'dueño no entra' => [RolUsuario::Dueno->value, 403],
-            'espectador no entra' => [RolUsuario::Espectador->value, 403],
+            'jugador no entra' => [RolUsuario::Jugador->value, 403],
         ];
     }
 
@@ -51,15 +50,14 @@ class RolesYAccesoTest extends TestCase
     public static function rolesDelPanelDeEquipos(): array
     {
         return [
-            'dueño entra' => [RolUsuario::Dueno->value, 200],
+            'jugador entra' => [RolUsuario::Jugador->value, 200],
             'administrador entra' => [RolUsuario::Administrador->value, 200],
             'empleado entra' => [RolUsuario::Empleado->value, 200],
-            'espectador no entra' => [RolUsuario::Espectador->value, 403],
         ];
     }
 
     #[DataProvider('rolesDelPanelDeEquipos')]
-    public function test_el_panel_de_equipos_no_es_para_espectadores(string $rol, int $esperado): void
+    public function test_el_panel_de_equipos_es_para_cualquier_cuenta(string $rol, int $esperado): void
     {
         $usuario = Usuario::factory()->create(['rol' => $rol]);
 
@@ -78,6 +76,9 @@ class RolesYAccesoTest extends TestCase
         Torneo::factory()->create();
 
         $this->getJson('/api/v1/inicio')->assertOk();
+        $this->getJson('/api/v1/juegos')->assertOk()->assertJsonCount(5, 'data');
+        $this->getJson('/api/v1/juegos/valorant')->assertOk();
+        $this->getJson('/api/v1/juegos/minecraft')->assertNotFound();
         $this->getJson('/api/v1/torneos')->assertOk();
     }
 
@@ -96,36 +97,60 @@ class RolesYAccesoTest extends TestCase
         $this->assertSoftDeleted($torneo);
     }
 
-    public function test_el_empleado_si_crea_y_edita_torneos(): void
+    public function test_el_empleado_crea_y_publica_torneos(): void
     {
         $empleado = Usuario::factory()->empleado()->create();
 
         $respuesta = $this->actingAs($empleado)->postJson('/api/v1/admin/torneos', [
+            'juego' => 'valorant',
             'nombre' => 'Copa de la Universidad',
-            'formato' => 'liga_ida',
+            'formato' => 'eliminacion_doble',
             'cupo_maximo_equipos' => 8,
-            'minimo_jugadores_por_equipo' => 7,
-            'maximo_jugadores_por_equipo' => 18,
+            'mejor_de' => 3,
             'costo_inscripcion_centavos' => 10_000_000,
-        ])->assertCreated();
+            'premios' => [50_000_000, 20_000_000, 0],
+        ])->assertCreated()
+            ->assertJsonPath('data.estado.valor', 'borrador')
+            ->assertJsonPath('data.premios.total_formateado', '$ 700.000');
 
         $slug = $respuesta->json('data.slug');
 
         $this->actingAs($empleado)
-            ->patchJson("/api/v1/admin/torneos/$slug", ['estado' => 'inscripciones_abiertas'])
+            ->postJson("/api/v1/admin/torneos/$slug/estado", ['estado' => 'inscripciones_abiertas'])
             ->assertOk()
             ->assertJsonPath('data.estado.valor', 'inscripciones_abiertas');
+
+        // «En curso» no se pone a mano: se llega iniciando el torneo.
+        $this->actingAs($empleado)
+            ->postJson("/api/v1/admin/torneos/$slug/estado", ['estado' => 'en_curso'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('estado');
     }
 
-    public function test_el_maximo_de_jugadores_no_puede_ser_menor_que_el_minimo(): void
+    public function test_el_formato_tiene_que_ser_del_tipo_del_juego(): void
     {
-        $this->actingAs(Usuario::factory()->administrador()->create())->postJson('/api/v1/admin/torneos', [
-            'nombre' => 'Copa Inconsistente',
-            'formato' => 'liga_ida',
+        $administrador = Usuario::factory()->administrador()->create();
+
+        $this->actingAs($administrador)->postJson('/api/v1/admin/torneos', [
+            'juego' => 'pubg',
+            'nombre' => 'Copa Imposible',
+            'formato' => 'eliminacion_simple',
             'cupo_maximo_equipos' => 8,
-            'minimo_jugadores_por_equipo' => 20,
-            'maximo_jugadores_por_equipo' => 10,
-        ])->assertUnprocessable()->assertJsonValidationErrors('maximo_jugadores_por_equipo');
+        ])->assertUnprocessable()->assertJsonValidationErrors('formato');
+
+        $this->actingAs($administrador)->postJson('/api/v1/admin/torneos', [
+            'juego' => 'freefire',
+            'nombre' => 'Sala Llena',
+            'formato' => 'battle_royale',
+            'cupo_maximo_equipos' => 20,
+        ])->assertUnprocessable()->assertJsonValidationErrors('cupo_maximo_equipos');
+
+        $this->actingAs($administrador)->postJson('/api/v1/admin/torneos', [
+            'juego' => 'lol',
+            'nombre' => 'Grupos sin Grupos',
+            'formato' => 'grupos_y_eliminacion',
+            'cupo_maximo_equipos' => 8,
+        ])->assertUnprocessable()->assertJsonValidationErrors(['cantidad_de_grupos', 'clasifican_por_grupo']);
     }
 
     public function test_las_respuestas_traen_las_cabeceras_de_seguridad(): void

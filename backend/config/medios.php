@@ -7,9 +7,9 @@ return [
     | Disco de las imágenes
     |--------------------------------------------------------------------------
     |
-    | Escudos, uniformes y fotos van al disco `public`, que se expone mediante
-    | el enlace simbólico `public/storage`. Los nombres de archivo los genera
-    | el servidor: el nombre que manda el navegador nunca se usa.
+    | Logos de equipo y capturas de resultados van al disco `public`, que se
+    | expone mediante el enlace simbólico `public/storage`. Los nombres de
+    | archivo los genera el servidor: el nombre del navegador nunca se usa.
     |
     */
 
@@ -36,10 +36,11 @@ return [
     */
 
     'limites' => [
-        'escudo' => ['kb' => 2048, 'minimo_px' => 120, 'maximo_px' => 2000],
-        'uniforme' => ['kb' => 3072, 'minimo_px' => 200, 'maximo_px' => 2400],
-        'foto_jugador' => ['kb' => 2048, 'minimo_px' => 120, 'maximo_px' => 2000],
-        'logo_torneo' => ['kb' => 2048, 'minimo_px' => 120, 'maximo_px' => 2000],
+        'logo' => ['kb' => 2048, 'minimo_px' => 120, 'maximo_px' => 2000],
+
+        // La captura del marcador final: sale de una pantalla, así que admite
+        // resoluciones de monitor y de móvil.
+        'captura' => ['kb' => 6144, 'minimo_px' => 200, 'maximo_px' => 4000],
     ],
 
     /*
@@ -49,10 +50,8 @@ return [
     */
 
     'carpetas' => [
-        'escudo' => 'escudos',
-        'uniforme' => 'uniformes',
-        'foto_jugador' => 'jugadores',
-        'logo_torneo' => 'torneos',
+        'logo' => 'logos',
+        'captura' => 'capturas',
     ],
 
 ];

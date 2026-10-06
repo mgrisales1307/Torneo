@@ -60,5 +60,10 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('subidas', fn (Request $peticion): Limit => Limit::perMinute(30)
             ->by($peticion->user()?->getAuthIdentifier() ?? $peticion->ip()));
+
+        // Un código de invitación es la llave de un equipo: probar códigos al
+        // azar tiene que salir caro.
+        RateLimiter::for('unirse', fn (Request $peticion): Limit => Limit::perMinute(10)
+            ->by($peticion->user()?->getAuthIdentifier() ?? $peticion->ip()));
     }
 }

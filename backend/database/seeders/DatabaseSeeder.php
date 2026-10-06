@@ -7,8 +7,8 @@ use Illuminate\Database\Seeder;
 
 /**
  * Ojo: aquí no se usa WithoutModelEvents. El seeder de demostración necesita
- * los eventos de los modelos, que son los que generan los slugs de torneos y
- * equipos.
+ * los eventos de los modelos, que son los que generan los slugs y los códigos
+ * de invitación.
  */
 class DatabaseSeeder extends Seeder
 {
@@ -30,7 +30,7 @@ class DatabaseSeeder extends Seeder
         $this->callWith(UsuariosSeeder::class, ['baseNueva' => $baseNueva]);
 
         if ($baseNueva) {
-            $this->call(TorneoDeDemostracionSeeder::class);
+            $this->call(DemostracionSeeder::class);
         }
     }
 }

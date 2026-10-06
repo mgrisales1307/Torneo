@@ -6,7 +6,7 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Carbon;
 
 /**
- * Lo que hay que entregarle al navegador para que el dueño del equipo pueda
+ * Lo que hay que entregarle al navegador para que el capitán del equipo pueda
  * pagar: a dónde ir y hasta cuándo sirve.
  *
  * @implements Arrayable<string, mixed>

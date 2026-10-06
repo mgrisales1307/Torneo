@@ -2,17 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enumeraciones\TipoEventoPartido;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 /**
- * Resultado de un partido: el marcador y, opcionalmente, el detalle de goles y
- * tarjetas.
- *
- * Aquí se valida la forma de los datos. Que el jugador sea de uno de los dos
- * equipos y que el marcador cuadre con los goles lo comprueba el servicio
- * RegistroDeResultados, que es quien conoce el partido.
+ * La organización fija el marcador de una serie: resuelve una disputa o carga
+ * un partido que nadie reportó.
  */
 class GuardarResultadoRequest extends FormRequest
 {
@@ -22,44 +16,23 @@ class GuardarResultadoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'goles_local' => ['required', 'integer', 'min:0', 'max:99'],
-            'goles_visitante' => ['required', 'integer', 'min:0', 'max:99'],
-            'observaciones' => ['nullable', 'string', 'max:1000'],
-
-            'eventos' => ['sometimes', 'array', 'max:100'],
-            'eventos.*.equipo_id' => ['required', 'integer', 'exists:equipos,id'],
-            'eventos.*.jugador_id' => ['required', 'integer', 'exists:jugadores,id'],
-            'eventos.*.tipo' => ['required', Rule::enum(TipoEventoPartido::class)],
-            'eventos.*.minuto' => ['nullable', 'integer', 'min:0', 'max:130'],
-            'eventos.*.detalle' => ['nullable', 'string', 'max:160'],
+            'victorias_a' => ['required', 'integer', 'min:0', 'max:5'],
+            'victorias_b' => ['required', 'integer', 'min:0', 'max:5'],
+            'detalle' => ['sometimes', 'nullable', 'array', 'max:5'],
+            'detalle.*.mapa' => ['nullable', 'string', 'max:40'],
+            'detalle.*.ganador' => ['required', 'in:a,b'],
         ];
     }
 
     /**
-     * @return array<string, string>
-     */
-    public function attributes(): array
-    {
-        return [
-            'goles_local' => 'goles del local',
-            'goles_visitante' => 'goles del visitante',
-            'eventos.*.equipo_id' => 'equipo del evento',
-            'eventos.*.jugador_id' => 'jugador del evento',
-            'eventos.*.tipo' => 'tipo de evento',
-            'eventos.*.minuto' => 'minuto',
-        ];
-    }
-
-    /**
-     * @return array<string, mixed>
+     * @return array{victorias_a: int, victorias_b: int, detalle: array<int, array<string, mixed>>|null}
      */
     public function datosDelResultado(): array
     {
         return [
-            'goles_local' => (int) $this->validated('goles_local'),
-            'goles_visitante' => (int) $this->validated('goles_visitante'),
-            'observaciones' => $this->validated('observaciones'),
-            'eventos' => $this->validated('eventos', []),
+            'victorias_a' => (int) $this->validated('victorias_a'),
+            'victorias_b' => (int) $this->validated('victorias_b'),
+            'detalle' => $this->validated('detalle'),
         ];
     }
 }

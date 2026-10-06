@@ -12,8 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Inscripción de un equipo en un torneo. Es la bisagra entre el equipo, el
- * cobro y la competencia: sin una inscripción aprobada, un equipo no aparece
- * en el calendario ni en la tabla.
+ * cobro y la competencia: sin una inscripción aprobada, un equipo no entra al
+ * cuadro.
  *
  * @property EstadoInscripcion $estado
  */
@@ -25,14 +25,12 @@ class Inscripcion extends Model
     protected $table = 'inscripciones';
 
     /**
-     * El estado no es asignable en masa: lo mueven los servicios de pago y de
-     * revisión, que son los únicos que conocen las transiciones válidas.
+     * Nada es asignable en masa: el estado lo mueven los servicios de pago y
+     * de revisión, y la semilla y el grupo los pone el inicio del torneo.
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'grupo',
-    ];
+    protected $fillable = [];
 
     /**
      * @var array<string, mixed>
@@ -51,6 +49,8 @@ class Inscripcion extends Model
         return [
             'estado' => EstadoInscripcion::class,
             'monto_centavos' => 'integer',
+            'semilla' => 'integer',
+            'check_in_en' => 'datetime',
             'revisado_en' => 'datetime',
             'pagada_en' => 'datetime',
         ];
@@ -69,7 +69,7 @@ class Inscripcion extends Model
      */
     public function equipo(): BelongsTo
     {
-        return $this->belongsTo(Equipo::class);
+        return $this->belongsTo(Equipo::class)->withTrashed();
     }
 
     /**
@@ -107,6 +107,19 @@ class Inscripcion extends Model
         $consulta->where('estado', EstadoInscripcion::Aprobada->value);
     }
 
+    /**
+     * Inscripciones que siguen en juego: ni rechazadas ni retiradas.
+     *
+     * @param  Builder<static>  $consulta
+     */
+    public function scopeVigentes(Builder $consulta): void
+    {
+        $consulta->whereNotIn('estado', [
+            EstadoInscripcion::Rechazada->value,
+            EstadoInscripcion::Retirada->value,
+        ]);
+    }
+
     public function estaAprobada(): bool
     {
         return $this->estado === EstadoInscripcion::Aprobada;
@@ -115,5 +128,10 @@ class Inscripcion extends Model
     public function esperaPago(): bool
     {
         return $this->estado === EstadoInscripcion::PendientePago && $this->monto_centavos > 0;
+    }
+
+    public function hizoCheckIn(): bool
+    {
+        return $this->check_in_en !== null;
     }
 }

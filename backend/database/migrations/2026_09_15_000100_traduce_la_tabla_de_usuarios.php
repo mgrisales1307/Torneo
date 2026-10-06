@@ -1,6 +1,5 @@
 <?php
 
-use App\Enumeraciones\RolUsuario;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +33,7 @@ return new class extends Migration
         });
 
         // El rol `user` de la primera versión pasa a llamarse `espectador`.
-        DB::table('usuarios')->where('rol', 'user')->update(['rol' => RolUsuario::Espectador->value]);
+        DB::table('usuarios')->where('rol', 'user')->update(['rol' => 'espectador']);
 
         // Los tokens de Sanctum guardan el nombre de la clase del modelo.
         DB::table('personal_access_tokens')
@@ -48,7 +47,7 @@ return new class extends Migration
             ->where('tokenable_type', 'App\Models\Usuario')
             ->update(['tokenable_type' => 'App\Models\User']);
 
-        DB::table('usuarios')->where('rol', RolUsuario::Espectador->value)->update(['rol' => 'user']);
+        DB::table('usuarios')->where('rol', 'espectador')->update(['rol' => 'user']);
 
         Schema::table('usuarios', function (Blueprint $table): void {
             $table->dropSoftDeletes();

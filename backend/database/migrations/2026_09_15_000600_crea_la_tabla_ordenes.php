@@ -1,6 +1,5 @@
 <?php
 
-use App\Enumeraciones\EstadoOrden;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -25,7 +24,7 @@ return new class extends Migration
 
             $table->unsignedBigInteger('monto_centavos');
             $table->char('moneda', 3)->default('COP');
-            $table->string('estado', 30)->default(EstadoOrden::Pendiente->value)->index();
+            $table->string('estado', 30)->default('pendiente')->index();
             $table->string('pasarela', 40);
 
             $table->timestamp('expira_en')->nullable();

@@ -62,7 +62,6 @@ export function ProveedorDeSesion({ children }) {
       estaAutenticado: usuario !== null,
       esStaff: ROLES_DE_STAFF.includes(rol),
       esAdministrador: rol === 'admin',
-      puedeTenerEquipos: rol === 'dueno' || ROLES_DE_STAFF.includes(rol),
       ingresar,
       registrarse,
       salir,

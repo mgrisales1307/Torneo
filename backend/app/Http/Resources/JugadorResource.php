@@ -2,18 +2,15 @@
 
 namespace App\Http\Resources;
 
-use App\Models\Jugador;
+use App\Models\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
- * Ficha pública de un jugador.
+ * El perfil público de un jugador: apodo, cuentas de juego y equipos. Ni el
+ * nombre real ni el correo salen de aquí.
  *
- * No incluye documento, teléfono ni correo: son datos personales y no tienen
- * por qué salir en la plantilla que ve cualquier visitante. Para el dueño del
- * equipo y la organización existe JugadorPrivadoResource.
- *
- * @mixin Jugador
+ * @mixin Usuario
  */
 class JugadorResource extends JsonResource
 {
@@ -23,25 +20,15 @@ class JugadorResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'equipo_id' => $this->equipo_id,
-            'nombres' => $this->nombres,
-            'apellidos' => $this->apellidos,
-            'nombre_completo' => $this->nombreCompleto(),
-            'numero_camiseta' => $this->numero_camiseta,
-            'posicion' => [
-                'valor' => $this->posicion->value,
-                'etiqueta' => $this->posicion->etiqueta(),
-                'abreviatura' => $this->posicion->abreviatura(),
-            ],
-            'estado' => [
-                'valor' => $this->estado->value,
-                'etiqueta' => $this->estado->etiqueta(),
-            ],
-            'es_capitan' => $this->es_capitan,
-            'edad' => $this->edad(),
-            'foto_url' => $this->urlDeImagen($this->foto_ruta),
-            'equipo' => new EquipoResumenResource($this->whenLoaded('equipo')),
+            'apodo' => $this->apodo,
+            'cuentas' => CuentaDeJuegoResource::collection($this->whenLoaded('cuentasDeJuego')),
+            'equipos' => $this->whenLoaded('equipos', fn () => $this->equipos->map(fn ($equipo): array => [
+                ...$equipo->resumen(),
+                'juego' => ['valor' => $equipo->juego->value, 'nombre' => $equipo->juego->nombre()],
+                'es_capitan' => $equipo->capitan_id === $this->id,
+                'es_suplente' => (bool) $equipo->pivot->es_suplente,
+            ])),
+            'desde' => $this->created_at?->toIso8601String(),
         ];
     }
 }

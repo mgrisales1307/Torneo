@@ -29,6 +29,8 @@ class InscripcionResource extends JsonResource
                 : Dinero::formatear($this->monto_centavos, $this->moneda),
             'moneda' => $this->moneda,
             'espera_pago' => $this->esperaPago(),
+            'check_in_en' => $this->check_in_en?->toIso8601String(),
+            'semilla' => $this->semilla,
             'grupo' => $this->grupo,
             'notas_revision' => $this->notas_revision,
             'pagada_en' => $this->pagada_en?->toIso8601String(),
@@ -37,7 +39,7 @@ class InscripcionResource extends JsonResource
 
             'torneo' => new TorneoResource($this->whenLoaded('torneo')),
             'equipo' => new EquipoResource($this->whenLoaded('equipo')),
-            'revisor' => new UsuarioResource($this->whenLoaded('revisor')),
+            'revisor' => $this->whenLoaded('revisor', fn () => ['apodo' => $this->revisor?->apodo]),
             'ordenes' => OrdenResource::collection($this->whenLoaded('ordenes')),
         ];
     }

@@ -25,10 +25,11 @@ class UsuarioAdminController extends Controller
             ->when($peticion->filled('buscar'), function ($consulta) use ($peticion): void {
                 $termino = '%'.$peticion->string('buscar').'%';
                 $consulta->where(fn ($filtro) => $filtro
-                    ->where('nombre', 'like', $termino)
+                    ->where('apodo', 'like', $termino)
+                    ->orWhere('nombre', 'like', $termino)
                     ->orWhere('correo', 'like', $termino));
             })
-            ->orderBy('nombre')
+            ->orderBy('apodo')
             ->paginate(25)
             ->withQueryString();
 

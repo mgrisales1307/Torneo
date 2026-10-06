@@ -28,8 +28,8 @@ class InscripcionAdminController extends Controller
             ->with([
                 'torneo',
                 'revisor',
-                'equipo' => fn ($consulta) => $consulta->withCount('jugadores'),
-                'equipo.dueno',
+                'equipo' => fn ($consulta) => $consulta->withCount('miembros'),
+                'equipo.miembros',
             ])
             ->when(
                 $peticion->filled('estado') && EstadoInscripcion::tryFrom((string) $peticion->string('estado')) !== null,
@@ -51,7 +51,7 @@ class InscripcionAdminController extends Controller
         $this->gestor->aprobar($inscripcion, $peticion->user(), $peticion->validated('notas'));
 
         return response()->json([
-            'message' => 'Inscripción aprobada. El equipo ya forma parte del torneo.',
+            'message' => 'Inscripción aprobada.',
             'data' => new InscripcionResource($inscripcion->load(['torneo', 'equipo', 'revisor'])),
         ]);
     }

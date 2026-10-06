@@ -41,7 +41,21 @@ enum EstadoTorneo: string
     }
 
     /**
-     * Estados en los que ya no tiene sentido tocar el calendario.
+     * Publicado y todavía sin cuadro: se puede hacer check-in y se puede
+     * iniciar.
+     */
+    public function esperaInicio(): bool
+    {
+        return in_array($this, [self::InscripcionesAbiertas, self::InscripcionesCerradas], true);
+    }
+
+    public function haEmpezado(): bool
+    {
+        return in_array($this, [self::EnCurso, self::Finalizado], true);
+    }
+
+    /**
+     * Estados en los que ya no tiene sentido tocar el cuadro ni los resultados.
      */
     public function estaCerrado(): bool
     {

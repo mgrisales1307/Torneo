@@ -24,7 +24,7 @@ class PagoDeInscripcionTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    private Usuario $dueno;
+    private Usuario $capitan;
 
     private Inscripcion $inscripcion;
 
@@ -32,18 +32,18 @@ class PagoDeInscripcionTest extends TestCase
     {
         parent::setUp();
 
-        $this->dueno = Usuario::factory()->dueno()->create();
+        $this->capitan = Usuario::factory()->create();
 
         $this->inscripcion = Inscripcion::factory()->create([
             'torneo_id' => Torneo::factory()->create()->getKey(),
-            'equipo_id' => Equipo::factory()->delDueno($this->dueno)->create()->getKey(),
+            'equipo_id' => Equipo::factory()->conCapitan($this->capitan)->create()->getKey(),
             'monto_centavos' => 15_000_000,
         ]);
     }
 
-    public function test_el_dueno_genera_la_orden_de_pago_de_su_inscripcion(): void
+    public function test_el_capitan_genera_la_orden_de_pago_de_su_inscripcion(): void
     {
-        $respuesta = $this->actingAs($this->dueno)
+        $respuesta = $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/inscripciones/{$this->inscripcion->id}/orden")
             ->assertCreated();
 
@@ -56,18 +56,18 @@ class PagoDeInscripcionTest extends TestCase
 
         // La referencia es aleatoria, no un número consecutivo que se pueda
         // adivinar para llegar a la orden de otro equipo.
-        $this->assertMatchesRegularExpression('/^JZ-[A-Z0-9]{14}$/', $referencia);
+        $this->assertMatchesRegularExpression('/^NZ-[A-Z0-9]{14}$/', $referencia);
         $this->assertSame("/panel/pagos/$referencia", $respuesta->json('cobro.url'));
     }
 
     public function test_pedir_la_orden_dos_veces_no_crea_dos_cobros(): void
     {
-        $primera = $this->actingAs($this->dueno)
+        $primera = $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/inscripciones/{$this->inscripcion->id}/orden")
             ->assertCreated()
             ->json('data.referencia');
 
-        $segunda = $this->actingAs($this->dueno)
+        $segunda = $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/inscripciones/{$this->inscripcion->id}/orden")
             ->assertCreated()
             ->json('data.referencia');
@@ -80,7 +80,7 @@ class PagoDeInscripcionTest extends TestCase
     {
         $vencida = Orden::factory()->deLaInscripcion($this->inscripcion)->expirada()->create();
 
-        $nueva = $this->actingAs($this->dueno)
+        $nueva = $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/inscripciones/{$this->inscripcion->id}/orden")
             ->assertCreated()
             ->json('data.referencia');
@@ -93,7 +93,7 @@ class PagoDeInscripcionTest extends TestCase
     {
         $orden = Orden::factory()->deLaInscripcion($this->inscripcion)->create();
 
-        $this->actingAs($this->dueno)
+        $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/ordenes/{$orden->referencia}/pagar-simulado", ['resultado' => 'aprobado'])
             ->assertOk()
             ->assertJsonPath('data.estado.valor', EstadoOrden::Pagada->value);
@@ -111,7 +111,7 @@ class PagoDeInscripcionTest extends TestCase
     {
         $orden = Orden::factory()->deLaInscripcion($this->inscripcion)->create();
 
-        $this->actingAs($this->dueno)
+        $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/ordenes/{$orden->referencia}/pagar-simulado", ['resultado' => 'rechazado'])
             ->assertOk()
             ->assertJsonPath('data.estado.valor', EstadoOrden::Fallida->value);
@@ -122,7 +122,7 @@ class PagoDeInscripcionTest extends TestCase
     public function test_nadie_puede_pagar_ni_mirar_la_orden_de_otro(): void
     {
         $orden = Orden::factory()->deLaInscripcion($this->inscripcion)->create();
-        $intruso = Usuario::factory()->dueno()->create();
+        $intruso = Usuario::factory()->create();
 
         $this->actingAs($intruso)->getJson("/api/v1/panel/ordenes/{$orden->referencia}")->assertForbidden();
 
@@ -138,7 +138,7 @@ class PagoDeInscripcionTest extends TestCase
     {
         $orden = Orden::factory()->deLaInscripcion($this->inscripcion)->pagada()->create();
 
-        $this->actingAs($this->dueno)
+        $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/ordenes/{$orden->referencia}/pagar-simulado", ['resultado' => 'aprobado'])
             ->assertUnprocessable();
 
@@ -204,14 +204,14 @@ class PagoDeInscripcionTest extends TestCase
     {
         $orden = Orden::factory()->deLaInscripcion($this->inscripcion)->create();
 
-        $this->enviarNotificacion($orden, referencia: 'JZ-NOEXISTE00000')->assertNotFound();
+        $this->enviarNotificacion($orden, referencia: 'NZ-NOEXISTE00000')->assertNotFound();
     }
 
     public function test_no_se_genera_orden_de_una_inscripcion_ya_pagada(): void
     {
         $this->inscripcion->forceFill(['estado' => EstadoInscripcion::Aprobada])->save();
 
-        $this->actingAs($this->dueno)
+        $this->actingAs($this->capitan)
             ->postJson("/api/v1/panel/inscripciones/{$this->inscripcion->id}/orden")
             ->assertUnprocessable()
             ->assertJsonPath('message', 'Esta inscripción ya está pagada.');

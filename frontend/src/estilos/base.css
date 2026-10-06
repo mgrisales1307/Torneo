@@ -4,66 +4,40 @@
   box-sizing: border-box;
 }
 
-/*
- * Se reserva siempre el hueco de la barra de desplazamiento.
- *
- * La portada se sale del contenedor con `100vw`, que incluye la barra, y
- * main.jsx publica su ancho en `--barra` para restarlo. Pero sin esto la
- * medida se tomaba con el documento todavía vacío —sin barra, por tanto 0— y
- * al renderizar el contenido aparecía la barra y la portada sobresalía justo
- * esos píxeles: de ahí el scroll horizontal en todo el sitio. Con el hueco
- * reservado desde el principio, la medida es correcta desde el primer momento.
- */
-html {
-  scrollbar-gutter: stable;
-}
-
 html {
   min-width: 320px;
-  background: var(--papel);
+  background: var(--fondo);
   scroll-behavior: smooth;
+  scrollbar-gutter: stable;
 }
 
 body {
   min-width: 320px;
   min-height: 100vh;
   margin: 0;
-  color: var(--tinta);
-  background: var(--papel);
-  font-family: var(--interfaz);
+  color: var(--texto);
+  background: var(--fondo);
+  font-family: var(--fuente);
   font-size: 1rem;
-  line-height: 1.55;
+  font-weight: 400;
+  line-height: 1.6;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/*
- * Archivo tiene una altura de x alta y formas estrechas, así que no necesita
- * que se le cierre el interletraje. El tracking negativo se reserva para los
- * titulares grandes, donde sí hace falta.
- */
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   margin: 0;
-  font-weight: 600;
-  letter-spacing: 0;
-  line-height: 1.15;
+  font-weight: 800;
+  line-height: 1.05;
   text-wrap: balance;
-}
-
-/*
- * La voz de los datos: la misma Archivo estrechada, con cifras tabulares para
- * que las columnas de números queden a plomo. Se usa en tablas, marcadores,
- * minutos y dorsales.
- */
-.datos {
-  font-stretch: var(--ancho-datos);
-  font-variant-numeric: tabular-nums;
 }
 
 p {
   margin: 0;
-  line-height: 1.65;
 }
 
 a {
@@ -76,79 +50,111 @@ input,
 select,
 textarea {
   font: inherit;
+  color: inherit;
 }
 
 img {
+  display: block;
   max-width: 100%;
 }
 
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
-a:focus-visible,
-[tabindex]:focus-visible {
-  outline: 2px solid #c99327;
-  outline-offset: 3px;
-  border-radius: 4px;
-}
-
-button,
-a,
-input,
-label {
-  -webkit-tap-highlight-color: transparent;
+ul,
+ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 ::selection {
-  color: var(--tinta);
   background: var(--acento);
+  color: var(--acento-tinta);
 }
 
-/* Visible solo para lectores de pantalla. */
+:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 3px;
+}
+
+/*
+ * Jerarquía tipográfica (la de juzt). Los títulos van pesados y con el
+ * interletraje cerrado; el texto corrido, en 400 y sin tocar.
+ */
+.titulo-pagina {
+  font-size: var(--tipo-titulo-pagina);
+  font-weight: 900;
+  letter-spacing: -0.045em;
+  line-height: 0.92;
+}
+
+.titulo-seccion {
+  font-size: var(--tipo-titulo-seccion);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.titulo-bloque {
+  font-size: var(--tipo-titulo-bloque);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.entradilla {
+  max-width: 52ch;
+  color: var(--texto-suave);
+  font-size: var(--tipo-entradilla);
+  line-height: 1.55;
+}
+
+.rotulo {
+  color: var(--apagado);
+  font-size: var(--tipo-rotulo);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.45;
+  text-transform: uppercase;
+}
+
+.rotulo--acento {
+  color: var(--acento);
+}
+
+/* Cifras: marcadores, puntos y tablas, siempre a plomo. */
+.cifra {
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+}
+
+.apagado {
+  color: var(--apagado);
+}
+
 .solo-lectores {
   position: absolute;
   width: 1px;
   height: 1px;
-  padding: 0;
-  margin: -1px;
   overflow: hidden;
-  clip-path: inset(50%);
+  clip: rect(0 0 0 0);
   white-space: nowrap;
 }
 
-/* Salto al contenido, lo primero que encuentra quien navega con teclado. */
-.salto-contenido {
-  position: absolute;
-  z-index: 100;
-  top: 0.6rem;
-  left: 0.6rem;
-  transform: translateY(-160%);
-  border-radius: 999px;
-  padding: 0.7rem 1.1rem;
-  color: var(--papel);
-  background: var(--tinta);
-  font-size: 0.78rem;
-  font-weight: 700;
-  transition: transform 160ms ease;
+.girador {
+  animation: girar 0.8s linear infinite;
 }
 
-.salto-contenido:focus {
-  transform: translateY(0);
-}
-
-.contenedor {
-  width: min(100% - 2.5rem, var(--ancho-contenido));
-  margin-inline: auto;
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

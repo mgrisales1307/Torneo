@@ -5,25 +5,25 @@ namespace App\Enumeraciones;
 /**
  * Roles del sistema. El rol vive en la columna `usuarios.rol`.
  *
- * - Espectador: cualquiera que se registre para seguir el torneo.
- * - Dueno: registra equipos, paga la inscripción y gestiona jugadores.
- * - Empleado: organiza la competencia (calendario, resultados, inscripciones).
+ * - Jugador: cualquiera que se registre. Crea equipos, se une a otros con un
+ *   código e inscribe a los que capitanea.
+ * - Empleado: organiza la competencia (torneos, inscripciones, resultados).
  * - Administrador: todo lo anterior más la gestión de usuarios.
+ *
+ * Capitán no es un rol de la cuenta: es un cargo dentro de cada equipo.
  */
 enum RolUsuario: string
 {
     case Administrador = 'admin';
     case Empleado = 'empleado';
-    case Dueno = 'dueno';
-    case Espectador = 'espectador';
+    case Jugador = 'jugador';
 
     public function etiqueta(): string
     {
         return match ($this) {
             self::Administrador => 'Administración',
             self::Empleado => 'Organización',
-            self::Dueno => 'Dueño de equipo',
-            self::Espectador => 'Espectador',
+            self::Jugador => 'Jugador',
         };
     }
 

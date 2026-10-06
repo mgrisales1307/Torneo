@@ -23,23 +23,23 @@ use Illuminate\Validation\ValidationException;
 class AutenticacionController extends Controller
 {
     /**
-     * Quien se registra lo hace para inscribir a su equipo, así que la cuenta
-     * nace con el rol de dueño. Los roles de la organización los asigna la
-     * administración, nunca un formulario público.
+     * Toda cuenta nace como jugador: puede crear equipos y unirse a otros. Los
+     * roles de la organización los asigna la administración, nunca un
+     * formulario público.
      */
     public function registro(RegistroRequest $peticion): JsonResponse
     {
         $usuario = Usuario::create([
-            ...$peticion->safe()->only(['nombre', 'correo', 'telefono']),
+            ...$peticion->safe()->only(['apodo', 'nombre', 'correo', 'telefono']),
             'clave' => $peticion->validated('clave'),
-            'rol' => RolUsuario::Dueno,
+            'rol' => RolUsuario::Jugador,
         ]);
 
         Auth::login($usuario);
         $peticion->session()->regenerate();
 
         return response()->json([
-            'message' => 'Tu cuenta quedó creada. ¡Bienvenido a Juegos Zone!',
+            'message' => 'Tu cuenta quedó creada. ¡Bienvenido a NexZone!',
             'usuario' => new UsuarioResource($usuario),
         ], 201);
     }
@@ -85,7 +85,7 @@ class AutenticacionController extends Controller
     public function perfil(Request $peticion): JsonResponse
     {
         return response()->json([
-            'usuario' => new UsuarioResource($peticion->user()->loadCount('equipos')),
+            'usuario' => new UsuarioResource($peticion->user()->load('cuentasDeJuego')->loadCount('equipos')),
         ]);
     }
 }

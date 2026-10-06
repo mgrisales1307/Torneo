@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Enumeraciones\EstadoInscripcion;
 use App\Enumeraciones\EstadoOrden;
+use App\Enumeraciones\EstadoPartido;
 use App\Enumeraciones\EstadoTorneo;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\InscripcionResource;
 use App\Http\Resources\PartidoResource;
+use App\Http\Resources\TorneoResource;
 use App\Models\Equipo;
 use App\Models\Inscripcion;
 use App\Models\Orden;
@@ -24,9 +26,14 @@ class ResumenAdminController extends Controller
 {
     public function __invoke(): JsonResponse
     {
+        $this->authorize('administrar', Torneo::class);
+
         $recaudado = (int) Orden::query()
             ->where('estado', EstadoOrden::Pagada->value)
             ->sum('monto_centavos');
+
+        $porRevisar = Inscripcion::query()->where('estado', EstadoInscripcion::PendienteRevision->value);
+        $disputas = Partido::query()->where('estado', EstadoPartido::EnDisputa->value);
 
         return response()->json([
             'cifras' => [
@@ -36,36 +43,28 @@ class ResumenAdminController extends Controller
                     EstadoTorneo::EnCurso->value,
                 ])->count(),
                 'equipos' => Equipo::query()->count(),
-                'usuarios' => Usuario::query()->count(),
-                'inscripciones_por_revisar' => Inscripcion::query()
-                    ->where('estado', EstadoInscripcion::PendienteRevision->value)
-                    ->count(),
-                'partidos_sin_resultado' => Partido::query()
-                    ->whereNull('goles_local')
-                    ->whereNotNull('programado_para')
-                    ->where('programado_para', '<', now())
-                    ->count(),
+                'jugadores' => Usuario::query()->count(),
+                'inscripciones_por_revisar' => (clone $porRevisar)->count(),
+                'disputas' => (clone $disputas)->count(),
                 'recaudado_centavos' => $recaudado,
                 'recaudado_formateado' => Dinero::formatear($recaudado),
             ],
 
             'por_revisar' => InscripcionResource::collection(
-                Inscripcion::query()
-                    ->where('estado', EstadoInscripcion::PendienteRevision->value)
-                    ->with(['torneo', 'equipo'])
-                    ->latest('pagada_en')
-                    ->limit(8)
-                    ->get()
+                $porRevisar->with(['torneo', 'equipo'])->latest('pagada_en')->limit(8)->get()
             ),
 
-            'partidos_pendientes' => PartidoResource::collection(
-                Partido::query()
-                    ->whereNull('goles_local')
-                    ->whereNotNull('programado_para')
-                    ->where('programado_para', '<', now())
-                    ->with(['equipoLocal', 'equipoVisitante', 'torneo'])
-                    ->orderBy('programado_para')
-                    ->limit(8)
+            'disputas' => PartidoResource::collection(
+                $disputas->with(['equipoA', 'equipoB', 'torneo'])->orderBy('updated_at')->limit(8)->get()
+            ),
+
+            // Torneos listos para arrancar: publicados, sin cuadro todavía.
+            'por_iniciar' => TorneoResource::collection(
+                Torneo::query()
+                    ->whereIn('estado', [EstadoTorneo::InscripcionesAbiertas->value, EstadoTorneo::InscripcionesCerradas->value])
+                    ->withCount(['inscripcionesQueOcupanCupo', 'partidos'])
+                    ->orderByRaw('inicia_en IS NULL, inicia_en')
+                    ->limit(6)
                     ->get()
             ),
         ]);

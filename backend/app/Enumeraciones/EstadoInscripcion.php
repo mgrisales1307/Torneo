@@ -3,8 +3,8 @@
 namespace App\Enumeraciones;
 
 /**
- * Recorrido de una inscripción: el dueño la crea, paga, la organización la
- * revisa y queda aprobada. Solo las aprobadas entran al calendario.
+ * Recorrido de una inscripción: el capitán la crea, paga, la organización la
+ * revisa y queda aprobada. Solo las aprobadas (y con check-in) entran al cuadro.
  */
 enum EstadoInscripcion: string
 {

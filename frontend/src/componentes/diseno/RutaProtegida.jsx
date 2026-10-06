@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Link, Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useSesion } from '../../contexto/contextoDeSesion'
 import { Cargando, EstadoVacio } from '../ui/Basicos'
 import { ShieldAlert } from 'lucide-react'
@@ -27,16 +27,13 @@ export function RutaProtegida({ rolesPermitidos }) {
     return (
       <EstadoVacio
         icono={<ShieldAlert size={30} />}
-        titulo="Esta zona no es para tu cuenta"
+        titulo="Esta zona es de la organización"
         accion={
-          <a className="boton boton--contorno boton--chico" href="/">
+          <Link className="boton boton--contorno boton--chico" to="/">
             Volver al inicio
-          </a>
+          </Link>
         }
-      >
-        Tu rol actual no tiene acceso a esta sección. Si crees que es un error, escríbele a la organización
-        del torneo.
-      </EstadoVacio>
+      />
     )
   }
 

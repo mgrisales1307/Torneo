@@ -1,112 +1,110 @@
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { ClipboardCheck, Flag } from 'lucide-react'
 import { mensajeDeError, obtenerResumenAdmin } from '../../lib/api'
 import { fechaYHora } from '../../lib/formato'
+import { EquipoEnLinea } from '../../componentes/equipo/LogoDeEquipo'
 import { Aviso, Cargando, Insignia, Tarjeta } from '../../componentes/ui/Basicos'
-import { Escudo } from '../../componentes/ui/Escudo'
 import { NavegacionDelPanel } from '../panel/NavegacionDelPanel'
 import { ENLACES_DE_ORGANIZACION } from '../panel/enlacesDelPanel'
 
 export default function ResumenOrganizacion() {
-  const { data, isPending, isError, error } = useQuery({
-    queryKey: ['admin', 'resumen'],
-    queryFn: obtenerResumenAdmin,
-  })
+  const resumen = useQuery({ queryKey: ['resumen-admin'], queryFn: obtenerResumenAdmin })
+
+  if (resumen.isPending) return <Cargando />
+  if (resumen.isError) return <Aviso tono="error">{mensajeDeError(resumen.error)}</Aviso>
+
+  const { cifras, por_revisar: porRevisar, disputas, por_iniciar: porIniciar } = resumen.data
 
   return (
-    <>
-      <header className="panel-cabecera">
-        <div>
-          <h1>Organización</h1>
-          <p>El estado de la competencia y lo que está esperando por ti.</p>
-        </div>
+    <div>
+      <header className="encabezado-pagina">
+        <h1 className="titulo-pagina">Organización</h1>
       </header>
 
-      <NavegacionDelPanel enlaces={ENLACES_DE_ORGANIZACION} />
+      <NavegacionDelPanel
+        enlaces={ENLACES_DE_ORGANIZACION}
+        contadores={{
+          '/organizacion/inscripciones': cifras.inscripciones_por_revisar,
+          '/organizacion/disputas': cifras.disputas,
+        }}
+      />
 
-      {isPending && <Cargando />}
-      {isError && <Aviso tono="error">{mensajeDeError(error)}</Aviso>}
-
-      {data && (
-        <>
-          <div className="cifras">
-            <div className="cifra">
-              <strong>{data.cifras.torneos_activos}</strong>
-              <span>Torneos activos</span>
-            </div>
-            <div className="cifra">
-              <strong>{data.cifras.equipos}</strong>
-              <span>Equipos</span>
-            </div>
-            <div className="cifra">
-              <strong>{data.cifras.inscripciones_por_revisar}</strong>
-              <span>Por revisar</span>
-            </div>
-            <div className="cifra">
-              <strong>{data.cifras.partidos_sin_resultado}</strong>
-              <span>Sin resultado</span>
-            </div>
-            <div className="cifra">
-              <strong>{data.cifras.recaudado_formateado}</strong>
-              <span>Recaudado</span>
-            </div>
+      <div className="pila pila--chica">
+        <div className="cifras">
+          <Link to="/organizacion/torneos">
+            <span className="rotulo">Torneos activos</span>
+            <strong>{cifras.torneos_activos}</strong>
+          </Link>
+          <Link to="/organizacion/inscripciones">
+            <span className="rotulo">Por revisar</span>
+            <strong>{cifras.inscripciones_por_revisar}</strong>
+          </Link>
+          <Link to="/organizacion/disputas">
+            <span className="rotulo">Disputas</span>
+            <strong>{cifras.disputas}</strong>
+          </Link>
+          <div>
+            <span className="rotulo">Equipos</span>
+            <strong>{cifras.equipos}</strong>
           </div>
-
-          <div className="rejilla rejilla--dos seccion">
-            <Tarjeta
-              titulo="Inscripciones por revisar"
-              accion={
-                <Link className="enlace-mas" to="/organizacion/inscripciones">
-                  Ver todas →
-                </Link>
-              }
-            >
-              {data.por_revisar.length === 0 ? (
-                <p style={{ color: 'var(--apagado)', fontSize: '.82rem' }}>
-                  <ClipboardCheck size={15} /> No hay nada pendiente. Todo al día.
-                </p>
-              ) : (
-                <div className="detalle-lista">
-                  {data.por_revisar.map((inscripcion) => (
-                    <div key={inscripcion.id}>
-                      <span>
-                        {inscripcion.equipo?.nombre} · {inscripcion.torneo?.nombre}
-                      </span>
-                      <Insignia estado={inscripcion.estado} />
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Tarjeta>
-
-            <Tarjeta titulo="Partidos jugados sin resultado">
-              {data.partidos_pendientes.length === 0 ? (
-                <p style={{ color: 'var(--apagado)', fontSize: '.82rem' }}>
-                  <Flag size={15} /> Todos los partidos disputados tienen su marcador cargado.
-                </p>
-              ) : (
-                <div className="detalle-lista">
-                  {data.partidos_pendientes.map((partido) => (
-                    <div key={partido.id}>
-                      <span>
-                        <Escudo equipo={partido.equipo_local} tamano="chico" />{' '}
-                        {partido.equipo_local?.abreviatura} vs {partido.equipo_visitante?.abreviatura}
-                      </span>
-                      <Link
-                        className="enlace-mas"
-                        to={`/organizacion/torneos/${partido.torneo?.slug}?vista=calendario`}
-                      >
-                        {fechaYHora(partido.programado_para)} →
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Tarjeta>
+          <div>
+            <span className="rotulo">Recaudado</span>
+            <strong style={{ fontSize: '1.4rem' }}>{cifras.recaudado_formateado}</strong>
           </div>
-        </>
-      )}
-    </>
+        </div>
+
+        <div className="rejilla rejilla--anchas">
+          <Tarjeta titulo="Disputas">
+            {disputas.length === 0 ? (
+              <p className="apagado">Ninguna.</p>
+            ) : (
+              <div className="lista-detalle">
+                {disputas.map((partido) => (
+                  <div key={partido.id}>
+                    <Link to={`/partidos/${partido.id}`}>
+                      {partido.equipo_a?.nombre} vs {partido.equipo_b?.nombre}
+                    </Link>
+                    <span>{partido.torneo?.nombre}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Tarjeta>
+
+          <Tarjeta titulo="Inscripciones por revisar">
+            {porRevisar.length === 0 ? (
+              <p className="apagado">Ninguna.</p>
+            ) : (
+              <div className="lista-detalle">
+                {porRevisar.map((inscripcion) => (
+                  <div key={inscripcion.id}>
+                    <EquipoEnLinea equipo={inscripcion.equipo} enlazar={false} />
+                    <Link to={`/organizacion/torneos/${inscripcion.torneo.slug}`}>{inscripcion.torneo.nombre}</Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Tarjeta>
+
+          <Tarjeta titulo="Por iniciar">
+            {porIniciar.length === 0 ? (
+              <p className="apagado">Ninguno.</p>
+            ) : (
+              <div className="lista-detalle">
+                {porIniciar.map((torneo) => (
+                  <div key={torneo.id}>
+                    <Link to={`/organizacion/torneos/${torneo.slug}`}>{torneo.nombre}</Link>
+                    <span className="fila">
+                      {fechaYHora(torneo.fechas.inicia_en)}
+                      <Insignia estado={torneo.estado} />
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Tarjeta>
+        </div>
+      </div>
+    </div>
   )
 }

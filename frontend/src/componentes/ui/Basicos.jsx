@@ -87,13 +87,13 @@ export function CampoDeColor({ etiqueta, error, value, onChange, name }) {
   return (
     <Campo etiqueta={etiqueta} error={error} id={name}>
       <span className="campo-color">
-        <input type="color" id={name} name={name} value={value || '#0B1D17'} onChange={onChange} />
+        <input type="color" id={name} name={name} value={value || '#FF4655'} onChange={onChange} />
         <input
           className="campo__control"
           name={name}
           value={value || ''}
           onChange={onChange}
-          placeholder="#0B1D17"
+          placeholder="#FF4655"
           maxLength={7}
           aria-label={`${etiqueta} en hexadecimal`}
         />
@@ -126,28 +126,28 @@ export function Tarjeta({ titulo, accion, children, plana = false, className = '
 }
 
 const TONOS_DE_INSIGNIA = {
+  // Torneo
   borrador: 'neutra',
   inscripciones_abiertas: 'exito',
   inscripciones_cerradas: 'aviso',
   en_curso: 'acento',
   finalizado: 'neutra',
   cancelado: 'error',
+  // Inscripción
   pendiente_pago: 'aviso',
   pendiente_revision: 'info',
   aprobada: 'exito',
   rechazada: 'error',
   retirada: 'neutra',
-  programado: 'info',
-  en_juego: 'acento',
-  aplazado: 'aviso',
-  pendiente: 'aviso',
+  // Partido
+  pendiente: 'neutra',
+  por_jugar: 'info',
+  reportado: 'aviso',
+  en_disputa: 'error',
+  // Orden de pago
   pagada: 'exito',
   fallida: 'error',
   expirada: 'neutra',
-  activo: 'exito',
-  lesionado: 'aviso',
-  suspendido: 'error',
-  inactivo: 'neutra',
 }
 
 /**
@@ -155,9 +155,15 @@ const TONOS_DE_INSIGNIA = {
  * que un estado nuevo en el backend aparece aquí sin tocar nada (en gris).
  */
 export function Insignia({ estado, tono, children }) {
-  const elegido = tono ?? TONOS_DE_INSIGNIA[estado?.valor ?? estado] ?? 'neutra'
+  const valor = estado?.valor ?? estado
+  const elegido = tono ?? TONOS_DE_INSIGNIA[valor] ?? 'neutra'
+  const vivo = valor === 'en_curso'
 
-  return <span className={`insignia insignia--${elegido}`}>{children ?? estado?.etiqueta ?? estado}</span>
+  return (
+    <span className={`insignia insignia--${elegido} ${vivo ? 'insignia--vivo' : ''}`}>
+      {children ?? estado?.etiqueta ?? estado}
+    </span>
+  )
 }
 
 const ICONOS_DE_AVISO = {
@@ -198,16 +204,24 @@ export function EstadoVacio({ icono, titulo, children, accion }) {
   )
 }
 
-export function Forma({ resultados = [] }) {
-  if (resultados.length === 0) return <span aria-hidden="true">—</span>
-
+/**
+ * Pestañas sencillas: la pestaña activa la guarda quien las usa.
+ */
+export function Pestanas({ opciones, activa, alCambiar }) {
   return (
-    <span className="forma" aria-label={`Últimos resultados: ${resultados.join(', ')}`}>
-      {resultados.map((resultado, indice) => (
-        <span className={`forma__marca forma__marca--${resultado}`} key={`${resultado}-${indice}`} aria-hidden="true">
-          {resultado}
-        </span>
+    <div className="pestanas" role="tablist">
+      {opciones.map((opcion) => (
+        <button
+          key={opcion.valor}
+          type="button"
+          role="tab"
+          aria-selected={activa === opcion.valor}
+          className={`pestanas__boton ${activa === opcion.valor ? 'pestanas__boton--activa' : ''}`}
+          onClick={() => alCambiar(opcion.valor)}
+        >
+          {opcion.etiqueta}
+        </button>
       ))}
-    </span>
+    </div>
   )
 }

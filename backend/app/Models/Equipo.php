@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enumeraciones\EstadoTorneo;
+use App\Enumeraciones\Juego;
 use App\Models\Rasgos\TieneImagenes;
 use App\Models\Rasgos\TieneSlug;
 use Database\Factories\EquipoFactory;
@@ -9,13 +11,16 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
 /**
- * Un equipo pertenece a un dueño, que es quien paga la inscripción y gestiona
- * la plantilla.
+ * Un equipo de un juego. Lo crea su capitán, que es quien lo inscribe y paga;
+ * los demás entran con el código de invitación.
+ *
+ * @property Juego $juego
  */
 class Equipo extends Model
 {
@@ -25,27 +30,22 @@ class Equipo extends Model
     protected $table = 'equipos';
 
     /**
+     * El juego y el capitán no son asignables en masa: el juego no cambia
+     * nunca, y la capitanía se cede con GestorDeEquipos.
+     *
      * @var list<string>
      */
     protected $fillable = [
         'nombre',
         'abreviatura',
-        'ciudad',
-        'estadio',
-        'fundado_en',
-        'descripcion',
-        'color_primario',
-        'color_secundario',
-        'activo',
+        'color',
     ];
 
     /**
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'color_primario' => '#0B1D17',
-        'color_secundario' => '#EAB857',
-        'activo' => true,
+        'color' => '#FF4655',
     ];
 
     /**
@@ -54,13 +54,18 @@ class Equipo extends Model
     protected function casts(): array
     {
         return [
-            'fundado_en' => 'date',
-            'activo' => 'boolean',
+            'juego' => Juego::class,
         ];
     }
 
     protected static function booted(): void
     {
+        static::creating(function (self $equipo): void {
+            if (blank($equipo->codigo_invitacion)) {
+                $equipo->codigo_invitacion = self::codigoNuevo();
+            }
+        });
+
         static::saving(function (self $equipo): void {
             if ($equipo->isDirty('abreviatura') && filled($equipo->abreviatura)) {
                 $equipo->abreviatura = Str::upper($equipo->abreviatura);
@@ -69,19 +74,39 @@ class Equipo extends Model
     }
 
     /**
-     * @return BelongsTo<Usuario, $this>
+     * Ocho caracteres sin los que se confunden al dictarlos (0/O, 1/I/L).
      */
-    public function dueno(): BelongsTo
+    public static function codigoNuevo(): string
     {
-        return $this->belongsTo(Usuario::class, 'dueno_id');
+        $alfabeto = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+
+        do {
+            $codigo = '';
+
+            for ($i = 0; $i < 8; $i++) {
+                $codigo .= $alfabeto[random_int(0, strlen($alfabeto) - 1)];
+            }
+        } while (self::withTrashed()->where('codigo_invitacion', $codigo)->exists());
+
+        return $codigo;
     }
 
     /**
-     * @return HasMany<Jugador, $this>
+     * @return BelongsTo<Usuario, $this>
      */
-    public function jugadores(): HasMany
+    public function capitan(): BelongsTo
     {
-        return $this->hasMany(Jugador::class);
+        return $this->belongsTo(Usuario::class, 'capitan_id');
+    }
+
+    /**
+     * @return BelongsToMany<Usuario, $this>
+     */
+    public function miembros(): BelongsToMany
+    {
+        return $this->belongsToMany(Usuario::class, 'miembros_equipo')
+            ->withPivot('es_suplente')
+            ->withTimestamps();
     }
 
     /**
@@ -93,41 +118,58 @@ class Equipo extends Model
     }
 
     /**
-     * @return HasMany<Partido, $this>
-     */
-    public function partidosComoLocal(): HasMany
-    {
-        return $this->hasMany(Partido::class, 'equipo_local_id');
-    }
-
-    /**
-     * @return HasMany<Partido, $this>
-     */
-    public function partidosComoVisitante(): HasMany
-    {
-        return $this->hasMany(Partido::class, 'equipo_visitante_id');
-    }
-
-    /**
      * @param  Builder<static>  $consulta
      */
-    public function scopeDelDueno(Builder $consulta, Usuario $dueno): void
+    public function scopeDelMiembro(Builder $consulta, Usuario $usuario): void
     {
-        $consulta->where('dueno_id', $dueno->getKey());
+        $consulta->whereHas('miembros', fn (Builder $miembros) => $miembros->whereKey($usuario->getKey()));
+    }
+
+    public function esCapitan(?Usuario $usuario): bool
+    {
+        return $usuario !== null && $usuario->getKey() === $this->capitan_id;
+    }
+
+    public function tieneMiembro(Usuario $usuario): bool
+    {
+        return $this->miembros()->whereKey($usuario->getKey())->exists();
     }
 
     /**
-     * Rutas de las imágenes del equipo, para poder borrarlas del disco cuando
-     * se reemplazan o el equipo se elimina.
+     * Un equipo que está jugando un torneo no cambia de plantilla hasta que el
+     * torneo termine.
+     */
+    public function estaCompitiendo(): bool
+    {
+        return $this->inscripciones()
+            ->aprobadas()
+            ->whereHas('torneo', fn (Builder $torneo) => $torneo->where('estado', EstadoTorneo::EnCurso->value))
+            ->exists();
+    }
+
+    /**
+     * Lo mínimo para pintar al equipo en una tabla o en un cuadro. Las tablas
+     * se guardan en caché como arreglos, por eso no es un Resource.
      *
+     * @return array{id: int, nombre: string, slug: string, abreviatura: string, color: string, logo_url: string|null}
+     */
+    public function resumen(): array
+    {
+        return [
+            'id' => $this->getKey(),
+            'nombre' => $this->nombre,
+            'slug' => $this->slug,
+            'abreviatura' => $this->abreviatura,
+            'color' => $this->color,
+            'logo_url' => $this->urlDeImagen($this->logo_ruta),
+        ];
+    }
+
+    /**
      * @return array<int, string>
      */
     public function rutasDeImagenes(): array
     {
-        return array_values(array_filter([
-            $this->escudo_ruta,
-            $this->uniforme_local_ruta,
-            $this->uniforme_visitante_ruta,
-        ]));
+        return array_values(array_filter([$this->logo_ruta]));
     }
 }

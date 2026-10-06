@@ -1,7 +1,5 @@
 <?php
 
-use App\Enumeraciones\EstadoJugador;
-use App\Enumeraciones\PosicionJugador;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,14 +15,14 @@ return new class extends Migration
             $table->string('apellidos', 120);
             $table->string('documento_identidad', 40);
             $table->date('fecha_nacimiento');
-            $table->string('posicion', 30)->default(PosicionJugador::Mediocampista->value);
+            $table->string('posicion', 30)->default('mediocampista');
 
             // Nullable a propósito: al dar de baja a un jugador se libera su
             // dorsal para que otro pueda usarlo, sin romper el índice único ni
             // perder el historial de goles del jugador retirado.
             $table->unsignedTinyInteger('numero_camiseta')->nullable();
 
-            $table->string('estado', 30)->default(EstadoJugador::Activo->value);
+            $table->string('estado', 30)->default('activo');
             $table->boolean('es_capitan')->default(false);
             $table->string('foto_ruta')->nullable();
             $table->string('telefono', 30)->nullable();

@@ -14,6 +14,12 @@ class RegistroRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // El apodo es público y forma parte de la dirección del perfil, así
+            // que solo admite letras, números, guion y guion bajo.
+            'apodo' => [
+                'required', 'string', 'min:3', 'max:20', 'regex:/^[A-Za-z0-9_-]+$/',
+                Rule::unique('usuarios', 'apodo'),
+            ],
             'nombre' => ['required', 'string', 'min:3', 'max:120'],
             'correo' => [
                 'required', 'string', 'email:filter', 'max:255',
@@ -32,6 +38,10 @@ class RegistroRequest extends FormRequest
             $this->merge(['correo' => mb_strtolower(trim((string) $this->input('correo')))]);
         }
 
+        if ($this->has('apodo')) {
+            $this->merge(['apodo' => trim((string) $this->input('apodo'))]);
+        }
+
         if ($this->has('nombre')) {
             $this->merge(['nombre' => trim((string) $this->input('nombre'))]);
         }
@@ -40,9 +50,21 @@ class RegistroRequest extends FormRequest
     /**
      * @return array<string, string>
      */
+    public function messages(): array
+    {
+        return [
+            'apodo.regex' => 'El apodo solo admite letras, números, guion y guion bajo.',
+            'apodo.unique' => 'Ese apodo ya está en uso.',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
     public function attributes(): array
     {
         return [
+            'apodo' => 'apodo',
             'nombre' => 'nombre',
             'correo' => 'correo electrónico',
             'clave' => 'contraseña',

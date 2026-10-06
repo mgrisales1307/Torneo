@@ -12,7 +12,7 @@ class RevisarInscripcionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Al rechazar, el motivo es obligatorio: el dueño del equipo tiene
+            // Al rechazar, el motivo es obligatorio: el capitán del equipo tiene
             // que saber qué corregir.
             'notas' => [
                 $this->routeIs('*.rechazar') ? 'required' : 'nullable',

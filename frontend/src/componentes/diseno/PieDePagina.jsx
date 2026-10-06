@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom'
 export function PieDePagina() {
   return (
     <footer className="pie">
-      <div className="contenedor pie__fila">
-        <span>© {new Date().getFullYear()} Juegos Zone · Gestión de torneos de fútbol</span>
+      <div className="contenedor">
+        <span>© {new Date().getFullYear()} NexZone</span>
         <span>
-          <Link to="/torneos">Torneos</Link> · <Link to="/registro">Inscribe tu equipo</Link>
+          <Link to="/torneos">Torneos</Link>
         </span>
       </div>
     </footer>

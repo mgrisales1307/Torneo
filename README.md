@@ -1,10 +1,11 @@
-# Juegos Zone — Torneos
+# NexZone — Torneos de esports
 
-Plataforma de torneos de fútbol. Cualquiera puede seguir la competencia sin
-cuenta: tabla de posiciones, calendario, resultados, plantillas y goleadores.
-Los dueños de equipo se registran, inscriben su equipo pagando la inscripción y
-gestionan su plantilla. La organización crea los torneos, revisa inscripciones,
-genera el calendario y carga los resultados.
+Plataforma de torneos de **Valorant, League of Legends, Dota 2, PUBG:
+Battlegrounds y Free Fire**. Cualquiera puede seguir los cuadros, las tablas y
+el ranking sin cuenta. Los jugadores arman equipos, se unen con un código,
+vinculan su cuenta de cada juego, se inscriben, hacen check-in y reportan sus
+partidos. La organización crea los torneos, revisa inscripciones, arranca los
+cuadros y resuelve las disputas.
 
 - **backend/** — API en Laravel 13 con autenticación por Sanctum (sesión en cookie).
 - **frontend/** — SPA en React 19 + Vite, con React Router y TanStack Query.
@@ -45,14 +46,30 @@ Abre <http://localhost:5173>.
 No hay que copiar archivos `.env`, ni generar claves, ni correr migraciones: el
 contenedor lo hace solo al arrancar, y lo vuelve a comprobar cada vez.
 
-### Si ya tenías el proyecto de antes
+### Si ya tenías el proyecto de antes (la versión de fútbol)
 
-`docker compose up` aplica las migraciones nuevas sobre tu base de datos
-actual, sin borrar nada. Si prefieres empezar de cero con los datos de
-demostración:
+`docker compose up` aplica la migración que pasa la plataforma a esports. Las
+**cuentas se conservan** —cada una recibe un apodo sacado de su nombre— y las
+tablas del fútbol (plantillas, goles, calendario) se borran, porque no tienen
+equivalente.
+
+Como la base ya existía, la demostración no se carga sola. Para cargarla sin
+borrar tus cuentas:
+
+```bash
+docker compose exec api php artisan db:seed --class=DemostracionSeeder
+```
+
+O, para empezar de cero con todo:
 
 ```bash
 docker compose exec api php artisan migrate:fresh --seed
+```
+
+Y reinstala el frontend, porque cambió la fuente:
+
+```bash
+cd frontend && npm install
 ```
 
 ### Credenciales de desarrollo
@@ -60,40 +77,76 @@ docker compose exec api php artisan migrate:fresh --seed
 | Rol | Correo | Contraseña | Puede |
 | --- | --- | --- | --- |
 | `admin` | `admin@juegoszone.com` | `admin123` | Todo, incluida la gestión de usuarios |
-| `empleado` | `empleado@juegoszone.com` | `trabajador123` | Organizar torneos, inscripciones y resultados |
-| `dueno` | `dueno@juegoszone.com` | `dueno123` | Sus equipos, su plantilla y sus pagos |
-| `espectador` | `test@example.com` | `password` | Solo mirar; no accede a ningún panel |
+| `empleado` | `empleado@juegoszone.com` | `trabajador123` | Organizar torneos, inscripciones y disputas |
+| `jugador` | `jugador@juegoszone.com` | `jugador123` | Sus equipos, cuentas, inscripciones y partidos |
 
-Hay dos dueños más (`dueno2@` y `dueno3@juegoszone.com`, misma contraseña) para
-probar que nadie puede tocar el equipo de otro.
+`jugador@` (apodo **Parcero**) capitanea Cóndores Andinos, de Valorant, y tiene
+un partido esperando que confirme el resultado. Hay dos jugadores más,
+`jugador2@` (**LaMona**) y `jugador3@` (**ElPaisa**), con la misma contraseña,
+y 37 jugadores de relleno (`<apodo>@demo.juegoszone.com`, también
+`jugador123`).
 
 Son **exclusivamente para desarrollo local**. `admin` y `empleado` se aseguran
 en cada arranque, porque sin ellas nadie puede entrar al panel de organización.
-Las demás —los tres dueños y el espectador— solo se crean en una base de datos
-recién nacida.
+Los jugadores solo se crean junto con la demostración.
 
 ### Datos de demostración
 
-La primera vez que arranca, la base se llena con un torneo completo: ocho
-equipos con plantilla, calendario generado y las primeras cuatro jornadas ya
-jugadas, más un segundo torneo con las inscripciones abiertas para probar el
-flujo de pago.
+En una base recién creada se cargan siete torneos, cada uno en un momento
+distinto, para que todas las pantallas tengan algo que mostrar:
 
-Se siembra **solo en una base recién creada**. Esto importa: el arranque del
-contenedor ejecuta `migrate --seed` cada vez, así que si la condición fuera
-más laxa, un reinicio le devolvería los datos de prueba a quien acaba de
-borrarlos, y hasta le crearía equipos de demostración a nombre de su propia
-cuenta.
+| Juego | Torneo | Formato | Estado |
+| --- | --- | --- | --- |
+| Valorant | Copa Neón Valorant | Eliminación doble | En curso, con un reporte por confirmar |
+| Valorant | Relámpago Valorant | Eliminación simple | Inscripciones abiertas, gratis |
+| League of Legends | Grieta del Pacífico | Grupos y eliminación | Grupos terminados, eliminatorias en curso |
+| Dota 2 | Ancients Cup | Eliminación simple | Finalizado, con campeón |
+| Dota 2 | Suizo de Roshan | Sistema suizo | Primera ronda jugada |
+| PUBG | Erangel Colombia | Battle royale | Dos de cuatro partidas |
+| Free Fire | Booyah Fest | Battle royale | Inscripciones pagas y check-in abierto |
 
-Para vaciar la base y volver a empezar con la demostración:
+Los cuadros y resultados se generan con los mismos servicios que usa la
+aplicación, así que la demostración nunca contradice las reglas. Se siembra
+**solo en una base recién creada**: el arranque del contenedor ejecuta
+`migrate --seed` cada vez, y si la condición fuera más laxa, un reinicio le
+devolvería los datos de prueba a quien acaba de borrarlos.
 
-```bash
-docker compose exec api php artisan migrate:fresh --seed
-```
+### Portadas de los juegos
 
-Y para trabajar con la base limpia, sin datos de prueba, basta borrar lo que
-sobre: los reinicios respetan ese estado y solo se aseguran de que existan
-`admin` y `empleado`.
+Están en `frontend/src/assets/juegos/`, una por juego y con su nombre
+(`valorant.webp`, `lol.webp`, `dota2.webp`, `pubg.webp`, `freefire.webp`). Se
+recortó el marco que traían las capturas y se pasaron a WebP: las cinco juntas
+pesan 176 KB, frente a 1,7 MB de los originales.
+
+Para cambiar una basta con reemplazar el archivo manteniendo el nombre (sirve
+png, jpg, webp o avif). Si falta alguna, la tarjeta se pinta con el color del
+juego y su sigla, así que la página nunca se rompe.
+
+Son arte oficial de Riot, Valve, Krafton y Garena: sirven para la entrega
+académica, no para publicar la plataforma comercialmente.
+
+### El vídeo de bienvenida
+
+La portada abre con el cinemático `NexZone_Cinematic_Final.mp4`, a todo el
+ancho y con el título encima. Arranca silenciado —los navegadores no dejan
+reproducir sonido sin que la persona lo pida— y el botón de la esquina le da
+voz.
+
+**Cómo se preparó**, por si hay que rehacerlo con otro vídeo (ffmpeg):
+
+1. El original es 1280 × 720, 24 fps, 20 s y 12,6 MB.
+2. Se recodificó en H.264 con CRF 28 y `+faststart`, para que empiece a
+   reproducirse antes de bajar entero: **4,1 MB** (`bienvenida-720.mp4`).
+3. Una versión para móviles en 854 × 480 con CRF 28: **2,3 MB**
+   (`bienvenida-480.mp4`). La elige el navegador según el ancho de la pantalla.
+4. El cartel es el fotograma del segundo 15 —los personajes de todos los juegos
+   alrededor del trofeo— en JPEG: 99 KB (`bienvenida-cartel.jpg`).
+
+Quien pide movimiento reducido, quien navega con ahorro de datos y quien está
+en 2G recibe solo el cartel.
+
+El título va abajo a la izquierda, sobre un velo degradado: el cinemático tiene
+escenas de humo casi blanco, y sin el velo el texto se perdería en ellas.
 
 ---
 
@@ -118,75 +171,23 @@ entorno del contenedor tienen prioridad.
 
 ### Tipografía
 
-Dos familias, las dos alojadas en el propio proyecto (paquetes de Fontsource en
-`node_modules`), nunca pedidas a Google Fonts: así la aplicación no depende de
-un tercero y no se filtra la IP de quien nos visita.
+Una sola familia, **Pitagon Sans** (licencia OFL), la misma del proyecto juzt.
+Se sirve desde `frontend/src/assets/fuentes/`, nunca desde un CDN: así la
+aplicación no depende de un tercero y no se filtra la IP de quien nos visita.
 
-| Voz | Familia | Dónde |
-| --- | --- | --- |
-| Titulares | **Instrument Serif** | Portadas, nombres de torneo, títulos de sección |
-| Interfaz | **Archivo** | Todo el texto, botones, formularios |
-| Datos | **Archivo estrechada** (clase `.datos`) | Tablas, marcadores, minutos, dorsales |
+La jerarquía de títulos es la de juzt, con sus mismos tamaños fluidos
+(`frontend/src/estilos/tokens.css`):
 
-La tercera voz no es una tercera fuente: Archivo es variable y trae un **eje de
-ancho** (62 %–125 %), así que la misma familia se estrecha para las columnas de
-cifras, como se compone una tabla de posiciones en un periódico deportivo.
+| Clase | Tamaño | Peso | Uso |
+| --- | --- | --- | --- |
+| `.titulo-pagina` | `clamp(3rem, 5.4vw, 6.6rem)` | 900 | El título de cada pantalla |
+| `.titulo-seccion` | `clamp(2.5rem, 3.9vw, 4rem)` | 900 | Secciones grandes de las páginas públicas |
+| `.titulo-bloque` | `clamp(1.55rem, 2vw, 1.9rem)` | 800 | Tarjetas, paneles y diálogos |
+| `.entradilla` | `clamp(1.02rem, 1.15vw, 1.14rem)` | 400 | El párrafo que acompaña a un título |
+| `.rotulo` | `0.68rem`, versales, `0.14em` | 600 | La etiqueta sobre un título o un dato |
 
-Dos detalles que conviene no deshacer:
-
-- Las cifras de las tablas llevan `font-variant-numeric: tabular-nums`. Hace
-  falta de verdad: los dígitos de Archivo miden 575, 576 o 577 unidades según
-  el caso, y sin esa propiedad las columnas se desalinean fila a fila.
-- Los pesos son los de la escala (400, 500, 600, 700) y el interletraje
-  negativo se reserva para los titulares grandes. Valores intermedios del tipo
-  `font-weight: 730` o tracking cerrado en el texto corrido son lo que le da a
-  una interfaz ese aire de plantilla generada.
-
-### La portada animada
-
-El home abre con el estadio a pantalla completa, en vídeo. Se apila en cinco
-capas, de atrás hacia delante: el cartel (un fotograma, para que haya imagen en
-el primer pintado), el vídeo en bucle, el velo degradado, los rayos de luz y el
-confeti.
-
-**Procedencia del metraje.** Es un clip de [Pexels]
-(https://www.pexels.com/video/exciting-night-football-match-in-stadium-35002181/),
-bajo licencia Pexels: libre para uso comercial y no comercial, sin atribución
-obligatoria. Se sustituyó la imagen anterior, que era una previsualización de
-Adobe Stock con la marca de agua visible y sin licencia.
-
-**Cómo se preparó**, por si hay que rehacerlo con otro plano:
-
-1. El original viene en 2560 × 1440. Las versiones 4K de Pexels están tras
-   descarga firmada, así que **el máster es de 1440p, no de 4K**.
-2. Se recortó a 10,5 s y se hizo un bucle sin costura mezclando la cola con la
-   cabeza con un cruce de 1,5 s. La diferencia entre el primer y el último
-   fotograma quedó en el 2,2%: el salto no se percibe.
-3. Se codificó sin reducción de ruido —el denoise borraba los destellos de los
-   móviles en la tribuna, que es lo más bonito del plano— y con CRF 34, que
-   compensa el peso.
-4. Salen tres archivos: 1440p para escritorio (3,5 MB), 720p para móviles
-   (1,5 MB) y el cartel en JPEG (0,15 MB). Quien pide movimiento reducido, quien
-   navega con ahorro de datos y quien está en 2G recibe solo el cartel.
-
-**Por qué no es 4K servido al navegador.** Ese mismo plano en 4K pesa 52 MB por
-diez segundos. Un fondo que va oscurecido bajo un velo y detrás de un texto no
-gana nada perceptible con esa resolución, y sí perdería a cualquiera con una
-conexión normal.
-
-**La legibilidad del texto está medida, no estimada.** Se muestreó el brillo del
-vídeo fotograma a fotograma y se compuso el velo encima para calcular el
-contraste real del texto crema en el peor momento del bucle:
-
-| | Contraste | WCAG |
-| --- | --- | --- |
-| Sin velo | 1,28:1 | ilegible |
-| Con el velo actual | 8,54:1 | cumple AA (4,5:1) y AAA (7:1) |
-
-El velo es degradado y no plano porque un velo uniforme necesitaría oscurecer el
-78% de toda la imagen para alcanzar el mínimo, y entonces el vídeo no se vería.
-**Si se cambia el metraje o se mueve el texto de sitio, hay que volver a medir**:
-esos números valen para este plano.
+Los títulos llevan el interletraje cerrado (−0.045em, −0.04em y −0.035em) y el
+texto corrido va en 400, sin tocar.
 
 ### Convención de nombres
 
@@ -204,73 +205,124 @@ compose.yaml                Levanta la API. Es el único archivo que hay que eje
 docker/api/                 Imagen de la API: PHP, Composer y el arranque.
 
 backend/
-  app/Enumeraciones/        Estados y tipos del dominio (torneo, inscripción, partido…).
-  app/Models/               Torneo, Equipo, Jugador, Inscripcion, Orden, Pago, Partido…
-  app/Policies/             Quién puede hacer qué sobre cada modelo.
+  app/Enumeraciones/        Juego, formatos, fases, estados de torneo, partido e inscripción.
+  app/Models/               Torneo, Fase, Partido, Equipo, CuentaDeJuego, Inscripcion, Orden…
+  app/Policies/             Quién puede hacer qué: capitán, miembro u organización.
   app/Servicios/
-    Torneos/                Calendario, tabla de posiciones, goleadores, resultados.
-    Inscripciones/          Transiciones de estado de una inscripción.
+    Equipos/                Crear equipos, unirse con código, suplentes y capitanía.
+    Inscripciones/          Inscripción, revisión y check-in.
+    Torneos/                Inicio, avance, resultados, tablas y ranking.
+    Torneos/Cuadros/        Los algoritmos: eliminación simple y doble, grupos y suizo.
     Pagos/                  Contrato de pasarela, pasarela simulada y gestor de cobros.
-    Medios/                 Subida y validación de escudos, uniformes y fotos.
+    Medios/                 Subida y validación de logos y capturas.
   app/Http/Controllers/Api/V1/
     Publico/                Lo que ve cualquier visitante.
-    Dueno/                  El panel del dueño de equipo.
+    Panel/                  El panel del jugador.
     Admin/                  El panel de la organización.
-  app/Http/Requests/        Validación de cada formulario.
-  app/Http/Resources/       Forma del JSON que sale de la API.
-  lang/es/                  Mensajes de validación en español.
-  tests/Feature/            100 pruebas que cubren el flujo completo.
+  tests/                    118 pruebas: los algoritmos y el flujo completo.
 
 frontend/src/
-  paginas/publico/          Portada, torneos, ficha de equipo, detalle de partido.
+  paginas/publico/          Portada, juego, torneos, torneo, partido, equipo y jugador.
   paginas/acceso/           Ingreso y registro.
-  paginas/panel/            Equipos, plantilla, inscripciones y pago.
-  paginas/admin/            Resumen, torneos, calendario, resultados, usuarios.
+  paginas/panel/            Pendientes, equipos, inscripciones, cuentas y pago.
+  paginas/admin/            Resumen, torneos, inscripciones, disputas y usuarios.
+  componentes/torneo/       Cuadro, cruces, tablas, ranking y formularios de resultado.
+  componentes/juego/        Portada de cada juego.
+  componentes/equipo/       Logo del equipo.
   componentes/ui/           Botones, campos, tarjetas, diálogos, insignias.
-  componentes/torneo/       Tabla de posiciones, lista de partidos, goleadores.
-  componentes/diseno/       Cabecera, pie, armazón del sitio y rutas protegidas.
-  contexto/                 La sesión de quien está navegando.
-  lib/                      Cliente de la API y formato de fechas y dinero.
-  estilos/                  Tokens de diseño, base, componentes y páginas.
+  lib/                      Cliente de la API, formato de fechas y dinero, y los juegos.
+  estilos/                  Tokens, base, componentes y páginas.
 ```
 
 ---
 
-## Cómo funciona el torneo
+## Cómo funciona
+
+### Los juegos
+
+| Juego | Modo | Equipo | Cuenta que se vincula |
+| --- | --- | --- | --- |
+| Valorant | Duelo 5v5 | 5 titulares + 2 suplentes | Riot ID (`Nombre#LAN`) |
+| League of Legends | Duelo 5v5 | 5 titulares + 2 suplentes | Riot ID |
+| Dota 2 | Duelo 5v5 | 5 titulares + 2 suplentes | Steam ID (17 cifras) |
+| PUBG: Battlegrounds | Battle royale | Escuadra de 4 + 1 suplente | Nombre en PUBG |
+| Free Fire | Battle royale | Escuadra de 4 + 1 suplente | UID de Free Fire |
+
+Cada regla que cambia de un juego a otro vive en el enum `Juego`: el formato de
+la cuenta, cuántos caben en una sala y la tabla de puntos del battle royale (la
+de PUBG Global Series y la de Free Fire World Series, más un punto por baja).
 
 ### El recorrido de un equipo
 
 ```
-  registro  →  crear equipo  →  cargar plantilla  →  inscribirse  →  pagar
-                                                                       │
-        la organización revisa  ◄──────────────────────────────────────┘
-                   │
-                   ├─ aprueba  →  el equipo entra al calendario y a la tabla
-                   └─ rechaza  →  el dueño ve el motivo y puede corregir
+  crear equipo  →  compartir el código  →  cada uno vincula su cuenta del juego
+                                                         │
+  inscribirse  →  pagar  →  la organización aprueba  →  check-in  →  cuadro
 ```
 
-Una inscripción pasa por estos estados: `pendiente_pago` → `pendiente_revision`
-→ `aprobada`, y puede terminar en `rechazada` o `retirada`. El estado no se
-cambia a mano en ningún controlador: lo mueve `GestorDeInscripciones`, que es
-quien conoce las transiciones válidas.
+- **Capitán** no es un rol de la cuenta: es un cargo dentro de cada equipo.
+  Solo el capitán inscribe, paga, hace el check-in y reporta resultados, y
+  puede ceder la capitanía.
+- Para inscribirse, el equipo necesita la **plantilla titular completa** y que
+  **todos** tengan su cuenta del juego vinculada. Nadie puede jugar el mismo
+  torneo con dos equipos.
+- Mientras el equipo juega un torneo, la plantilla y las cuentas **no cambian**.
+- El **check-in** abre los minutos que diga el torneo antes de su inicio. Al
+  arrancar, los aprobados que no lo hicieron quedan fuera.
 
-### El calendario
+Una inscripción pasa por `pendiente_pago` → `pendiente_revision` → `aprobada`,
+y puede terminar en `rechazada` o `retirada`. El estado no se cambia a mano en
+ningún controlador: lo mueve `GestorDeInscripciones`.
 
-`GeneradorDeCalendario` arma la liga con el método del círculo: con n equipos
-salen n-1 jornadas donde todos juegan contra todos una vez, alternando local y
-visitante. Si el número de equipos es impar, uno descansa cada fecha. En el
-formato de ida y vuelta se duplican las jornadas invirtiendo la localía.
+### Los formatos
 
-### La tabla de posiciones
+La estructura de un torneo sigue el modelo de Toornament: **torneo → fase →
+partido**. La organización elige el formato y, al iniciar, `InicioDeTorneo`
+siembra a los equipos por el ranking del juego y arma la primera fase.
 
-No se guarda en ninguna columna: se calcula siempre a partir de los partidos
-finalizados, así que es imposible que contradiga a los resultados. Para que eso
-no cueste una consulta pesada en cada visita, se guarda en caché y los servicios
-que tocan resultados la invalidan.
+| Formato | Cómo se arma |
+| --- | --- |
+| Eliminación simple | Cuadro a potencia de dos con orden de siembra clásico (1 contra 16, 8 contra 9…). Los byes caen en las mejores semillas. |
+| Eliminación doble | Igual, más una llave inferior que recibe a los que pierden arriba, y una gran final. |
+| Grupos y eliminación | Reparto en serpiente, todos contra todos en cada grupo y, al terminar, eliminatorias con los clasificados (el primero de un grupo cruza con el último clasificado de otro). |
+| Sistema suizo | Cada ronda empareja récords iguales sin repetir rivales. Si son impares, descansa el peor clasificado y cuenta como victoria. |
+| Battle royale | Todos en cada partida; la tabla suma puntos por puesto y por bajas. |
 
-El marcador de un partido tiene que cuadrar con los goles registrados —contando
-los autogoles al revés—, o no se guarda nada. Es lo que evita que la tabla y la
-de goleadores cuenten historias distintas del mismo partido.
+Los partidos que no se van a jugar (los byes) no se guardan: quien pasa directo
+aparece ya en la ronda siguiente. Cada partido sabe a dónde van su ganador y su
+perdedor, así que avanzar en el cuadro es seguir un puntero.
+
+### Los resultados
+
+```
+  por_jugar ──un capitán reporta──► reportado ──el rival confirma──► finalizado
+                                        │
+                                        └──el rival reporta otro──► en_disputa ──organización──► finalizado
+```
+
+Los capitanes reportan el marcador de la serie con la captura de la pantalla
+final. Si los dos reportes coinciden, el partido se cierra solo y el ganador
+avanza; si no, queda en disputa y la organización decide con las dos capturas a
+la vista. Así nadie tiene que esperar a un árbitro cuando los dos equipos están
+de acuerdo.
+
+El marcador tiene que ser posible para la serie (al mejor de 3: 2-0 o 2-1). La
+organización puede corregir un resultado mientras el partido siguiente no se
+haya jugado; corregir la final reabre el torneo y cambia al campeón.
+
+### Tablas y ranking
+
+Ninguna tabla se guarda en una columna: se calculan siempre a partir de los
+partidos finalizados, así que es imposible que contradigan a los resultados. Se
+guardan en caché y los servicios que tocan resultados la invalidan.
+
+- **Grupos:** 3 puntos por victoria; desempatan la diferencia de mapas y los
+  mapas ganados.
+- **Suizo:** victorias; desempata el Buchholz (las victorias de los rivales
+  enfrentados).
+- **Battle royale:** puntos; desempatan las partidas ganadas y las bajas.
+- **Ranking de cada juego:** Elo en los de duelo (todos arrancan en 1000) y
+  puntos acumulados en battle royale. De aquí sale la siembra.
 
 ### Los pagos
 
@@ -305,14 +357,20 @@ Decisiones que ya están tomadas en el código:
   leer, un XSS tampoco se lo lleva.
 - **Dos capas de permisos.** El middleware `rol` corta por rol a la entrada de
   cada zona; las políticas (`app/Policies`) deciden pieza por pieza si algo es
-  tuyo. Cambiar un identificador en la URL devuelve 403, no los datos de otro.
+  tuyo o si eres el capitán. Cambiar un identificador en la URL devuelve 403,
+  no los datos de otro.
+- **Lo público y lo privado.** El perfil público muestra el apodo y las cuentas
+  de juego; el nombre real y el correo no salen nunca. El código de invitación
+  solo lo ven los miembros del equipo, y las capturas de un reporte, los dos
+  equipos y la organización.
 - **Nada de asignación masiva a ciegas.** Estados, montos y marcadores no son
   `fillable`: los escriben los servicios que conocen las reglas.
 - **Las imágenes se validan de verdad** —tipo real del archivo, peso y
   dimensiones— y se guardan con un nombre generado por el servidor. SVG no se
   acepta: es XML y puede traer scripts dentro.
 - **Límite de peticiones** en ingreso (por correo e IP), registro, pagos,
-  subidas y la API en general.
+  subidas, códigos de invitación (para que no se puedan adivinar a fuerza de
+  intentos) y la API en general.
 - **Mensajes que no filtran**: un correo inexistente y una contraseña
   equivocada responden exactamente lo mismo.
 - **Cabeceras de seguridad** (`nosniff`, `DENY`, `Referrer-Policy`) en toda
@@ -390,39 +448,42 @@ Todo cuelga de `/api/v1`. Las tres zonas son:
 | Zona | Prefijo | Quién entra |
 | --- | --- | --- |
 | Pública | `/api/v1/…` | Cualquiera, sin cuenta |
-| Dueño de equipo | `/api/v1/panel/…` | `dueno`, `admin`, `empleado` |
+| Jugador | `/api/v1/panel/…` | Cualquier cuenta; lo del capitán lo decide cada política |
 | Organización | `/api/v1/admin/…` | `admin`, `empleado` |
 
 Las rutas principales:
 
 ```
-GET    /api/v1/inicio                           Portada: torneos, próximos partidos, resultados
-GET    /api/v1/torneos                          Listado de torneos publicados
-GET    /api/v1/torneos/{slug}                   Ficha del torneo
-GET    /api/v1/torneos/{slug}/tabla             Tabla de posiciones
-GET    /api/v1/torneos/{slug}/partidos          Calendario y resultados
-GET    /api/v1/torneos/{slug}/goleadores        Tabla de goleadores
-GET    /api/v1/torneos/{slug}/equipos           Equipos que ya están dentro
-GET    /api/v1/equipos/{slug}                   Ficha del equipo y su plantilla
-GET    /api/v1/partidos/{id}                    Detalle del partido con sus goles
+GET    /api/v1/inicio                              Portada: juegos, torneos activos, resultados
+GET    /api/v1/juegos/{juego}                      Ficha del juego, sus torneos y su ranking
+GET    /api/v1/torneos                             Torneos publicados (filtros: juego, estado, buscar)
+GET    /api/v1/torneos/{slug}                      Ficha del torneo
+GET    /api/v1/torneos/{slug}/cuadro               Fases, partidos y tablas
+GET    /api/v1/torneos/{slug}/equipos              Equipos aprobados, con semilla y grupo
+GET    /api/v1/partidos/{id}                       Partido; los reportes, solo a sus equipos y la organización
+GET    /api/v1/equipos/{slug}                      Ficha del equipo
+GET    /api/v1/jugadores/{apodo}                   Perfil público del jugador
 
-POST   /api/v1/registro                         Crear cuenta de dueño
-POST   /api/v1/ingreso                          Entrar
-POST   /api/v1/salida                           Salir
-GET    /api/v1/perfil                           Quién soy
+POST   /api/v1/registro                            Crear cuenta (apodo, nombre, correo, clave)
+POST   /api/v1/ingreso                             Entrar
+POST   /api/v1/salida                              Salir
 
-GET    /api/v1/panel/equipos                    Mis equipos
-POST   /api/v1/panel/equipos                    Crear equipo
-POST   /api/v1/panel/equipos/{slug}/imagenes    Escudo y uniformes
-POST   /api/v1/panel/equipos/{slug}/jugadores   Sumar un jugador
-POST   /api/v1/panel/torneos/{slug}/inscripciones   Inscribir mi equipo
-POST   /api/v1/panel/inscripciones/{id}/orden       Generar la orden de pago
+PUT    /api/v1/panel/cuentas/{juego}               Vincular la cuenta de un juego
+POST   /api/v1/panel/equipos                       Crear equipo
+POST   /api/v1/panel/unirse                        Entrar a un equipo con su código
+PATCH  /api/v1/panel/equipos/{slug}/miembros/{id}  Titular o suplente; ceder la capitanía
+POST   /api/v1/panel/torneos/{slug}/inscripciones  Inscribir un equipo
+POST   /api/v1/panel/inscripciones/{id}/orden      Generar la orden de pago
+POST   /api/v1/panel/inscripciones/{id}/check-in   Hacer el check-in
+POST   /api/v1/panel/partidos/{id}/reporte         Reportar el marcador con su captura
 
-GET    /api/v1/admin/resumen                    Cifras y pendientes
-POST   /api/v1/admin/torneos                    Crear torneo
-POST   /api/v1/admin/torneos/{slug}/calendario  Generar el calendario
-POST   /api/v1/admin/inscripciones/{id}/aprobar Aprobar una inscripción
-POST   /api/v1/admin/partidos/{id}/resultado    Cargar el resultado
+POST   /api/v1/admin/torneos                       Crear torneo
+POST   /api/v1/admin/torneos/{slug}/estado         Publicar, cerrar inscripciones o cancelar
+POST   /api/v1/admin/torneos/{slug}/iniciar        Sembrar y armar el cuadro
+POST   /api/v1/admin/inscripciones/{id}/aprobar    Aprobar una inscripción
+GET    /api/v1/admin/partidos                      Disputas y reportes sin confirmar
+POST   /api/v1/admin/partidos/{id}/resultado       Fijar o corregir el marcador
+POST   /api/v1/admin/partidos/{id}/battle-royale   Cargar puestos y bajas de una partida
 ```
 
 La lista completa: `docker compose exec api php artisan route:list --except-vendor`.
@@ -431,18 +492,19 @@ La lista completa: `docker compose exec api php artisan route:list --except-vend
 
 ## Lo que falta para la próxima etapa
 
-La estructura ya está lista para estas piezas, que hoy no existen:
-
-- **Fase de grupos y eliminación directa.** El enum `FormatoTorneo` ya tiene el
-  caso `EliminacionDirecta` y la tabla de inscripciones tiene columna `grupo`;
-  falta que `GeneradorDeCalendario` sepa construir esos cuadros.
+- **Verificación automática de cuentas** con las API de Riot, Steam, Krafton y
+  Garena. Hoy se valida el formato y que nadie más la tenga.
+- **Resultados automáticos.** Las mismas API permiten traer el marcador de una
+  partida sin que nadie lo reporte.
+- **Plazo para confirmar.** Que un reporte sin respuesta se dé por bueno pasado
+  un tiempo, con una tarea programada.
+- **Gran final con revancha** en la eliminación doble, para cuando gana quien
+  viene de la llave inferior.
 - **Pasarela de pago real.** Implementar `PasarelaDePagos` con el proveedor que
   se elija y cambiar `PASARELA_PAGOS` en el entorno.
-- **Notificaciones por correo** cuando se aprueba o se rechaza una inscripción
-  (`Usuario` ya es `Notifiable` y sabe a qué correo escribir).
-- **Sanciones y suspensiones automáticas** a partir de las tarjetas, que ya se
-  registran partido a partido.
-- **Bitácora de auditoría** de las acciones de la organización.
+- **Notificaciones** por correo cuando abre el check-in o el rival reporta.
+- **Consultar a Coljuegos** antes de cobrar inscripciones con premio en dinero
+  real.
 
 ---
 
@@ -474,7 +536,7 @@ lsof -i :5173
 Vite falla a propósito en vez de cambiarse de puerto en silencio: el backend
 espera el 5173, y un cambio de puerto rompería el login.
 
-**Los escudos y las fotos no se ven (salen como imagen rota, o dan 403)**
+**Los logos y las capturas no se ven (salen como imagen rota, o dan 403)**
 El enlace `backend/public/storage` está roto. Pasa cuando se crea desde el host
 —por ejemplo al correr `php artisan storage:link` fuera de Docker—, porque
 entonces apunta a una ruta absoluta del host que dentro del contenedor no

@@ -1,6 +1,5 @@
 <?php
 
-use App\Enumeraciones\EstadoInscripcion;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('torneo_id')->constrained('torneos')->cascadeOnUpdate()->cascadeOnDelete();
             $table->foreignId('equipo_id')->constrained('equipos')->cascadeOnUpdate()->cascadeOnDelete();
-            $table->string('estado', 40)->default(EstadoInscripcion::PendientePago->value)->index();
+            $table->string('estado', 40)->default('pendiente_pago')->index();
 
             // Copia del precio vigente cuando se inscribió: si mañana sube el
             // costo del torneo, esta inscripción sigue debiendo lo que se pactó.

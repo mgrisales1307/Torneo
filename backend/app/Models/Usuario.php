@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Enumeraciones\Juego;
 use App\Enumeraciones\RolUsuario;
 use Database\Factories\UsuarioFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -20,7 +22,11 @@ use Laravel\Sanctum\HasApiTokens;
  * real de la columna, así que todo el framework (login, recordarme,
  * restablecer contraseña, correos) sigue funcionando sin parches.
  *
+ * El apodo es el nombre público; el nombre real y el correo no salen nunca en
+ * las páginas públicas.
+ *
  * @property-read string $nombre
+ * @property-read string $apodo
  * @property-read string $correo
  * @property-read RolUsuario $rol
  */
@@ -36,6 +42,7 @@ class Usuario extends Authenticatable
      */
     protected $fillable = [
         'nombre',
+        'apodo',
         'correo',
         'telefono',
         'clave',
@@ -78,11 +85,31 @@ class Usuario extends Authenticatable
     }
 
     /**
+     * @return HasMany<CuentaDeJuego, $this>
+     */
+    public function cuentasDeJuego(): HasMany
+    {
+        return $this->hasMany(CuentaDeJuego::class);
+    }
+
+    /**
+     * Equipos en los que juega, sea como capitán, titular o suplente.
+     *
+     * @return BelongsToMany<Equipo, $this>
+     */
+    public function equipos(): BelongsToMany
+    {
+        return $this->belongsToMany(Equipo::class, 'miembros_equipo')
+            ->withPivot('es_suplente')
+            ->withTimestamps();
+    }
+
+    /**
      * @return HasMany<Equipo, $this>
      */
-    public function equipos(): HasMany
+    public function equiposQueCapitanea(): HasMany
     {
-        return $this->hasMany(Equipo::class, 'dueno_id');
+        return $this->hasMany(Equipo::class, 'capitan_id');
     }
 
     /**
@@ -101,6 +128,11 @@ class Usuario extends Authenticatable
         return $this->hasMany(Orden::class, 'usuario_id');
     }
 
+    public function cuentaPara(Juego $juego): ?CuentaDeJuego
+    {
+        return $this->cuentasDeJuego->firstWhere('juego', $juego);
+    }
+
     public function esAdministrador(): bool
     {
         return $this->rol === RolUsuario::Administrador;
@@ -112,11 +144,6 @@ class Usuario extends Authenticatable
     public function perteneceAlStaff(): bool
     {
         return in_array($this->rol, [RolUsuario::Administrador, RolUsuario::Empleado], true);
-    }
-
-    public function puedeTenerEquipos(): bool
-    {
-        return $this->rol === RolUsuario::Dueno || $this->perteneceAlStaff();
     }
 
     public function tieneAlgunRol(RolUsuario ...$roles): bool

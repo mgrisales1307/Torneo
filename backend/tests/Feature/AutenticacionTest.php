@@ -11,9 +11,10 @@ class AutenticacionTest extends TestCase
 {
     use LazilyRefreshDatabase;
 
-    public function test_una_persona_se_registra_y_queda_con_la_sesion_abierta_como_duena(): void
+    public function test_una_persona_se_registra_y_queda_con_la_sesion_abierta_como_jugadora(): void
     {
         $respuesta = $this->desdeElFrontend()->postJson('/api/v1/registro', [
+            'apodo' => 'LauraGG',
             'nombre' => 'Laura Gómez',
             'correo' => 'Laura@Equipo.com',
             'clave' => 'tornea2026',
@@ -22,7 +23,8 @@ class AutenticacionTest extends TestCase
 
         $respuesta->assertCreated()
             ->assertJsonPath('usuario.nombre', 'Laura Gómez')
-            ->assertJsonPath('usuario.rol.valor', RolUsuario::Dueno->value);
+            ->assertJsonPath('usuario.apodo', 'LauraGG')
+            ->assertJsonPath('usuario.rol.valor', RolUsuario::Jugador->value);
 
         // El correo se guarda normalizado en minúsculas.
         $usuario = Usuario::query()->where('correo', 'laura@equipo.com')->firstOrFail();
@@ -36,6 +38,7 @@ class AutenticacionTest extends TestCase
         Usuario::factory()->create(['correo' => 'repetido@equipo.com']);
 
         $this->desdeElFrontend()->postJson('/api/v1/registro', [
+            'apodo' => 'OtraPersona',
             'nombre' => 'Otra Persona',
             'correo' => 'repetido@equipo.com',
             'clave' => 'tornea2026',
@@ -46,11 +49,33 @@ class AutenticacionTest extends TestCase
     public function test_el_registro_exige_una_clave_con_letras_y_numeros(): void
     {
         $this->desdeElFrontend()->postJson('/api/v1/registro', [
+            'apodo' => 'LauraGG',
             'nombre' => 'Laura Gómez',
             'correo' => 'laura@equipo.com',
             'clave' => 'corta',
             'clave_confirmation' => 'corta',
         ])->assertUnprocessable()->assertJsonValidationErrors('clave');
+    }
+
+    public function test_el_apodo_es_unico_y_sin_espacios(): void
+    {
+        Usuario::factory()->create(['apodo' => 'Tomado']);
+
+        $this->desdeElFrontend()->postJson('/api/v1/registro', [
+            'apodo' => 'Tomado',
+            'nombre' => 'Laura Gómez',
+            'correo' => 'laura@equipo.com',
+            'clave' => 'tornea2026',
+            'clave_confirmation' => 'tornea2026',
+        ])->assertUnprocessable()->assertJsonValidationErrors('apodo');
+
+        $this->desdeElFrontend()->postJson('/api/v1/registro', [
+            'apodo' => 'con espacio',
+            'nombre' => 'Laura Gómez',
+            'correo' => 'laura@equipo.com',
+            'clave' => 'tornea2026',
+            'clave_confirmation' => 'tornea2026',
+        ])->assertUnprocessable()->assertJsonValidationErrors('apodo');
     }
 
     public function test_las_credenciales_correctas_abren_la_sesion(): void
@@ -97,12 +122,12 @@ class AutenticacionTest extends TestCase
 
     public function test_con_sesion_se_consulta_el_perfil_y_se_cierra_la_sesion(): void
     {
-        $usuario = Usuario::factory()->dueno()->create();
+        $usuario = Usuario::factory()->create();
 
         $this->actingAs($usuario)->getJson('/api/v1/perfil')
             ->assertOk()
             ->assertJsonPath('usuario.correo', $usuario->correo)
-            ->assertJsonPath('usuario.rol.valor', RolUsuario::Dueno->value)
+            ->assertJsonPath('usuario.rol.valor', RolUsuario::Jugador->value)
             // La contraseña no sale nunca en la respuesta.
             ->assertJsonMissingPath('usuario.clave');
 

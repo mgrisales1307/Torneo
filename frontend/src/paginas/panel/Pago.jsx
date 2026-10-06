@@ -38,19 +38,17 @@ export default function Pago() {
   const inscripcion = datos.inscripcion
 
   return (
-    <div style={{ maxWidth: '36rem', marginInline: 'auto' }}>
-      <header className="panel-cabecera">
-        <div>
-          <h1>Pago de inscripción</h1>
-          <p>Orden {datos.referencia}</p>
-        </div>
+    <div className="pila pila--chica" style={{ maxWidth: '36rem', marginInline: 'auto' }}>
+      <header className="encabezado-pagina">
+        <p className="rotulo">Orden {datos.referencia}</p>
+        <h1 className="titulo-pagina">Pago</h1>
         <Insignia estado={datos.estado} />
       </header>
 
       {aviso && <Aviso tono={aviso.tono}>{aviso.texto}</Aviso>}
 
       <Tarjeta className="seccion">
-        <div className="detalle-lista">
+        <div className="lista-detalle">
           <div>
             <span>Torneo</span>
             <strong>{inscripcion?.torneo?.nombre}</strong>
@@ -94,7 +92,7 @@ export default function Pago() {
               Entorno de pruebas: ningún cobro real se realiza.
             </p>
 
-            <div className="barra-acciones" style={{ justifyContent: 'flex-start', marginTop: '1rem' }}>
+            <div className="fila" style={{ marginTop: '1rem' }}>
               <Boton
                 iconoIzquierda={<CreditCard size={16} />}
                 cargando={pagar.isPending}

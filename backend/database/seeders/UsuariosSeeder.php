@@ -18,24 +18,26 @@ use Illuminate\Database\Seeder;
  *   ESENCIALES    admin y empleado. Se aseguran siempre, porque sin ellas nadie
  *                 puede entrar al panel de organización y la aplicación queda a
  *                 medias.
- *   DEMOSTRACIÓN  los dueños de prueba y el espectador. Solo se crean en una
- *                 base recién nacida: si alguien limpió los datos a propósito,
- *                 un reinicio no debe devolvérselos.
+ *   DEMOSTRACIÓN  los jugadores de prueba. Solo se crean en una base recién
+ *                 nacida: si alguien limpió los datos a propósito, un reinicio
+ *                 no debe devolvérselos.
  */
 class UsuariosSeeder extends Seeder
 {
     /**
-     * @var array<int, array{nombre: string, correo: string, clave: string, rol: RolUsuario}>
+     * @var array<int, array{nombre: string, apodo: string, correo: string, clave: string, rol: RolUsuario}>
      */
     private const ESENCIALES = [
         [
             'nombre' => 'Administrador',
+            'apodo' => 'Admin',
             'correo' => 'admin@juegoszone.com',
             'clave' => 'admin123',
             'rol' => RolUsuario::Administrador,
         ],
         [
             'nombre' => 'Empleado de Torneo',
+            'apodo' => 'Organizacion',
             'correo' => 'empleado@juegoszone.com',
             'clave' => 'trabajador123',
             'rol' => RolUsuario::Empleado,
@@ -43,32 +45,33 @@ class UsuariosSeeder extends Seeder
     ];
 
     /**
-     * @var array<int, array{nombre: string, correo: string, clave: string, rol: RolUsuario}>
+     * Los tres jugadores de prueba. El primero capitanea un equipo de
+     * Valorant, el segundo uno de League of Legends y el tercero una escuadra
+     * de PUBG: así se prueba el panel del capitán en los dos tipos de juego.
+     *
+     * @var array<int, array{nombre: string, apodo: string, correo: string, clave: string, rol: RolUsuario}>
      */
-    private const DEMOSTRACION = [
+    public const DEMOSTRACION = [
         [
             'nombre' => 'Carlos Ramírez',
-            'correo' => 'dueno@juegoszone.com',
-            'clave' => 'dueno123',
-            'rol' => RolUsuario::Dueno,
+            'apodo' => 'Parcero',
+            'correo' => 'jugador@juegoszone.com',
+            'clave' => 'jugador123',
+            'rol' => RolUsuario::Jugador,
         ],
         [
             'nombre' => 'Marcela Ospina',
-            'correo' => 'dueno2@juegoszone.com',
-            'clave' => 'dueno123',
-            'rol' => RolUsuario::Dueno,
+            'apodo' => 'LaMona',
+            'correo' => 'jugador2@juegoszone.com',
+            'clave' => 'jugador123',
+            'rol' => RolUsuario::Jugador,
         ],
         [
             'nombre' => 'Andrés Betancur',
-            'correo' => 'dueno3@juegoszone.com',
-            'clave' => 'dueno123',
-            'rol' => RolUsuario::Dueno,
-        ],
-        [
-            'nombre' => 'Hincha de Prueba',
-            'correo' => 'test@example.com',
-            'clave' => 'password',
-            'rol' => RolUsuario::Espectador,
+            'apodo' => 'ElPaisa',
+            'correo' => 'jugador3@juegoszone.com',
+            'clave' => 'jugador123',
+            'rol' => RolUsuario::Jugador,
         ],
     ];
 
@@ -86,6 +89,7 @@ class UsuariosSeeder extends Seeder
                 ['correo' => $cuenta['correo']],
                 [
                     'nombre' => $cuenta['nombre'],
+                    'apodo' => $cuenta['apodo'],
                     'clave' => $cuenta['clave'],
                     'rol' => $cuenta['rol'],
                     'email_verified_at' => now(),

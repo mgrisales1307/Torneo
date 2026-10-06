@@ -1,6 +1,5 @@
 <?php
 
-use App\Enumeraciones\EstadoPartido;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -21,7 +20,7 @@ return new class extends Migration
             $table->timestamp('programado_para')->nullable();
             $table->string('sede', 160)->nullable();
             $table->string('arbitro', 160)->nullable();
-            $table->string('estado', 30)->default(EstadoPartido::Programado->value)->index();
+            $table->string('estado', 30)->default('programado')->index();
 
             $table->unsignedTinyInteger('goles_local')->nullable();
             $table->unsignedTinyInteger('goles_visitante')->nullable();

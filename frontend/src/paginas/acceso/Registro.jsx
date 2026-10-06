@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ArrowUpRight, LoaderCircle } from 'lucide-react'
 import { useSesion } from '../../contexto/contextoDeSesion'
 import { erroresPorCampo, mensajeDeError } from '../../lib/api'
+import { Aviso, Boton, Campo } from '../../componentes/ui/Basicos'
 import { PantallaDeAcceso } from './PantallaDeAcceso'
 
 const FORMULARIO_VACIO = {
+  apodo: '',
   nombre: '',
   correo: '',
-  telefono: '',
   clave: '',
   clave_confirmation: '',
 }
@@ -35,8 +35,6 @@ export default function Registro() {
 
   async function alEnviar(evento) {
     evento.preventDefault()
-    setError('')
-    setErrores({})
 
     if (formulario.clave !== formulario.clave_confirmation) {
       setErrores({ clave_confirmation: 'Las dos contraseñas deben ser iguales.' })
@@ -45,121 +43,78 @@ export default function Registro() {
 
     try {
       await registrarse.mutateAsync(formulario)
-      navegar('/panel', { replace: true })
+      navegar('/panel/cuentas', { replace: true })
     } catch (fallo) {
       setErrores(erroresPorCampo(fallo))
       setError(mensajeDeError(fallo, 'No fue posible crear la cuenta.'))
     }
   }
 
-  const ocupado = registrarse.isPending
-
   return (
-    <PantallaDeAcceso numero="02">
-      <section aria-labelledby="titulo-registro">
-        <header className="formulario-encabezado">
-          <p className="indice-seccion">Crear cuenta</p>
-          <h2 id="titulo-registro">
-            Inscribe
-            <br />
-            tu equipo.
-          </h2>
-          <p>Crea tu cuenta de dueño y empieza a armar la plantilla.</p>
-        </header>
+    <PantallaDeAcceso>
+      <header>
+        <h1 className="titulo-pagina">Crear cuenta</h1>
+      </header>
 
-        <form className="formulario-acceso" onSubmit={alEnviar} noValidate aria-busy={ocupado}>
-          <CampoDeAcceso
-            etiqueta="Nombre completo"
-            name="nombre"
-            value={formulario.nombre}
-            onChange={alCambiarCampo}
-            autoComplete="name"
-            placeholder="Tu nombre"
-            error={errores.nombre}
-            disabled={ocupado}
-          />
-
-          <CampoDeAcceso
-            etiqueta="Correo electrónico"
-            name="correo"
-            type="email"
-            value={formulario.correo}
-            onChange={alCambiarCampo}
-            autoComplete="email"
-            placeholder="nombre@equipo.com"
-            error={errores.correo}
-            disabled={ocupado}
-          />
-
-          <CampoDeAcceso
-            etiqueta="Teléfono (opcional)"
-            name="telefono"
-            value={formulario.telefono}
-            onChange={alCambiarCampo}
-            autoComplete="tel"
-            placeholder="300 000 0000"
-            error={errores.telefono}
-            disabled={ocupado}
-          />
-
-          <CampoDeAcceso
+      <form className="formulario" onSubmit={alEnviar} noValidate>
+        <Campo
+          etiqueta="Apodo"
+          name="apodo"
+          autoComplete="nickname"
+          pista="Público. Letras, números, guion y guion bajo."
+          value={formulario.apodo}
+          onChange={alCambiarCampo}
+          error={errores.apodo}
+          maxLength={20}
+        />
+        <Campo
+          etiqueta="Nombre completo"
+          name="nombre"
+          autoComplete="name"
+          value={formulario.nombre}
+          onChange={alCambiarCampo}
+          error={errores.nombre}
+        />
+        <Campo
+          etiqueta="Correo"
+          name="correo"
+          type="email"
+          autoComplete="email"
+          value={formulario.correo}
+          onChange={alCambiarCampo}
+          error={errores.correo}
+        />
+        <div className="formulario__fila">
+          <Campo
             etiqueta="Contraseña"
             name="clave"
             type="password"
+            autoComplete="new-password"
             value={formulario.clave}
             onChange={alCambiarCampo}
-            autoComplete="new-password"
-            placeholder="Mínimo 8 caracteres, con letras y números"
             error={errores.clave}
-            disabled={ocupado}
           />
-
-          <CampoDeAcceso
-            etiqueta="Repite la contraseña"
+          <Campo
+            etiqueta="Repítela"
             name="clave_confirmation"
             type="password"
+            autoComplete="new-password"
             value={formulario.clave_confirmation}
             onChange={alCambiarCampo}
-            autoComplete="new-password"
-            placeholder="La misma contraseña"
             error={errores.clave_confirmation}
-            disabled={ocupado}
           />
+        </div>
 
-          <div className="ranura-aviso" aria-live="polite">
-            {error && (
-              <p className="formulario-error" role="alert">
-                {error}
-              </p>
-            )}
-          </div>
+        {error && !Object.keys(errores).length && <Aviso tono="error">{error}</Aviso>}
 
-          <button className="boton-principal" type="submit" disabled={ocupado}>
-            <span>{ocupado ? 'Creando tu cuenta' : 'Crear cuenta'}</span>
-            {ocupado ? <LoaderCircle className="girador" size={19} /> : <ArrowUpRight size={19} />}
-          </button>
-        </form>
+        <Boton type="submit" className="boton--ancho" cargando={registrarse.isPending}>
+          Crear cuenta
+        </Boton>
+      </form>
 
-        <p style={{ marginTop: '1.75rem', fontSize: '.78rem', color: 'var(--apagado)' }}>
-          ¿Ya tienes cuenta? <Link to="/ingreso">Entrar</Link>
-        </p>
-      </section>
+      <p className="acceso__pie">
+        ¿Ya tienes cuenta? <Link to="/ingreso">Entrar</Link>
+      </p>
     </PantallaDeAcceso>
-  )
-}
-
-function CampoDeAcceso({ etiqueta, error, name, ...resto }) {
-  return (
-    <div className="grupo-campo">
-      <label htmlFor={name}>{etiqueta}</label>
-      <div className="campo-caja">
-        <input id={name} name={name} aria-invalid={Boolean(error)} {...resto} />
-      </div>
-      {error && (
-        <p className="formulario-error" style={{ marginTop: '.4rem' }} role="alert">
-          {error}
-        </p>
-      )}
-    </div>
   )
 }

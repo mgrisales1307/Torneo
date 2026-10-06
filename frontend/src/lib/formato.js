@@ -43,6 +43,22 @@ export function hora(valor) {
   return fecha ? HORA.format(fecha) : '—'
 }
 
+/**
+ * Fecha corta para datos sueltos: «3 oct · 7:00 p. m.». El año solo aparece
+ * si no es el actual.
+ */
+const DIA_Y_MES = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short' })
+
+export function fechaCompacta(valor) {
+  const fecha = aFecha(valor)
+
+  if (!fecha) return 'Por definir'
+
+  const anio = fecha.getFullYear() !== new Date().getFullYear() ? ` ${fecha.getFullYear()}` : ''
+
+  return `${DIA_Y_MES.format(fecha).replace('.', '')}${anio} · ${HORA.format(fecha)}`
+}
+
 export function fechaYHora(valor) {
   const fecha = aFecha(valor)
   return fecha ? `${FECHA_CORTA.format(fecha)} · ${HORA.format(fecha)}` : 'Por definir'
@@ -63,15 +79,46 @@ export function paraInputDeFecha(valor) {
 }
 
 export function iniciales(nombre = '') {
-  return (
-    nombre
-      .split(' ')
-      .filter(Boolean)
-      .map((parte) => parte[0])
-      .slice(0, 2)
-      .join('')
-      .toUpperCase() || 'JZ'
-  )
+  const partes = nombre.split(/[\s_-]+/).filter(Boolean)
+
+  const letras = partes.length > 1 ? partes.map((parte) => parte[0]).join('') : nombre.slice(0, 2)
+
+  return letras.slice(0, 2).toUpperCase() || 'NZ'
+}
+
+/**
+ * «Cuánto falta» en palabras: en 2 h, en 3 días, hace 10 min.
+ */
+const RELATIVO = new Intl.RelativeTimeFormat('es-CO', { numeric: 'auto' })
+
+export function relativo(valor) {
+  const fecha = aFecha(valor)
+
+  if (!fecha) return ''
+
+  const minutos = Math.round((fecha.getTime() - Date.now()) / 60000)
+
+  if (Math.abs(minutos) < 60) return RELATIVO.format(minutos, 'minute')
+  if (Math.abs(minutos) < 60 * 24) return RELATIVO.format(Math.round(minutos / 60), 'hour')
+
+  return RELATIVO.format(Math.round(minutos / (60 * 24)), 'day')
+}
+
+/**
+ * Nombre de una ronda del cuadro: la última es la final, la anterior la
+ * semifinal… El número de rondas lo da el cuadro, no el partido.
+ */
+export function nombreDeRonda(ronda, totalDeRondas, llave) {
+  if (llave === 'gran_final') return 'Gran final'
+  if (llave === 'inferior') return `Inferior · ronda ${ronda}`
+
+  const restantes = totalDeRondas - ronda
+
+  if (restantes === 0) return 'Final'
+  if (restantes === 1) return 'Semifinal'
+  if (restantes === 2) return 'Cuartos'
+
+  return `Ronda ${ronda}`
 }
 
 /**

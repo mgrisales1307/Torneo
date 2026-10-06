@@ -1,24 +1,24 @@
 <?php
 
-use App\Http\Controllers\Api\V1\Admin\CalendarioAdminController;
 use App\Http\Controllers\Api\V1\Admin\InscripcionAdminController;
 use App\Http\Controllers\Api\V1\Admin\PartidoAdminController;
 use App\Http\Controllers\Api\V1\Admin\ResumenAdminController;
 use App\Http\Controllers\Api\V1\Admin\TorneoAdminController;
 use App\Http\Controllers\Api\V1\Admin\UsuarioAdminController;
 use App\Http\Controllers\Api\V1\AutenticacionController;
-use App\Http\Controllers\Api\V1\Dueno\EquipoController;
-use App\Http\Controllers\Api\V1\Dueno\FotoDeJugadorController;
-use App\Http\Controllers\Api\V1\Dueno\ImagenDeEquipoController;
-use App\Http\Controllers\Api\V1\Dueno\InscripcionController;
-use App\Http\Controllers\Api\V1\Dueno\JugadorController;
-use App\Http\Controllers\Api\V1\Dueno\PagoController;
 use App\Http\Controllers\Api\V1\NotificacionDePagoController;
-use App\Http\Controllers\Api\V1\Publico\CalendarioController;
+use App\Http\Controllers\Api\V1\Panel\CuentaDeJuegoController;
+use App\Http\Controllers\Api\V1\Panel\EquipoController;
+use App\Http\Controllers\Api\V1\Panel\InscripcionController;
+use App\Http\Controllers\Api\V1\Panel\LogoDeEquipoController;
+use App\Http\Controllers\Api\V1\Panel\MiembroDeEquipoController;
+use App\Http\Controllers\Api\V1\Panel\PagoController;
+use App\Http\Controllers\Api\V1\Panel\PartidoController;
 use App\Http\Controllers\Api\V1\Publico\EquipoPublicoController;
-use App\Http\Controllers\Api\V1\Publico\GoleadoresController;
 use App\Http\Controllers\Api\V1\Publico\InicioController;
-use App\Http\Controllers\Api\V1\Publico\TablaDePosicionesController;
+use App\Http\Controllers\Api\V1\Publico\JuegoController;
+use App\Http\Controllers\Api\V1\Publico\JugadorPublicoController;
+use App\Http\Controllers\Api\V1\Publico\PartidoPublicoController;
 use App\Http\Controllers\Api\V1\Publico\TorneoPublicoController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,12 +30,13 @@ use Illuminate\Support\Facades\Route;
 | La API está dividida en tres zonas, y esa división es la que hace legible el
 | control de acceso:
 |
-|   público   — sin sesión. Solo lectura: torneos, tabla, calendario, equipos.
-|   /panel    — el dueño gestiona sus equipos, su plantilla y sus pagos.
+|   público   — sin sesión. Solo lectura: juegos, torneos, cuadros, equipos.
+|   /panel    — el jugador gestiona sus cuentas, sus equipos, sus
+|               inscripciones y reporta sus partidos.
 |   /admin    — la organización gestiona torneos, inscripciones y resultados.
 |
 | El middleware `rol` es la barrera gruesa; la fina la ponen las políticas de
-| cada modelo, que son las que saben si un equipo es tuyo.
+| cada modelo, que son las que saben si un equipo es tuyo o si eres su capitán.
 |
 */
 
@@ -49,15 +50,17 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
     Route::get('/inicio', InicioController::class)->name('inicio');
 
+    Route::get('/juegos', [JuegoController::class, 'index'])->name('juegos.index');
+    Route::get('/juegos/{juego}', [JuegoController::class, 'show'])->name('juegos.show');
+
     Route::get('/torneos', [TorneoPublicoController::class, 'index'])->name('torneos.index');
     Route::get('/torneos/{torneo}', [TorneoPublicoController::class, 'show'])->name('torneos.show');
     Route::get('/torneos/{torneo}/equipos', [TorneoPublicoController::class, 'equipos'])->name('torneos.equipos');
-    Route::get('/torneos/{torneo}/tabla', TablaDePosicionesController::class)->name('torneos.tabla');
-    Route::get('/torneos/{torneo}/goleadores', GoleadoresController::class)->name('torneos.goleadores');
-    Route::get('/torneos/{torneo}/partidos', [CalendarioController::class, 'index'])->name('torneos.partidos');
+    Route::get('/torneos/{torneo}/cuadro', [TorneoPublicoController::class, 'cuadro'])->name('torneos.cuadro');
 
-    Route::get('/partidos/{partido}', [CalendarioController::class, 'show'])->name('partidos.show');
+    Route::get('/partidos/{partido}', [PartidoPublicoController::class, 'show'])->name('partidos.show');
     Route::get('/equipos/{equipo}', [EquipoPublicoController::class, 'show'])->name('equipos.show');
+    Route::get('/jugadores/{usuario:apodo}', [JugadorPublicoController::class, 'show'])->name('jugadores.show');
 
     /*
     |----------------------------------------------------------------------
@@ -100,33 +103,41 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         /*
         |------------------------------------------------------------------
-        | Panel del dueño de equipo
+        | Panel del jugador
         |------------------------------------------------------------------
+        |
+        | Abierto a cualquier cuenta. Lo que es solo del capitán lo decide
+        | EquipoPolicy, equipo por equipo.
+        |
         */
 
-        Route::prefix('panel')->name('panel.')->middleware('rol:dueno,admin,empleado')->group(function (): void {
+        Route::prefix('panel')->name('panel.')->group(function (): void {
+            Route::get('/cuentas', [CuentaDeJuegoController::class, 'index'])->name('cuentas.index');
+            Route::put('/cuentas/{juego}', [CuentaDeJuegoController::class, 'update'])->name('cuentas.update');
+            Route::delete('/cuentas/{juego}', [CuentaDeJuegoController::class, 'destroy'])->name('cuentas.destroy');
+
             Route::get('/equipos', [EquipoController::class, 'index'])->name('equipos.index');
             Route::post('/equipos', [EquipoController::class, 'store'])->name('equipos.store');
             Route::get('/equipos/{equipo}', [EquipoController::class, 'show'])->name('equipos.show');
             Route::match(['put', 'patch'], '/equipos/{equipo}', [EquipoController::class, 'update'])->name('equipos.update');
             Route::delete('/equipos/{equipo}', [EquipoController::class, 'destroy'])->name('equipos.destroy');
+            Route::post('/equipos/{equipo}/codigo', [EquipoController::class, 'nuevoCodigo'])->name('equipos.codigo');
 
-            Route::post('/equipos/{equipo}/imagenes', [ImagenDeEquipoController::class, 'store'])
+            Route::post('/equipos/{equipo}/logo', [LogoDeEquipoController::class, 'store'])
                 ->middleware('throttle:subidas')
-                ->name('equipos.imagenes');
+                ->name('equipos.logo');
 
-            Route::get('/equipos/{equipo}/jugadores', [JugadorController::class, 'index'])->name('jugadores.index');
-            Route::post('/equipos/{equipo}/jugadores', [JugadorController::class, 'store'])->name('jugadores.store');
-            Route::match(['put', 'patch'], '/jugadores/{jugador}', [JugadorController::class, 'update'])->name('jugadores.update');
-            Route::delete('/jugadores/{jugador}', [JugadorController::class, 'destroy'])->name('jugadores.destroy');
-            Route::post('/jugadores/{jugador}/foto', [FotoDeJugadorController::class, 'store'])
-                ->middleware('throttle:subidas')
-                ->name('jugadores.foto');
+            Route::post('/unirse', [MiembroDeEquipoController::class, 'unirse'])
+                ->middleware('throttle:unirse')
+                ->name('equipos.unirse');
+            Route::patch('/equipos/{equipo}/miembros/{usuario}', [MiembroDeEquipoController::class, 'update'])->name('miembros.update');
+            Route::delete('/equipos/{equipo}/miembros/{usuario}', [MiembroDeEquipoController::class, 'destroy'])->name('miembros.destroy');
 
             Route::get('/inscripciones', [InscripcionController::class, 'index'])->name('inscripciones.index');
             Route::get('/inscripciones/{inscripcion}', [InscripcionController::class, 'show'])->name('inscripciones.show');
             Route::post('/torneos/{torneo}/inscripciones', [InscripcionController::class, 'store'])->name('inscripciones.store');
             Route::delete('/inscripciones/{inscripcion}', [InscripcionController::class, 'destroy'])->name('inscripciones.destroy');
+            Route::post('/inscripciones/{inscripcion}/check-in', [InscripcionController::class, 'checkIn'])->name('inscripciones.check-in');
 
             Route::post('/inscripciones/{inscripcion}/orden', [PagoController::class, 'store'])
                 ->middleware('throttle:pagos')
@@ -140,6 +151,11 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
                     ->middleware('throttle:pagos')
                     ->name('pagos.simulado');
             }
+
+            Route::get('/partidos', [PartidoController::class, 'index'])->name('partidos.index');
+            Route::post('/partidos/{partido}/reporte', [PartidoController::class, 'reportar'])
+                ->middleware('throttle:subidas')
+                ->name('partidos.reporte');
         });
 
         /*
@@ -156,15 +172,17 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
             Route::get('/torneos/{torneo}', [TorneoAdminController::class, 'show'])->name('torneos.show');
             Route::match(['put', 'patch'], '/torneos/{torneo}', [TorneoAdminController::class, 'update'])->name('torneos.update');
             Route::delete('/torneos/{torneo}', [TorneoAdminController::class, 'destroy'])->name('torneos.destroy');
-
-            Route::post('/torneos/{torneo}/calendario', [CalendarioAdminController::class, 'store'])->name('torneos.calendario');
+            Route::post('/torneos/{torneo}/estado', [TorneoAdminController::class, 'cambiarEstado'])->name('torneos.estado');
+            Route::post('/torneos/{torneo}/iniciar', [TorneoAdminController::class, 'iniciar'])->name('torneos.iniciar');
 
             Route::get('/inscripciones', [InscripcionAdminController::class, 'index'])->name('inscripciones.index');
             Route::post('/inscripciones/{inscripcion}/aprobar', [InscripcionAdminController::class, 'aprobar'])->name('inscripciones.aprobar');
             Route::post('/inscripciones/{inscripcion}/rechazar', [InscripcionAdminController::class, 'rechazar'])->name('inscripciones.rechazar');
 
+            Route::get('/partidos', [PartidoAdminController::class, 'index'])->name('partidos.index');
             Route::match(['put', 'patch'], '/partidos/{partido}', [PartidoAdminController::class, 'update'])->name('partidos.update');
-            Route::post('/partidos/{partido}/resultado', [PartidoAdminController::class, 'registrarResultado'])->name('partidos.resultado');
+            Route::post('/partidos/{partido}/resultado', [PartidoAdminController::class, 'resultado'])->name('partidos.resultado');
+            Route::post('/partidos/{partido}/battle-royale', [PartidoAdminController::class, 'battleRoyale'])->name('partidos.battle-royale');
 
             Route::get('/usuarios', [UsuarioAdminController::class, 'index'])->name('usuarios.index');
         });

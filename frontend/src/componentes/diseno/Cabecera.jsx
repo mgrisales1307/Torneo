@@ -1,69 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, LogOut, Menu, ShieldCheck, Trophy, X } from 'lucide-react'
+import { Link, NavLink, useNavigate } from 'react-router-dom'
+import { LayoutDashboard, LogOut, Menu, ShieldCheck, UserRound, X } from 'lucide-react'
 import { useSesion } from '../../contexto/contextoDeSesion'
 import { iniciales } from '../../lib/formato'
-
-const ENLACES = [
-  { a: '/', texto: 'Inicio' },
-  { a: '/torneos', texto: 'Torneos' },
-]
+import { JUEGOS } from '../../lib/juegos'
 
 export function Cabecera() {
-  const { usuario, estaAutenticado, esStaff, puedeTenerEquipos, salir } = useSesion()
+  const { usuario, estaAutenticado, esStaff, salir } = useSesion()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [menuUsuario, setMenuUsuario] = useState(false)
   const contenedorDelMenu = useRef(null)
-  const elementoCabecera = useRef(null)
   const navegar = useNavigate()
-  const { pathname } = useLocation()
-
-  /*
-   * El alto de la cabecera se publica como variable CSS porque la portada
-   * necesita subirse exactamente esa distancia para empezar detrás de ella y
-   * llenar la pantalla. Se mide en vez de fijarse a mano: depende de la fuente,
-   * del zoom y de si el menú móvil está abierto, así que cualquier constante se
-   * desajustaría.
-   */
-  useEffect(() => {
-    const elemento = elementoCabecera.current
-
-    if (!elemento) return undefined
-
-    const observador = new ResizeObserver(([entrada]) => {
-      document.documentElement.style.setProperty(
-        '--alto-cabecera',
-        `${entrada.target.getBoundingClientRect().height}px`,
-      )
-    })
-
-    observador.observe(elemento)
-
-    return () => observador.disconnect()
-  }, [])
-
-  /*
-   * Sobre la portada a pantalla completa la cabecera va transparente, para no
-   * cortar la imagen con una banda clara; en cuanto se desplaza un poco,
-   * recupera su fondo para que los enlaces sigan legibles sobre el contenido.
-   *
-   * El estado se inicializa leyendo el scroll actual en vez de dentro de un
-   * efecto: si se recarga la página a media altura, la cabecera ya nace sólida
-   * y no se ve el cambio.
-   */
-  const [desplazada, setDesplazada] = useState(() => window.scrollY > 48)
-
-  useEffect(() => {
-    function alDesplazar() {
-      setDesplazada(window.scrollY > 48)
-    }
-
-    window.addEventListener('scroll', alDesplazar, { passive: true })
-
-    return () => window.removeEventListener('scroll', alDesplazar)
-  }, [])
-
-  const sobreLaPortada = pathname === '/' && !desplazada
 
   function cerrarMenus() {
     setMenuAbierto(false)
@@ -87,19 +34,16 @@ export function Cabecera() {
     navegar('/')
   }
 
+  const claseDeEnlace = ({ isActive }) => `navegacion__enlace ${isActive ? 'navegacion__enlace--activo' : ''}`
+
   return (
-    <header
-      className={`cabecera ${sobreLaPortada ? 'cabecera--sobre-portada' : ''}`}
-      ref={elementoCabecera}
-    >
+    <header className="cabecera">
       <div className="contenedor cabecera__fila">
-        <Link className="logo" to="/" aria-label="Juegos Zone, inicio">
-          {/* Solo el sello. El nombre escrito al lado competía con el titular
-              de la portada; el sello sigue siendo el enlace al inicio, y el
-              nombre viaja en el aria-label para quien navegue con lector. */}
+        <Link className="logo" to="/" onClick={cerrarMenus}>
           <span className="logo__sello" aria-hidden="true">
-            JZ
+            NZ
           </span>
+          <span className="logo__texto">NexZone</span>
         </Link>
 
         <button
@@ -112,47 +56,15 @@ export function Cabecera() {
           {menuAbierto ? <X size={18} /> : <Menu size={18} />}
         </button>
 
-        {/* Al pulsar cualquier enlace se cierran los menús, para que no queden
-            abiertos encima de la pantalla nueva. */}
-        <nav
-          className={`navegacion ${menuAbierto ? 'navegacion--abierta' : ''}`}
-          aria-label="Principal"
-          onClick={cerrarMenus}
-        >
-          {ENLACES.map((enlace) => (
-            <NavLink
-              key={enlace.a}
-              to={enlace.a}
-              end={enlace.a === '/'}
-              className={({ isActive }) =>
-                `navegacion__enlace ${isActive ? 'navegacion__enlace--activo' : ''}`
-              }
-            >
-              {enlace.texto}
+        <nav className={`navegacion ${menuAbierto ? 'navegacion--abierta' : ''}`} aria-label="Principal" onClick={cerrarMenus}>
+          <NavLink to="/torneos" className={claseDeEnlace}>
+            Torneos
+          </NavLink>
+          {JUEGOS.map((juego) => (
+            <NavLink key={juego.valor} to={`/juegos/${juego.valor}`} className={claseDeEnlace}>
+              {juego.valor === 'lol' ? 'LoL' : juego.valor === 'pubg' ? 'PUBG' : juego.nombre}
             </NavLink>
           ))}
-
-          {puedeTenerEquipos && (
-            <NavLink
-              to="/panel"
-              className={({ isActive }) =>
-                `navegacion__enlace ${isActive ? 'navegacion__enlace--activo' : ''}`
-              }
-            >
-              Mi equipo
-            </NavLink>
-          )}
-
-          {esStaff && (
-            <NavLink
-              to="/organizacion"
-              className={({ isActive }) =>
-                `navegacion__enlace ${isActive ? 'navegacion__enlace--activo' : ''}`
-              }
-            >
-              Organización
-            </NavLink>
-          )}
         </nav>
 
         <div className="cabecera__acciones">
@@ -165,24 +77,25 @@ export function Cabecera() {
                 aria-expanded={menuUsuario}
                 aria-haspopup="menu"
               >
-                <span className="avatar-inicial" aria-hidden="true">
-                  {iniciales(usuario.nombre)}
+                <span className="avatar" aria-hidden="true">
+                  {iniciales(usuario.apodo)}
                 </span>
-                <span>{usuario.nombre.split(' ')[0]}</span>
+                <span>{usuario.apodo}</span>
               </button>
 
               {menuUsuario && (
                 <div className="menu-usuario__panel" role="menu" onClick={cerrarMenus}>
                   <div className="menu-usuario__cabecera">
-                    <strong>{usuario.nombre}</strong>
+                    <strong>{usuario.apodo}</strong>
                     <span>{usuario.correo}</span>
                   </div>
 
-                  {puedeTenerEquipos && (
-                    <Link className="menu-usuario__accion" to="/panel" role="menuitem">
-                      <LayoutDashboard size={15} /> Mi panel
-                    </Link>
-                  )}
+                  <Link className="menu-usuario__accion" to="/panel" role="menuitem">
+                    <LayoutDashboard size={15} /> Mi panel
+                  </Link>
+                  <Link className="menu-usuario__accion" to={`/jugadores/${usuario.apodo}`} role="menuitem">
+                    <UserRound size={15} /> Mi perfil público
+                  </Link>
 
                   {esStaff && (
                     <Link className="menu-usuario__accion" to="/organizacion" role="menuitem">
@@ -190,26 +103,19 @@ export function Cabecera() {
                     </Link>
                   )}
 
-                  <button
-                    className="menu-usuario__accion"
-                    type="button"
-                    onClick={cerrarSesion}
-                    role="menuitem"
-                  >
-                    <LogOut size={15} /> Cerrar sesión
+                  <button className="menu-usuario__accion" type="button" onClick={cerrarSesion} role="menuitem">
+                    <LogOut size={15} /> Salir
                   </button>
                 </div>
               )}
             </div>
           ) : (
             <>
-              {/* Contorno, no fantasma: en fantasma se perdía sobre la
-                  portada y no parecía pulsable. */}
-              <Link className="boton boton--contorno boton--chico" to="/ingreso">
+              <Link className="boton boton--fantasma boton--chico" to="/ingreso">
                 Entrar
               </Link>
               <Link className="boton boton--solido boton--chico" to="/registro">
-                <Trophy size={15} /> Inscribir equipo
+                Crear cuenta
               </Link>
             </>
           )}
@@ -218,4 +124,3 @@ export function Cabecera() {
     </header>
   )
 }
-

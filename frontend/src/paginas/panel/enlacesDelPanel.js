@@ -4,14 +4,17 @@
  * caliente de Vite).
  */
 
-export const ENLACES_DEL_DUENO = [
-  { a: '/panel', texto: 'Mis equipos', exacto: true },
-  { a: '/panel/inscripciones', texto: 'Inscripciones y pagos' },
+export const ENLACES_DEL_JUGADOR = [
+  { a: '/panel', texto: 'Pendientes', exacto: true },
+  { a: '/panel/equipos', texto: 'Equipos' },
+  { a: '/panel/inscripciones', texto: 'Inscripciones' },
+  { a: '/panel/cuentas', texto: 'Cuentas de juego' },
 ]
 
 export const ENLACES_DE_ORGANIZACION = [
   { a: '/organizacion', texto: 'Resumen', exacto: true },
   { a: '/organizacion/torneos', texto: 'Torneos' },
   { a: '/organizacion/inscripciones', texto: 'Inscripciones' },
+  { a: '/organizacion/disputas', texto: 'Disputas' },
   { a: '/organizacion/usuarios', texto: 'Usuarios' },
 ]

@@ -3,263 +3,306 @@
 namespace App\Servicios\Torneos;
 
 use App\Enumeraciones\EstadoPartido;
-use App\Enumeraciones\TipoEventoPartido;
+use App\Enumeraciones\EstadoTorneo;
+use App\Enumeraciones\TipoDeFase;
 use App\Excepciones\ReglaDeNegocio;
-use App\Models\Jugador;
+use App\Models\Equipo;
 use App\Models\Partido;
+use App\Models\ReporteDeResultado;
 use App\Models\Usuario;
-use Illuminate\Support\Collection;
+use App\Servicios\Medios\AlmacenDeImagenes;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Registra el resultado de un partido: el marcador y los goles y tarjetas que
- * lo explican.
+ * Cómo llega un resultado a un partido.
  *
- * El marcador que llega se compara con el que sale de los eventos. Si no
- * coinciden, no se guarda nada: es la forma de que la tabla de posiciones y la
- * de goleadores no puedan contar historias distintas del mismo partido.
+ * - Los capitanes reportan. Si los dos reportes coinciden, el partido se
+ *   cierra solo; si no, queda en disputa para la organización. Es el flujo de
+ *   las plataformas grandes: nadie tiene que esperar a un árbitro cuando los
+ *   dos equipos están de acuerdo.
+ * - La organización resuelve: fija el marcador de una disputa, o lo corrige.
+ * - En battle royale, la organización carga los puestos y bajas de la sala.
+ *
+ * Todo pasa dentro de una transacción con el partido bloqueado: si los dos
+ * capitanes reportan en el mismo instante, el segundo ve el reporte del
+ * primero.
  */
 class RegistroDeResultados
 {
     public function __construct(
-        private readonly CalculadoraDePosiciones $posiciones,
-        private readonly TablaDeGoleadores $goleadores,
+        private readonly AvanceDeCompetencia $avance,
+        private readonly TablasDeClasificacion $tablas,
+        private readonly RankingDeEquipos $ranking,
+        private readonly AlmacenDeImagenes $imagenes,
     ) {}
 
     /**
-     * @param  array{
-     *     goles_local: int,
-     *     goles_visitante: int,
-     *     observaciones?: string|null,
-     *     eventos?: array<int, array<string, mixed>>
-     * }  $datos
+     * @param  array{victorias_a: int, victorias_b: int, detalle?: array<int, array<string, mixed>>|null, comentario?: string|null}  $datos
      */
-    public function registrar(Partido $partido, Usuario $usuario, array $datos): Partido
+    public function reportar(Partido $partido, Equipo $equipo, Usuario $capitan, array $datos, ?UploadedFile $captura = null): Partido
     {
-        $this->verificarQueSePuedeCargar($partido);
+        return DB::transaction(function () use ($partido, $equipo, $capitan, $datos, $captura): Partido {
+            $partido = $this->bloquear($partido);
 
-        $eventos = $this->normalizarEventos($partido, $datos['eventos'] ?? []);
-        $golesLocal = (int) $datos['goles_local'];
-        $golesVisitante = (int) $datos['goles_visitante'];
+            $this->verificarQueElTorneoEstaEnCurso($partido);
 
-        if ($eventos->isNotEmpty()) {
-            $this->verificarQueElMarcadorCuadre($partido, $eventos, $golesLocal, $golesVisitante);
-        }
+            if ($partido->estado === EstadoPartido::Pendiente) {
+                throw ReglaDeNegocio::porqueSi('Todavía no se conoce el rival de este partido.');
+            }
 
-        DB::transaction(function () use ($partido, $usuario, $eventos, $golesLocal, $golesVisitante, $datos): void {
-            // Se reemplaza el detalle completo del partido: así corregir un
-            // resultado es volver a cargarlo, sin eventos duplicados ni
-            // huérfanos de la carga anterior.
-            $partido->eventos()->delete();
-
-            if ($eventos->isNotEmpty()) {
-                $ahora = now();
-
-                DB::table('eventos_partido')->insert(
-                    $eventos->map(fn (array $evento): array => [
-                        'partido_id' => $partido->getKey(),
-                        'equipo_id' => $evento['equipo_id'],
-                        'jugador_id' => $evento['jugador_id'],
-                        'tipo' => $evento['tipo']->value,
-                        'minuto' => $evento['minuto'],
-                        'detalle' => $evento['detalle'],
-                        'created_at' => $ahora,
-                        'updated_at' => $ahora,
-                    ])->all()
+            if ($partido->estado === EstadoPartido::Finalizado) {
+                throw ReglaDeNegocio::porqueSi(
+                    'Este partido ya tiene resultado. Si hay un error, escríbele a la organización.'
                 );
             }
+
+            [$victoriasA, $victoriasB, $detalle] = $this->marcadorValido($partido, $datos);
+
+            $reporte = ReporteDeResultado::query()
+                ->where('partido_id', $partido->getKey())
+                ->where('equipo_id', $equipo->getKey())
+                ->first() ?? new ReporteDeResultado;
+
+            $capturaAnterior = $reporte->captura_ruta;
+
+            $reporte->forceFill([
+                'partido_id' => $partido->getKey(),
+                'equipo_id' => $equipo->getKey(),
+                'usuario_id' => $capitan->getKey(),
+                'victorias_a' => $victoriasA,
+                'victorias_b' => $victoriasB,
+                'detalle' => $detalle,
+                'comentario' => $datos['comentario'] ?? null,
+                'captura_ruta' => $captura !== null
+                    ? $this->imagenes->guardar($captura, 'captura', $capturaAnterior)
+                    : $capturaAnterior,
+            ])->save();
+
+            $delRival = $partido->reportes()->whereNot('equipo_id', $equipo->getKey())->first();
+
+            if ($delRival === null) {
+                $partido->forceFill(['estado' => EstadoPartido::Reportado])->save();
+
+                return $partido;
+            }
+
+            if ($delRival->coincideCon($reporte)) {
+                return $this->finalizar($partido, $victoriasA, $victoriasB, $detalle, null);
+            }
+
+            $partido->forceFill(['estado' => EstadoPartido::EnDisputa])->save();
+
+            return $partido;
+        });
+    }
+
+    /**
+     * La organización fija el marcador: resuelve una disputa, carga un partido
+     * que nadie reportó o corrige uno ya cerrado.
+     *
+     * @param  array{victorias_a: int, victorias_b: int, detalle?: array<int, array<string, mixed>>|null}  $datos
+     */
+    public function resolver(Partido $partido, Usuario $organizador, array $datos): Partido
+    {
+        return DB::transaction(function () use ($partido, $organizador, $datos): Partido {
+            $partido = $this->bloquear($partido);
+
+            if (! $partido->torneo->estado->haEmpezado()) {
+                throw ReglaDeNegocio::porqueSi('Este torneo no está en juego.');
+            }
+
+            if ($partido->es_descanso || $partido->equipo_a_id === null || $partido->equipo_b_id === null) {
+                throw ReglaDeNegocio::porqueSi('Este partido todavía no tiene a sus dos rivales.');
+            }
+
+            [$victoriasA, $victoriasB, $detalle] = $this->marcadorValido($partido, $datos);
+
+            if ($partido->estaFinalizado()) {
+                $this->avance->deshacer($partido);
+            }
+
+            return $this->finalizar($partido, $victoriasA, $victoriasB, $detalle, $organizador);
+        });
+    }
+
+    /**
+     * @param  list<array{equipo_id: int, posicion: int, bajas: int}>  $resultados
+     */
+    public function registrarBattleRoyale(Partido $partido, Usuario $organizador, array $resultados): Partido
+    {
+        return DB::transaction(function () use ($partido, $organizador, $resultados): Partido {
+            $partido = $this->bloquear($partido);
+            $torneo = $partido->torneo;
+
+            if ($partido->fase->tipo !== TipoDeFase::BattleRoyale) {
+                throw ReglaDeNegocio::porqueSi('Esta partida no es de battle royale.');
+            }
+
+            if (! $torneo->estado->haEmpezado()) {
+                throw ReglaDeNegocio::porqueSi('Este torneo no está en juego.');
+            }
+
+            $participantes = $torneo->participantes()->pluck('equipo_id')->all();
+            $this->verificarSala($resultados, $participantes);
+
+            if ($partido->estaFinalizado()) {
+                $this->avance->deshacer($partido);
+            }
+
+            $partido->resultadosBattleRoyale()->delete();
+            $ahora = now();
+
+            DB::table('resultados_battle_royale')->insert(array_map(fn (array $resultado): array => [
+                'partido_id' => $partido->getKey(),
+                'equipo_id' => $resultado['equipo_id'],
+                'posicion' => $resultado['posicion'],
+                'bajas' => $resultado['bajas'],
+                'puntos' => $torneo->juego->puntosPorPosicion($resultado['posicion'])
+                    + $resultado['bajas'] * $torneo->juego->puntosPorBaja(),
+                'created_at' => $ahora,
+                'updated_at' => $ahora,
+            ], $resultados));
+
+            $ganador = collect($resultados)->firstWhere('posicion', 1);
 
             $partido->forceFill([
-                'goles_local' => $golesLocal,
-                'goles_visitante' => $golesVisitante,
+                'ganador_id' => $ganador['equipo_id'] ?? null,
                 'estado' => EstadoPartido::Finalizado,
-                'observaciones' => $datos['observaciones'] ?? $partido->observaciones,
-                'registrado_por_id' => $usuario->getKey(),
+                'resuelto_por_id' => $organizador->getKey(),
                 'finalizado_en' => now(),
             ])->save();
-        });
 
+            $this->avance->alFinalizar($partido);
+            $this->olvidarTablas($partido);
+
+            return $partido->refresh();
+        });
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>|null  $detalle
+     */
+    private function finalizar(Partido $partido, int $victoriasA, int $victoriasB, ?array $detalle, ?Usuario $organizador): Partido
+    {
+        $partido->forceFill([
+            'victorias_a' => $victoriasA,
+            'victorias_b' => $victoriasB,
+            'ganador_id' => $victoriasA > $victoriasB ? $partido->equipo_a_id : $partido->equipo_b_id,
+            'detalle' => $detalle,
+            'estado' => EstadoPartido::Finalizado,
+            'resuelto_por_id' => $organizador?->getKey(),
+            'finalizado_en' => now(),
+        ])->save();
+
+        $this->avance->alFinalizar($partido);
         $this->olvidarTablas($partido);
 
         return $partido->refresh();
     }
 
+    private function bloquear(Partido $partido): Partido
+    {
+        /** @var Partido $bloqueado */
+        $bloqueado = Partido::query()->whereKey($partido->getKey())->lockForUpdate()->firstOrFail();
+
+        return $bloqueado;
+    }
+
+    private function verificarQueElTorneoEstaEnCurso(Partido $partido): void
+    {
+        if ($partido->torneo->estado !== EstadoTorneo::EnCurso) {
+            throw ReglaDeNegocio::porqueSi('Este torneo no está en curso.');
+        }
+    }
+
     /**
-     * Reprograma un partido o cambia su estado sin tocar el marcador.
+     * Una serie al mejor de N la gana quien llega primero a (N / 2) + 1. Si
+     * viene el detalle de cada mapa, tiene que cuadrar con el marcador.
      *
      * @param  array<string, mixed>  $datos
+     * @return array{0: int, 1: int, 2: list<array{mapa: string|null, ganador: string}>|null}
      */
-    public function reprogramar(Partido $partido, array $datos): Partido
+    private function marcadorValido(Partido $partido, array $datos): array
     {
-        if ($partido->torneo->estado->estaCerrado()) {
-            throw ReglaDeNegocio::porqueSi('Este torneo está cerrado: sus partidos ya no se pueden modificar.');
+        $victoriasA = (int) $datos['victorias_a'];
+        $victoriasB = (int) $datos['victorias_b'];
+        $necesarias = $partido->victoriasParaGanar();
+
+        $ganador = max($victoriasA, $victoriasB);
+        $perdedor = min($victoriasA, $victoriasB);
+
+        if ($ganador !== $necesarias || $perdedor >= $necesarias) {
+            throw ReglaDeNegocio::porqueSi(
+                $partido->mejor_de === 1
+                    ? 'Al mejor de 1 el marcador es 1-0 o 0-1.'
+                    : sprintf(
+                        'Al mejor de %d, el ganador suma %d y el perdedor menos de %d.',
+                        $partido->mejor_de,
+                        $necesarias,
+                        $necesarias,
+                    ),
+                'victorias_a',
+            );
         }
 
-        $partido->fill(array_intersect_key($datos, array_flip([
-            'programado_para',
-            'sede',
-            'arbitro',
-            'observaciones',
-        ])));
+        $detalle = $datos['detalle'] ?? null;
 
-        if (isset($datos['estado'])) {
-            $nuevoEstado = $datos['estado'] instanceof EstadoPartido
-                ? $datos['estado']
-                : EstadoPartido::from((string) $datos['estado']);
-
-            if ($nuevoEstado === EstadoPartido::Finalizado) {
-                throw ReglaDeNegocio::porqueSi(
-                    'Para dar un partido por finalizado hay que cargar su resultado.',
-                    'estado',
-                );
-            }
-
-            // Al dejar de estar finalizado, el partido pierde el marcador para
-            // que la tabla de posiciones no siga contando un resultado que ya
-            // no existe.
-            if ($partido->estaFinalizado()) {
-                $partido->forceFill([
-                    'goles_local' => null,
-                    'goles_visitante' => null,
-                    'finalizado_en' => null,
-                ]);
-                $partido->eventos()->delete();
-            }
-
-            $partido->forceFill(['estado' => $nuevoEstado]);
+        if (blank($detalle)) {
+            return [$victoriasA, $victoriasB, null];
         }
 
-        $partido->save();
+        $detalle = array_values(array_map(fn (array $mapa): array => [
+            'mapa' => filled($mapa['mapa'] ?? null) ? mb_substr(trim((string) $mapa['mapa']), 0, 40) : null,
+            'ganador' => (string) ($mapa['ganador'] ?? ''),
+        ], $detalle));
 
-        $this->olvidarTablas($partido);
+        $ganadosA = count(array_filter($detalle, fn (array $mapa): bool => $mapa['ganador'] === 'a'));
+        $ganadosB = count(array_filter($detalle, fn (array $mapa): bool => $mapa['ganador'] === 'b'));
 
-        return $partido->refresh();
-    }
-
-    private function verificarQueSePuedeCargar(Partido $partido): void
-    {
-        if ($partido->torneo->estado->estaCerrado()) {
-            throw ReglaDeNegocio::porqueSi('Este torneo está cerrado: sus resultados ya no se pueden cambiar.');
+        if ($ganadosA !== $victoriasA || $ganadosB !== $victoriasB || $ganadosA + $ganadosB !== count($detalle)) {
+            throw ReglaDeNegocio::porqueSi('El detalle de los mapas no coincide con el marcador.', 'detalle');
         }
 
-        if (in_array($partido->estado, [EstadoPartido::Cancelado, EstadoPartido::Aplazado], true)) {
-            throw ReglaDeNegocio::porqueSi(sprintf(
-                'Este partido está %s. Reprográmalo antes de cargar el resultado.',
-                mb_strtolower($partido->estado->etiqueta()),
-            ));
-        }
+        return [$victoriasA, $victoriasB, $detalle];
     }
 
     /**
-     * Comprueba que cada evento pertenezca al partido y devuelve la lista lista
-     * para guardar.
+     * La sala tiene que traer a todos los participantes, cada uno una vez, con
+     * puestos del 1 en adelante sin repetir.
      *
-     * @param  array<int, array<string, mixed>>  $eventos
-     * @return Collection<int, array{equipo_id: int, jugador_id: int, tipo: TipoEventoPartido, minuto: int|null, detalle: string|null}>
+     * @param  list<array{equipo_id: int, posicion: int, bajas: int}>  $resultados
+     * @param  list<int>  $participantes
      */
-    private function normalizarEventos(Partido $partido, array $eventos): Collection
+    private function verificarSala(array $resultados, array $participantes): void
     {
-        if ($eventos === []) {
-            return collect();
+        $equipos = array_column($resultados, 'equipo_id');
+        $posiciones = array_column($resultados, 'posicion');
+
+        if (array_diff($equipos, $participantes) !== []) {
+            throw ReglaDeNegocio::porqueSi('Hay un equipo que no juega este torneo.', 'resultados');
         }
 
-        $equiposDelPartido = [$partido->equipo_local_id, $partido->equipo_visitante_id];
-
-        $jugadores = Jugador::query()
-            ->whereIn('equipo_id', $equiposDelPartido)
-            ->get(['id', 'equipo_id'])
-            ->keyBy('id');
-
-        return collect($eventos)->values()->map(function (array $evento, int $indice) use ($equiposDelPartido, $jugadores): array {
-            $numero = $indice + 1;
-            $equipoId = (int) ($evento['equipo_id'] ?? 0);
-            $jugadorId = (int) ($evento['jugador_id'] ?? 0);
-
-            if (! in_array($equipoId, $equiposDelPartido, true)) {
-                throw ReglaDeNegocio::porqueSi(
-                    "El evento #$numero es de un equipo que no juega este partido.",
-                    'eventos',
-                );
-            }
-
-            $jugador = $jugadores->get($jugadorId);
-
-            if ($jugador === null || $jugador->equipo_id !== $equipoId) {
-                throw ReglaDeNegocio::porqueSi(
-                    "El jugador del evento #$numero no pertenece al equipo indicado.",
-                    'eventos',
-                );
-            }
-
-            $tipo = TipoEventoPartido::tryFrom((string) ($evento['tipo'] ?? ''));
-
-            if ($tipo === null) {
-                throw ReglaDeNegocio::porqueSi("El evento #$numero tiene un tipo desconocido.", 'eventos');
-            }
-
-            return [
-                'equipo_id' => $equipoId,
-                'jugador_id' => $jugadorId,
-                'tipo' => $tipo,
-                'minuto' => isset($evento['minuto']) && $evento['minuto'] !== null ? (int) $evento['minuto'] : null,
-                'detalle' => isset($evento['detalle']) && $evento['detalle'] !== null
-                    ? mb_substr((string) $evento['detalle'], 0, 160)
-                    : null,
-            ];
-        });
-    }
-
-    /**
-     * @param  Collection<int, array<string, mixed>>  $eventos
-     */
-    private function verificarQueElMarcadorCuadre(
-        Partido $partido,
-        Collection $eventos,
-        int $golesLocal,
-        int $golesVisitante,
-    ): void {
-        $calculados = [
-            $partido->equipo_local_id => 0,
-            $partido->equipo_visitante_id => 0,
-        ];
-
-        foreach ($eventos as $evento) {
-            /** @var TipoEventoPartido $tipo */
-            $tipo = $evento['tipo'];
-
-            if ($tipo->sumaAlMarcador()) {
-                $calculados[$evento['equipo_id']]++;
-
-                continue;
-            }
-
-            // El autogol le suma al rival del equipo del jugador.
-            if ($tipo === TipoEventoPartido::Autogol) {
-                $rival = $evento['equipo_id'] === $partido->equipo_local_id
-                    ? $partido->equipo_visitante_id
-                    : $partido->equipo_local_id;
-
-                $calculados[$rival]++;
-            }
+        if (count(array_unique($equipos)) !== count($participantes) || count($equipos) !== count($participantes)) {
+            throw ReglaDeNegocio::porqueSi('Carga el puesto de cada uno de los equipos, una sola vez.', 'resultados');
         }
 
-        if ($calculados[$partido->equipo_local_id] === $golesLocal
-            && $calculados[$partido->equipo_visitante_id] === $golesVisitante) {
-            return;
-        }
+        sort($posiciones);
 
-        throw ReglaDeNegocio::porqueSi(sprintf(
-            'El marcador (%d-%d) no coincide con los goles registrados (%d-%d). Revisa los goles y los autogoles.',
-            $golesLocal,
-            $golesVisitante,
-            $calculados[$partido->equipo_local_id],
-            $calculados[$partido->equipo_visitante_id],
-        ), 'eventos');
+        if ($posiciones !== range(1, count($participantes))) {
+            throw ReglaDeNegocio::porqueSi(
+                sprintf('Los puestos van del 1 al %d, sin repetir.', count($participantes)),
+                'resultados',
+            );
+        }
     }
 
     private function olvidarTablas(Partido $partido): void
     {
-        $this->posiciones->olvidar($partido->torneo);
-        $this->goleadores->olvidar($partido->torneo);
+        foreach ($partido->torneo->fases()->get() as $fase) {
+            $this->tablas->olvidar($fase);
+        }
+
+        $this->ranking->olvidar($partido->torneo->juego);
     }
 }

@@ -1,1152 +1,661 @@
-/*
- * Estructura del sitio y estilos propios de cada zona: cabecera, pie, portada,
- * ficha de torneo, paneles.
- */
+/* Estilos propios de cada pantalla. */
 
-/* -------------------------------------------------------------- Armazón */
-
-.sitio {
-  display: flex;
-  min-height: 100svh;
-  flex-direction: column;
-}
-
-.sitio__contenido {
-  flex: 1;
-  padding-block: var(--aire-contenido) clamp(3rem, 6vw, 5rem);
-}
-
-/* ------------------------------------------------------------- Cabecera */
-
-.cabecera {
-  position: sticky;
-  z-index: 40;
-  top: 0;
-  border-bottom: 1px solid var(--linea-suave);
-  background: rgba(242, 239, 230, 0.88);
-  backdrop-filter: blur(12px);
-  transition: background 320ms ease, border-color 320ms ease, color 320ms ease;
-}
+/* --------------------------------------------------------------- Inicio */
 
 /*
- * Sobre la portada. No lleva fondo: la imagen pasa por detrás y el velo
- * superior del propio fondo es el que garantiza que se lean el logotipo y los
- * enlaces, así que aquí solo hay que aclarar los colores.
+ * El vídeo de bienvenida va a todo el ancho, pegado a la cabecera. El título
+ * se apoya abajo a la izquierda, sobre un velo que oscurece esa esquina: el
+ * cinemático tiene escenas de humo casi blanco, y sin el velo el texto crema se
+ * perdería en ellas.
  */
-.cabecera--sobre-portada {
-  border-bottom-color: transparent;
-  background: transparent;
-  backdrop-filter: none;
-  color: #f6f3e9;
+.sitio__contenido--portada {
+  padding-top: 0;
 }
 
-.cabecera--sobre-portada .logo,
-.cabecera--sobre-portada .navegacion__enlace,
-.cabecera--sobre-portada .menu-usuario__boton {
-  color: #f6f3e9;
-}
-
-/* Sobre la portada los enlaces van sueltos, sin la píldora de fondo: el velo
-   superior del vídeo ya los deja legibles y la caja oscura solo ensuciaba la
-   imagen. La marca de la página activa se mantiene. */
-.cabecera--sobre-portada .navegacion {
-  border-color: transparent;
-  background: transparent;
-  backdrop-filter: none;
-}
-
-.cabecera--sobre-portada .navegacion__enlace[aria-current='page'] {
-  color: var(--tinta);
-  background: rgba(246, 243, 233, 0.92);
-}
-
-.cabecera--sobre-portada .navegacion__enlace:hover {
-  background: rgba(246, 243, 233, 0.16);
-}
-
-.cabecera--sobre-portada .menu-usuario__boton {
-  border-color: rgba(246, 243, 233, 0.26);
-  background: rgba(8, 20, 16, 0.36);
-}
-
-.cabecera--sobre-portada .boton-menu {
-  color: #f6f3e9;
-}
-
-/*
- * Los dos botones, sobre la portada.
- *
- * El sólido es tinta sobre tinta, así que ahí se invierte: crema con letra
- * oscura, que es lo que más resalta sobre la imagen. Y «Entrar» pasa de
- * fantasma —casi invisible— a un contorno claro, para que se lea como la
- * segunda opción y no como un texto perdido.
- */
-.cabecera--sobre-portada .boton--solido {
-  color: var(--tinta);
-  background: #f6f3e9;
-}
-
-.cabecera--sobre-portada .boton--solido:hover {
-  background: #fffdf8;
-}
-
-.cabecera--sobre-portada .boton--contorno {
-  border-color: rgba(246, 243, 233, 0.5);
-  color: #f6f3e9;
-  background: rgba(246, 243, 233, 0.08);
-  backdrop-filter: blur(6px);
-}
-
-.cabecera--sobre-portada .boton--contorno:hover {
-  border-color: #f6f3e9;
-  background: rgba(246, 243, 233, 0.18);
-}
-
-.cabecera__fila {
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  min-height: 4.25rem;
-}
-
-.logo {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.65rem;
-  font-size: 0.92rem;
-  font-weight: 700;
-  letter-spacing: -0.012em;
-}
-
-.logo__sello {
-  display: grid;
-  width: 2.25rem;
-  height: 2.25rem;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--acento);
-  background: var(--tinta);
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-stretch: 78%;
-  letter-spacing: 0.02em;
-}
-
-.navegacion {
-  display: flex;
-  align-items: center;
-  gap: 0.2rem;
-  margin-left: auto;
-}
-
-.navegacion__enlace {
-  border-radius: 999px;
-  padding: 0.5rem 0.85rem;
-  color: var(--apagado);
-  font-size: 0.84rem;
-  font-weight: 500;
-  transition: color 160ms ease, background 160ms ease;
-}
-
-.navegacion__enlace:hover {
-  color: var(--tinta);
-  background: rgba(11, 29, 23, 0.06);
-}
-
-.navegacion__enlace--activo {
-  color: var(--tinta);
-  background: rgba(11, 29, 23, 0.08);
-}
-
-.cabecera__acciones {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-}
-
-.menu-usuario {
+.bienvenida {
   position: relative;
-}
-
-.menu-usuario__boton {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-  border: 1px solid var(--linea);
-  border-radius: 999px;
-  padding: 0.35rem 0.75rem 0.35rem 0.35rem;
-  color: var(--tinta);
-  background: var(--blanco);
-  font-size: 0.8rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 160ms ease;
-}
-
-.menu-usuario__boton:hover {
-  border-color: rgba(11, 29, 23, 0.3);
-}
-
-.menu-usuario__panel {
-  position: absolute;
-  z-index: 50;
-  top: calc(100% + 0.5rem);
-  right: 0;
-  width: 15rem;
-  overflow: hidden;
-  border: 1px solid var(--linea-suave);
-  border-radius: var(--radio);
-  background: var(--blanco);
-  box-shadow: var(--sombra-alta);
-  animation: subir 160ms ease both;
-}
-
-.menu-usuario__cabecera {
-  padding: 0.9rem 1rem;
-  border-bottom: 1px solid var(--linea-suave);
-  background: rgba(242, 239, 230, 0.6);
-}
-
-.menu-usuario__cabecera strong {
-  display: block;
-  font-size: 0.82rem;
-}
-
-.menu-usuario__cabecera span {
-  display: block;
-  overflow: hidden;
-  margin-top: 0.15rem;
-  color: var(--apagado-claro);
-  font-size: 0.68rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.menu-usuario__accion {
   display: flex;
-  width: 100%;
-  align-items: center;
-  gap: 0.6rem;
-  border: 0;
-  padding: 0.7rem 1rem;
-  color: var(--tinta);
-  background: transparent;
-  font-size: 0.8rem;
-  text-align: left;
-  cursor: pointer;
-  transition: background 140ms ease;
-}
-
-.menu-usuario__accion:hover {
-  background: rgba(242, 239, 230, 0.85);
-}
-
-.avatar-inicial {
-  display: grid;
-  width: 1.9rem;
-  height: 1.9rem;
-  flex: none;
-  place-items: center;
-  border-radius: 50%;
-  color: var(--acento);
-  background: var(--tinta);
-  font-size: 0.66rem;
-  font-weight: 700;
-  font-stretch: 80%;
-}
-
-.boton-menu {
-  display: none;
-}
-
-/* ------------------------------------------------------------------ Pie */
-
-.pie {
-  border-top: 1px solid var(--linea-suave);
-  padding-block: 2.5rem;
-  background: var(--tinta);
-  color: rgba(246, 243, 233, 0.72);
-}
-
-.pie__fila {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  font-size: 0.74rem;
-}
-
-.pie a:hover {
-  color: var(--acento);
-}
-
-/* -------------------------------------------------------------- Portada */
-
-/*
- * La portada ocupa la pantalla entera, así que tiene que salirse del
- * contenedor centrado en el que vive el resto de la página.
- *
- * Se usa `100vw` menos el ancho real de la barra de desplazamiento, que
- * main.jsx mide y publica en `--barra`. Sin esa resta, en los navegadores con
- * barra clásica la portada sobresale y aparece un scroll horizontal en todo el
- * sitio.
- */
-.portada {
-  position: relative;
+  overflow: hidden;
+  height: min(86vh, 56.25vw);
+  min-height: 32rem;
+  align-items: flex-end;
+  background: var(--fondo-alto);
   isolation: isolate;
-  display: grid;
-  align-content: center;
-  width: calc(100vw - var(--barra, 0px));
-  margin-inline: calc(50% - (100vw - var(--barra, 0px)) / 2);
-  /* svh, no vh: en el móvil la barra del navegador aparece y desaparece, y con
-     vh la portada da un salto de alto al desplazarse. */
-  min-height: 100svh;
-  /* Se sube para empezar detrás de la cabecera y comerse el aire del
-     contenedor: así llena la pantalla de borde a borde. La cabecera va con
-     z-index mayor, así que sigue pintándose encima. */
-  margin-top: calc(-1 * (var(--alto-cabecera, 4.6rem) + var(--aire-contenido)));
-  padding-block: calc(var(--alto-cabecera, 4.6rem) + clamp(1.5rem, 5vh, 3.5rem))
-    clamp(4rem, 9vh, 6rem);
-  padding-inline: clamp(1.25rem, 7vw, 7rem);
-  overflow: clip;
-  color: #f6f3e9;
-  background: #060f0c;
 }
 
-/* --- Las capas del fondo, de atrás hacia delante --- */
-
-.fondo-estadio {
+.bienvenida__video {
   position: absolute;
-  inset: 0;
-  overflow: clip;
-}
-
-/*
- * El cartel es un fotograma del propio vídeo. Está debajo para que la portada
- * tenga imagen desde el primer pintado: el vídeo tarda, y sin esto se vería un
- * rectángulo negro. También es lo único que se ve si alguien pidió movimiento
- * reducido o navega con ahorro de datos.
- */
-.fondo-estadio__cartel,
-.fondo-estadio__video {
-  position: absolute;
+  z-index: -2;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: 50% 46%;
 }
 
-.fondo-estadio__cartel {
-  z-index: 1;
-}
-
-.fondo-estadio__video {
-  z-index: 2;
-  /* Un acercamiento lentísimo. El plano ya tiene su propia panorámica; esto
-     solo evita que el reinicio del bucle se sienta como una foto quieta. */
-  animation: respiro-de-camara 54s ease-in-out infinite alternate;
-}
-
-@keyframes respiro-de-camara {
-  from {
-    transform: scale(1.02);
-  }
-
-  to {
-    transform: scale(1.1);
-  }
-}
-
-/*
- * El velo.
- *
- * Los valores no son a ojo. Se midió el brillo del vídeo fotograma a fotograma
- * y se compuso este degradado encima para calcular el contraste real del texto
- * crema en el peor momento del bucle:
- *
- *     sin velo ............  1,28:1   ilegible
- *     con este velo .......  8,54:1   cumple AA (4,5:1) y AAA (7:1)
- *
- * Es degradado y no plano por una razón: para llegar a 4,5:1 un velo uniforme
- * tendría que oscurecer el 78% de TODA la imagen, y entonces el vídeo no se
- * vería. Así se carga la mano donde hay letras y se levanta donde solo hay
- * estadio.
- *
- * Si se mueve el texto de sitio o se cambia el metraje, hay que volver a medir:
- * estos números valen para este plano.
- */
-.fondo-estadio__velo {
+.bienvenida__velo {
   position: absolute;
-  z-index: 3;
+  z-index: -1;
   inset: 0;
-  background:
-    linear-gradient(
-      97deg,
-      rgba(4, 12, 10, 0.82) 0%,
-      rgba(4, 12, 10, 0.78) 28%,
-      rgba(4, 12, 10, 0.68) 44%,
-      rgba(4, 12, 10, 0.4) 62%,
-      rgba(4, 12, 10, 0.18) 80%,
-      rgba(4, 12, 10, 0.1) 100%
-    ),
-    linear-gradient(to bottom, rgba(4, 12, 10, 0.66) 0%, rgba(4, 12, 10, 0) 20%),
-    linear-gradient(to top, rgba(4, 12, 10, 0.78) 0%, rgba(4, 12, 10, 0) 34%);
+  background: linear-gradient(180deg, rgba(8, 9, 13, 0) 35%, rgba(8, 9, 13, 0.7) 72%, var(--fondo) 100%),
+    linear-gradient(90deg, rgba(8, 9, 13, 0.82) 0%, rgba(8, 9, 13, 0.35) 45%, rgba(8, 9, 13, 0) 70%);
 }
 
-/* La luz de los focos, respirando. Va en `screen` para que sume luz en vez de
-   pintar un velo claro encima. */
-.fondo-estadio__luz {
+.bienvenida__contenido {
+  display: grid;
+  gap: 1.1rem;
+  padding-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+
+.bienvenida__contenido > * {
+  max-width: 44rem;
+}
+
+.bienvenida__contenido .titulo-pagina {
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.45);
+}
+
+.bienvenida__sonido {
   position: absolute;
-  z-index: 4;
-  inset: 0;
-  background:
-    radial-gradient(58% 42% at 70% 10%, rgba(255, 226, 168, 0.3), transparent 62%),
-    radial-gradient(34% 26% at 32% 2%, rgba(255, 238, 205, 0.15), transparent 70%);
-  mix-blend-mode: screen;
-  animation: respiro-de-luz 11s ease-in-out infinite alternate;
+  right: var(--canal);
+  bottom: clamp(2rem, 5vw, 3.5rem);
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  place-items: center;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: 999px;
+  background: rgba(8, 9, 13, 0.6);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
 }
 
-@keyframes respiro-de-luz {
-  from {
-    opacity: 0.55;
-    transform: scale(1) translate3d(0, 0, 0);
+.bienvenida__sonido:hover {
+  border-color: var(--texto-suave);
+}
+
+.bienvenida__sonido[aria-pressed='true'] {
+  border-color: var(--acento);
+  color: var(--acento);
+}
+
+@media (max-width: 48rem) {
+  .bienvenida {
+    height: auto;
+    min-height: 34rem;
   }
 
-  to {
-    opacity: 1;
-    transform: scale(1.07) translate3d(-1.4%, 1%, 0);
+  .bienvenida__velo {
+    background: linear-gradient(180deg, rgba(8, 9, 13, 0.15) 0%, rgba(8, 9, 13, 0.55) 45%, var(--fondo) 92%);
+  }
+
+  .bienvenida__sonido {
+    top: 1rem;
+    bottom: auto;
   }
 }
 
-.portada__confeti {
-  position: absolute;
-  z-index: 5;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+.portada {
+  display: grid;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
 }
 
-/* --- El texto, por encima de todo --- */
-
-/*
- * La columna del texto es más ancha que antes porque el titular en versales
- * estrechas ocupa mucho más de lo que parece: «CADA PARTIDO.» mide casi nueve
- * eses de ancho, y con la columna estrecha partía en dos, de modo que el
- * titular pasaba de dos líneas a cuatro y empujaba fuera de la pantalla el
- * párrafo y los botones.
- */
 .portada__texto {
-  position: relative;
-  z-index: 6;
-  max-width: min(62rem, 70%);
+  display: grid;
+  gap: 1.1rem;
+  max-width: 60rem;
 }
 
-/*
- * El titular.
- *
- * Archivo en 900 y estrechada al 76%, en versales y con la interlínea cerrada
- * por debajo del uno: las dos líneas forman un bloque macizo. Es la misma
- * receta de un cartel de partido, y es lo contrario de lo que hacía la serif
- * que había antes, que era fina y se deshacía sobre el vídeo.
- *
- * La sombra es el seguro: el velo ya garantiza el contraste, pero el fondo se
- * mueve, y una sombra suave asegura el borde de las letras en cualquier
- * fotograma sin que se note que está ahí.
- */
-.portada h1 {
-  max-width: 15ch;
-  font-family: var(--titulares);
-  font-size: clamp(3.1rem, 8.4vw, 7.4rem);
-  font-weight: 900;
-  font-stretch: 76%;
-  line-height: 0.9;
-  letter-spacing: -0.022em;
-  text-transform: uppercase;
-  text-shadow: 0 0.04em 0.6em rgba(2, 8, 6, 0.62);
-}
-
-.portada h1 em {
+.portada__titulo em {
   color: var(--acento);
   font-style: normal;
 }
 
-.portada__texto > p {
-  max-width: 44ch;
-  margin-top: 1.6rem;
-  color: rgba(246, 243, 233, 0.82);
-  font-size: clamp(0.95rem, 1.25vw, 1.12rem);
-  line-height: 1.65;
-  text-shadow: 0 0.06em 0.6em rgba(2, 8, 6, 0.55);
+.portada__juegos {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-.portada__acciones {
+@media (max-width: 64rem) {
+  .portada__juegos {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 36rem) {
+  .portada__juegos {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portada__juegos > :last-child {
+    grid-column: 1 / -1;
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.cifras-portada {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 2.4rem;
   flex-wrap: wrap;
+  gap: 0.5rem 1.75rem;
+  color: var(--apagado);
+  font-size: 0.9rem;
 }
 
-/* Indicador de que hay más abajo: sin él, una portada a pantalla completa
-   parece el final de la página. */
-.portada__bajar {
+.cifras-portada strong {
+  color: var(--texto);
+  font-weight: 800;
+}
+
+/* ------------------------------------------------- Encabezado con imagen */
+
+.encabezado-juego {
+  --color-juego: var(--acento);
+
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  gap: 1rem;
+  padding: clamp(1.5rem, 5vw, 3.5rem);
+  margin-bottom: clamp(2rem, 5vw, 3rem);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: radial-gradient(90% 120% at 0% 0%, color-mix(in srgb, var(--color-juego) 38%, transparent), transparent 65%),
+    var(--superficie);
+  isolation: isolate;
+}
+
+.encabezado-juego__fondo {
   position: absolute;
-  z-index: 6;
-  bottom: clamp(1.5rem, 4vh, 2.75rem);
-  left: 50%;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  transform: translateX(-50%);
-  border: 0;
-  padding: 0.5rem 0.9rem;
-  color: rgba(246, 243, 233, 0.72);
-  background: transparent;
-  font-size: 0.66rem;
-  font-weight: 600;
-  font-stretch: 86%;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition: color 200ms ease;
+  z-index: -2;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 25%;
+  opacity: 0.35;
 }
 
-.portada__bajar:hover {
+.encabezado-juego::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(90deg, var(--fondo) 10%, color-mix(in srgb, var(--fondo) 55%, transparent) 60%, transparent);
+  content: '';
+}
+
+.encabezado-juego__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.encabezado-juego .datos-clave {
+  margin-top: 0.75rem;
+  max-width: 56rem;
+}
+
+.encabezado-juego .datos-clave > div {
+  background: color-mix(in srgb, var(--superficie) 88%, transparent);
+}
+
+/* -------------------------------------------------------------- Partido */
+
+.marcador-grande {
+  display: grid;
+  align-items: center;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.marcador-grande__equipo {
+  display: grid;
+  justify-items: center;
+  gap: 0.75rem;
+  text-align: center;
+  --tamano-logo: clamp(3.5rem, 9vw, 5.5rem);
+}
+
+.marcador-grande__equipo strong {
+  font-size: clamp(1.05rem, 2.4vw, 1.6rem);
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.marcador-grande__equipo--perdedor {
+  opacity: 0.55;
+}
+
+.marcador-grande__cifras {
+  font-size: clamp(2.6rem, 8vw, 5rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.marcador-grande__centro {
+  display: grid;
+  justify-items: center;
+  gap: 0.6rem;
+}
+
+.mapas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.mapa {
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-chico);
+  background: var(--fondo-alto);
+  font-size: 0.8rem;
+}
+
+.mapa strong {
+  margin-left: 0.4rem;
   color: var(--acento);
 }
 
-.portada__bajar svg {
-  animation: bajar-flecha 2.4s ease-in-out infinite;
+.reporte {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo-alto);
 }
 
-@keyframes bajar-flecha {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
+.reporte__captura {
+  overflow: hidden;
+  border-radius: var(--radio-chico);
+  border: 1px solid var(--borde);
+}
 
-  50% {
-    transform: translateY(0.3rem);
+.reporte__captura img {
+  width: 100%;
+  max-height: 16rem;
+  object-fit: cover;
+}
+
+.reportes {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+}
+
+/* ---------------------------------------------------- Equipo y jugador */
+
+.ficha {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1.25rem;
+  --tamano-logo: clamp(4rem, 10vw, 6rem);
+}
+
+.ficha > div {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.miembros {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.miembro {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--fondo-alto);
+}
+
+.miembro__datos {
+  display: grid;
+  min-width: 0;
+  flex: 1;
+}
+
+.miembro__datos strong {
+  font-weight: 800;
+}
+
+.miembro__datos span {
+  overflow: hidden;
+  color: var(--apagado);
+  font-size: 0.82rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.miembro__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.codigo-invitacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px dashed color-mix(in srgb, var(--acento) 45%, transparent);
+  border-radius: var(--radio);
+  background: var(--acento-suave);
+}
+
+.codigo-invitacion code {
+  font-family: var(--fuente);
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+/* ---------------------------------------------------------------- Panel */
+
+.panel-navegacion {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  padding: 0.3rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  scrollbar-width: none;
+}
+
+.panel-navegacion a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.6rem 0.95rem;
+  border-radius: var(--radio-chico);
+  color: var(--apagado);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-navegacion a:hover {
+  color: var(--texto);
+}
+
+.panel-navegacion a.activo {
+  background: var(--superficie-activa);
+  color: var(--texto);
+}
+
+.panel-navegacion .contador {
+  display: grid;
+  min-width: 1.25rem;
+  height: 1.25rem;
+  padding-inline: 0.3rem;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--acento);
+  color: var(--acento-tinta);
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.tarjeta-equipo {
+  --color-juego: var(--acento);
+
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--color-juego);
+  border-radius: var(--radio-grande);
+  background: var(--superficie);
+  transition: border-color 0.15s;
+  --tamano-logo: 3rem;
+}
+
+.tarjeta-equipo:hover {
+  border-color: var(--borde-fuerte);
+  border-left-color: var(--color-juego);
+}
+
+.tarjeta-equipo__cabeza {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.tarjeta-equipo__cabeza strong {
+  display: block;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+
+.cuenta-juego {
+  --color-juego: var(--acento);
+
+  display: grid;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1rem;
+  border: 1px solid var(--borde);
+  border-left: 3px solid var(--color-juego);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  grid-template-columns: minmax(9rem, 13rem) minmax(0, 1fr) auto;
+}
+
+@media (max-width: 44rem) {
+  .cuenta-juego {
+    grid-template-columns: 1fr;
   }
 }
 
-@media (max-width: 860px) {
-  .portada__texto {
-    max-width: 100%;
-  }
+.cuenta-juego__nombre {
+  display: grid;
+}
 
-  /* En vertical el degradado lateral no sirve: el texto ocupa todo el ancho,
-     así que el velo pasa a ser de abajo hacia arriba. */
-  .fondo-estadio__velo {
-    background:
-      linear-gradient(
-        to top,
-        rgba(4, 12, 10, 0.95) 0%,
-        rgba(4, 12, 10, 0.9) 42%,
-        rgba(4, 12, 10, 0.72) 64%,
-        rgba(4, 12, 10, 0.5) 82%,
-        rgba(4, 12, 10, 0.42) 100%
-      ),
-      linear-gradient(to bottom, rgba(4, 12, 10, 0.7) 0%, rgba(4, 12, 10, 0) 22%);
-  }
+.cuenta-juego__nombre strong {
+  font-weight: 800;
+}
+
+.cuenta-juego__nombre span {
+  color: var(--apagado);
+  font-size: 0.8rem;
 }
 
 .cifras {
   display: grid;
   gap: 1px;
-  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
   overflow: hidden;
-  margin-top: clamp(2rem, 4vw, 3rem);
-  border-radius: var(--radio);
-  background: var(--linea-suave);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-grande);
+  background: var(--borde);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
 }
 
-.cifra {
-  padding: 1.25rem;
-  background: var(--blanco);
-}
-
-.cifra strong {
-  display: block;
-  font-family: var(--titulares);
-  font-size: 2.5rem;
-  font-weight: 800;
-  font-stretch: 82%;
-  font-variant-numeric: tabular-nums;
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-
-.cifra span {
-  color: var(--apagado);
-  font-size: 0.7rem;
-  font-weight: 600;
-  font-stretch: 86%;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-/* ------------------------------------------------------------- Secciones */
-
-.seccion {
-  margin-top: clamp(2.5rem, 5vw, 4rem);
-}
-
-.seccion__encabezado {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.35rem;
-  flex-wrap: wrap;
-}
-
-/* Los titulares de sección van pesados y estrechos como el de la portada, pero
-   sin versales: en un texto que se lee de corrido las mayúsculas cansan. */
-.seccion__encabezado h2 {
-  font-family: var(--titulares);
-  font-size: clamp(1.7rem, 2.9vw, 2.4rem);
-  font-weight: 800;
-  font-stretch: 84%;
-  line-height: 1.04;
-  letter-spacing: -0.018em;
-}
-
-.seccion__encabezado p {
-  margin-top: 0.3rem;
-  color: var(--apagado);
-  font-size: 0.82rem;
-}
-
-.enlace-mas {
-  display: inline-flex;
-  align-items: center;
+.cifras > div {
+  display: grid;
   gap: 0.35rem;
-  color: var(--tinta);
-  font-size: 0.78rem;
-  font-weight: 700;
+  padding: 1.1rem 1.25rem;
+  background: var(--superficie);
 }
 
-.enlace-mas:hover {
+.cifras strong {
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.cifras a:hover strong {
   color: var(--acento);
 }
 
-.rejilla {
-  display: grid;
-  gap: 1.1rem;
-}
-
-.rejilla--dos {
-  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
-}
-
-.rejilla--tres {
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-}
-
-.rejilla--panel {
-  align-items: start;
-  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-}
-
-/* --------------------------------------------------------- Ficha torneo */
-
-.torneo-tarjeta {
+.accion-pendiente {
   display: flex;
-  flex-direction: column;
-  gap: 0.85rem;
-  border: 1px solid var(--linea-suave);
-  border-radius: var(--radio);
-  padding: 1.35rem;
-  background: var(--blanco);
-  box-shadow: var(--sombra-baja);
-  transition: transform 180ms ease, box-shadow 180ms ease;
-}
-
-.torneo-tarjeta:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--sombra-media);
-}
-
-.torneo-tarjeta h3 {
-  font-size: 1.05rem;
-}
-
-.torneo-tarjeta__meta {
-  display: flex;
-  gap: 1rem;
   flex-wrap: wrap;
-  color: var(--apagado);
-  font-size: 0.74rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.25rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
 }
 
-.torneo-tarjeta__meta span {
-  display: inline-flex;
-  align-items: center;
+.accion-pendiente > div {
+  display: grid;
   gap: 0.3rem;
 }
 
-.torneo-tarjeta__pie {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: auto;
-  padding-top: 0.85rem;
-  border-top: 1px solid var(--linea-suave);
-  font-size: 0.78rem;
+.accion-pendiente strong {
+  font-weight: 800;
 }
 
-.torneo-cabecera {
+/* -------------------------------------------------- Ingreso y registro */
+
+.acceso {
+  display: grid;
+  min-height: 100vh;
+}
+
+@media (min-width: 60rem) {
+  .acceso {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+}
+
+.acceso__marca {
   position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: var(--radio-grande);
-  padding: clamp(1.75rem, 4vw, 3rem);
-  color: #f6f3e9;
-  background:
-    radial-gradient(120% 120% at 85% 0%, rgba(234, 184, 87, 0.22), transparent 55%),
-    var(--tinta);
-}
-
-.torneo-cabecera h1 {
-  font-family: var(--titulares);
-  font-size: clamp(2.2rem, 4.5vw, 3.6rem);
-  font-weight: 800;
-  font-stretch: 82%;
-  line-height: 1.02;
-  letter-spacing: -0.02em;
-}
-
-.torneo-cabecera__datos {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  margin-top: 1.35rem;
-  color: rgba(246, 243, 233, 0.74);
-  font-size: 0.78rem;
-}
-
-.torneo-cabecera__datos span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-/* -------------------------------------------------------------- Partidos */
-
-.partido {
-  display: grid;
-  align-items: center;
-  gap: 0.75rem;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  border: 1px solid var(--linea-suave);
-  border-radius: var(--radio);
-  padding: 1rem 1.1rem;
-  background: var(--blanco);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.partido:hover {
-  border-color: var(--linea);
-  box-shadow: var(--sombra-baja);
-}
-
-.partido__equipo {
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  min-width: 0;
-  font-size: 0.86rem;
-  font-weight: 500;
-}
-
-.partido__equipo--visitante {
-  flex-direction: row-reverse;
-  text-align: right;
-}
-
-.partido__equipo span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.partido__centro {
-  display: grid;
-  justify-items: center;
-  gap: 0.2rem;
-  min-width: 5.5rem;
-}
-
-/*
- * El marcador se compone como un tablero, no como un titular: Archivo
- * estrechada, peso fuerte y cifras tabulares. Así «10 – 0» y «1 – 1» ocupan
- * exactamente lo mismo y la columna del centro no se mueve entre partidos.
- */
-.partido__marcador {
-  font-size: 1.45rem;
-  font-weight: 700;
-  font-stretch: 78%;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
-}
-
-.partido__hora {
-  color: var(--apagado);
-  font-size: 0.74rem;
-  font-weight: 500;
-  font-stretch: 92%;
-}
-
-.partido__pie {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: space-between;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--linea-suave);
-  color: var(--apagado-claro);
-  font-size: 0.7rem;
-}
-
-/*
- * Tablero del diálogo de carga de resultados. Misma voz que el marcador de la
- * lista de partidos, para que la organización vea el mismo número que verá el
- * público.
- */
-.tablero {
-  display: grid;
-  place-items: center;
-  gap: 0.35rem;
-  border-radius: var(--radio);
-  padding: 1.1rem;
-  background: var(--papel-hondo);
-}
-
-.tablero__marcador {
-  font-size: 2.2rem;
-  font-weight: 700;
-  font-stretch: 76%;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.01em;
-}
-
-.tablero__equipos {
-  color: var(--apagado);
-  font-size: 0.74rem;
-  font-weight: 600;
-  font-stretch: 86%;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.jornada-titulo {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin: 1.75rem 0 0.9rem;
-  color: var(--apagado);
-  font-size: 0.7rem;
-  font-weight: 600;
-  font-stretch: 84%;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
-}
-
-.jornada-titulo::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: var(--linea-suave);
-}
-
-.lista-partidos {
-  display: grid;
-  gap: 0.7rem;
-}
-
-/* Las abreviaturas de la tabla (PJ, G, E, P, GF, GC, DG) llevan su significado
-   en el title, pero sin el subrayado punteado que añade el navegador. */
-.tabla abbr[title] {
-  text-decoration: none;
-  cursor: help;
-}
-
-/* ---------------------------------------------------------------- Forma */
-
-.forma {
-  display: inline-flex;
-  gap: 0.2rem;
-}
-
-.forma__marca {
-  display: grid;
-  width: 1.25rem;
-  height: 1.25rem;
-  place-items: center;
-  border-radius: 0.3rem;
-  color: var(--blanco);
-  font-size: 0.64rem;
-  font-weight: 700;
-  font-stretch: 80%;
-}
-
-.forma__marca--V {
-  background: var(--exito);
-}
-
-.forma__marca--E {
-  background: var(--apagado-claro);
-}
-
-.forma__marca--D {
-  background: var(--error);
-}
-
-/* ---------------------------------------------------------------- Panel */
-
-.panel-cabecera {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.75rem;
-  flex-wrap: wrap;
-}
-
-.panel-cabecera h1 {
-  font-family: var(--titulares);
-  font-size: clamp(2rem, 3.6vw, 2.8rem);
-  font-weight: 800;
-  font-stretch: 84%;
-  line-height: 1.04;
-  letter-spacing: -0.018em;
-}
-
-.panel-cabecera p {
-  margin-top: 0.4rem;
-  color: var(--apagado);
-  font-size: 0.85rem;
-}
-
-.panel-navegacion {
-  display: flex;
-  gap: 0.4rem;
-  overflow-x: auto;
-  margin-bottom: 1.75rem;
-  padding-bottom: 0.25rem;
-  scrollbar-width: none;
-}
-
-.panel-navegacion::-webkit-scrollbar {
   display: none;
+  overflow: hidden;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(2rem, 4vw, 3.5rem);
+  background: var(--fondo-alto);
+  isolation: isolate;
 }
 
-.panel-navegacion a {
-  border: 1px solid var(--linea-suave);
-  border-radius: 999px;
-  padding: 0.5rem 0.95rem;
-  color: var(--apagado);
-  background: var(--blanco);
-  font-size: 0.8rem;
-  font-weight: 500;
-  white-space: nowrap;
-  transition: color 160ms ease, background 160ms ease, border-color 160ms ease;
+@media (min-width: 60rem) {
+  .acceso__marca {
+    display: flex;
+  }
 }
 
-.panel-navegacion a:hover {
-  color: var(--tinta);
-  border-color: var(--linea);
+.acceso__mosaico {
+  position: absolute;
+  z-index: -2;
+  inset: -2rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  opacity: 0.55;
+  transform: rotate(-6deg) scale(1.1);
 }
 
-.panel-navegacion a[aria-current='page'] {
-  color: #f8f6ed;
-  border-color: var(--tinta);
-  background: var(--tinta);
+.acceso__mosaico .portada-juego {
+  border-radius: var(--radio);
 }
 
-.fila-equipo {
+.acceso__marca::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 9, 13, 0.55), rgba(8, 9, 13, 0.95) 75%);
+  content: '';
+}
+
+.acceso__lema {
+  display: grid;
+  gap: 1rem;
+}
+
+.acceso__formulario {
   display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+}
+
+.acceso__tarjeta {
+  display: grid;
+  gap: 1.75rem;
+  width: min(100%, 26rem);
+  margin-inline: auto;
+}
+
+.acceso__tarjeta header {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.acceso__pie {
+  color: var(--apagado);
+  font-size: 0.9rem;
+}
+
+.acceso__pie a {
+  color: var(--acento);
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------- Organización */
+
+.formulario-torneo {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.formulario-torneo fieldset {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 1.1rem;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+}
+
+.formulario-torneo legend {
+  padding-inline: 0.4rem;
+  color: var(--apagado);
+  font-size: var(--tipo-rotulo);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.sala {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.sala__fila {
+  display: grid;
   align-items: center;
   gap: 0.75rem;
-  min-width: 0;
+  grid-template-columns: minmax(0, 1fr) 5.5rem 5.5rem;
 }
 
-.fila-equipo strong {
-  display: block;
-  font-size: 0.85rem;
-}
-
-.fila-equipo span {
-  display: block;
-  color: var(--apagado-claro);
-  font-size: 0.7rem;
-}
-
-.barra-acciones {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-.subida-imagen {
-  display: grid;
-  gap: 0.6rem;
-  justify-items: center;
-  border: 1px dashed var(--linea);
-  border-radius: var(--radio);
-  padding: 1.1rem;
+.sala__fila .campo__control {
+  min-height: 2.4rem;
+  padding: 0.4rem 0.6rem;
   text-align: center;
 }
 
-.subida-imagen__previa {
-  display: grid;
-  width: 6rem;
-  height: 6rem;
-  place-items: center;
-  overflow: hidden;
-  border-radius: var(--radio-chico);
-  background: var(--papel-hondo);
-}
-
-.subida-imagen__previa img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.subida-imagen p {
-  color: var(--apagado-claro);
-  font-size: 0.7rem;
-}
-
-.uniformes {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
-}
-
-.paginacion {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
+.sala__cabecera {
   color: var(--apagado);
-  font-size: 0.78rem;
-}
-
-.detalle-lista {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.detalle-lista div {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  font-size: 0.82rem;
-}
-
-.detalle-lista dt,
-.detalle-lista span:first-child {
-  color: var(--apagado);
-}
-
-.detalle-lista strong {
-  text-align: right;
+  font-size: var(--tipo-rotulo);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.evento-fila {
-  display: grid;
-  align-items: center;
-  gap: 0.6rem;
-  grid-template-columns: 3rem minmax(0, 1fr) auto;
-  border-bottom: 1px solid var(--linea-suave);
-  padding: 0.55rem 0;
-  font-size: 0.8rem;
-}
-
-.evento-fila:last-child {
-  border-bottom: 0;
-}
-
-.evento-fila__minuto {
-  color: var(--apagado);
-  font-size: 0.74rem;
-  font-weight: 600;
-  font-stretch: var(--ancho-datos);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ------------------------------------------------------------ Adaptable */
-
-@media (max-width: 860px) {
-  .rejilla--panel {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .navegacion {
-    position: fixed;
-    z-index: 45;
-    inset: 4.25rem 0 auto;
-    display: none;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0;
-    border-bottom: 1px solid var(--linea);
-    padding: 0.6rem;
-    background: var(--papel);
-    box-shadow: var(--sombra-media);
-  }
-
-  .navegacion--abierta {
-    display: flex;
-  }
-
-  .navegacion__enlace {
-    border-radius: var(--radio-chico);
-    padding: 0.8rem 1rem;
-  }
-
-  .boton-menu {
-    display: inline-grid;
-    width: 2.6rem;
-    height: 2.6rem;
-    margin-left: auto;
-    place-items: center;
-    border: 1px solid var(--linea);
-    border-radius: 50%;
-    color: var(--tinta);
-    background: var(--blanco);
-    cursor: pointer;
-  }
-
-  .cabecera__acciones {
-    margin-left: 0;
-  }
-}
-
-@media (max-width: 560px) {
-  .partido {
-    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-    gap: 0.5rem;
-    padding: 0.85rem;
-  }
-
-  .partido__equipo span {
-    font-size: 0.78rem;
-  }
-
-  .menu-usuario__boton span {
-    display: none;
-  }
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
 }

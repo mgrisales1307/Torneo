@@ -36,26 +36,16 @@ class TorneoPolicy
     }
 
     /**
-     * Borrar un torneo se lleva por delante inscripciones y calendario, así
-     * que queda reservado a la administración y solo mientras no haya empezado.
+     * Borrar un torneo se lleva por delante inscripciones y cuadro, así que
+     * queda reservado a la administración y solo mientras no haya empezado.
      */
     public function eliminar(Usuario $usuario, Torneo $torneo): bool
     {
-        return $usuario->esAdministrador() && ! $torneo->partidos()->exists();
+        return $usuario->esAdministrador() && ! $torneo->estado->haEmpezado();
     }
 
-    public function gestionarCalendario(Usuario $usuario, Torneo $torneo): bool
+    public function iniciar(Usuario $usuario, Torneo $torneo): bool
     {
         return $usuario->perteneceAlStaff();
-    }
-
-    /**
-     * Solo decide si esta persona puede inscribir equipos. Si el torneo admite
-     * inscripciones ahora mismo —fechas, estado y cupo— lo resuelve
-     * GestorDeInscripciones, que explica en el mensaje cuál es el problema.
-     */
-    public function inscribirEquipo(Usuario $usuario, Torneo $torneo): bool
-    {
-        return $usuario->puedeTenerEquipos();
     }
 }

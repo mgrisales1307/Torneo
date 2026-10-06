@@ -22,10 +22,10 @@ class OrdenFactory extends Factory
     public function definition(): array
     {
         return [
-            'referencia' => 'JZ-'.Str::upper(Str::random(14)),
+            'referencia' => 'NZ-'.Str::upper(Str::random(14)),
             'inscripcion_id' => Inscripcion::factory(),
-            'usuario_id' => Usuario::factory()->dueno(),
-            'monto_centavos' => 15_000_000,
+            'usuario_id' => Usuario::factory(),
+            'monto_centavos' => 5_000_000,
             'moneda' => 'COP',
             'estado' => EstadoOrden::Pendiente,
             'pasarela' => 'simulada',
@@ -37,7 +37,7 @@ class OrdenFactory extends Factory
     {
         return $this->state([
             'inscripcion_id' => $inscripcion->getKey(),
-            'usuario_id' => $inscripcion->equipo->dueno_id,
+            'usuario_id' => $inscripcion->equipo->capitan_id,
             'monto_centavos' => $inscripcion->monto_centavos,
             'moneda' => $inscripcion->moneda,
         ]);

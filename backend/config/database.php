@@ -38,10 +38,17 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
+
+            // La API corre con varios procesos (PHP_CLI_SERVER_WORKERS) y las
+            // pantallas piden varias cosas a la vez. Con SQLite, dos escrituras
+            // simultáneas —el límite de peticiones guarda su cuenta en la
+            // caché— chocaban con «database is locked». Así la segunda espera
+            // su turno en vez de fallar, y las transacciones toman el turno de
+            // escritura desde el principio en lugar de pedirlo a mitad.
+            'busy_timeout' => 5000,
             'journal_mode' => null,
             'synchronous' => null,
-            'transaction_mode' => 'DEFERRED',
+            'transaction_mode' => 'IMMEDIATE',
         ],
 
         'mysql' => [

@@ -24,7 +24,7 @@ class InscripcionFactory extends Factory
             'torneo_id' => Torneo::factory(),
             'equipo_id' => Equipo::factory(),
             'estado' => EstadoInscripcion::PendientePago,
-            'monto_centavos' => 15_000_000,
+            'monto_centavos' => 5_000_000,
             'moneda' => 'COP',
         ];
     }
@@ -53,6 +53,11 @@ class InscripcionFactory extends Factory
             'revisado_en' => now(),
             'notas_revision' => 'Documentación incompleta.',
         ]);
+    }
+
+    public function conCheckIn(): static
+    {
+        return $this->state(['check_in_en' => now()]);
     }
 
     public function gratuita(): static

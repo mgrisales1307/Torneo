@@ -10,7 +10,7 @@ import { Campo } from '../componentes/ui/Basicos'
  * padre guarda lo que se escribe en su propio estado y le pasa a Dialogo una
  * función de cierre declarada en el cuerpo del componente —es decir, una
  * función nueva en cada render—. Así es como lo usan MisEquipos,
- * PlantillaDelEquipo, TorneosAdmin e InscripcionesAdmin.
+ * TorneosAdmin y ListaDeInscripciones.
  */
 function ModalDePrueba() {
   const [abierto, setAbierto] = useState(true)
@@ -41,11 +41,11 @@ describe('Dialogo', () => {
     const campo = screen.getByLabelText('Nombre del equipo')
 
     await usuario.click(campo)
-    await usuario.keyboard('Atlético Parceros')
+    await usuario.keyboard('Cóndores Andinos')
 
     // Si el modal le roba el foco tras la primera pulsación, solo llega la
     // primera letra y el resto del texto se pierde.
-    expect(campo).toHaveValue('Atlético Parceros')
+    expect(campo).toHaveValue('Cóndores Andinos')
     expect(campo).toHaveFocus()
   })
 

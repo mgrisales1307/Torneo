@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Enumeraciones\EstadoTorneo;
 use App\Enumeraciones\FormatoTorneo;
-use App\Models\Rasgos\TieneImagenes;
+use App\Enumeraciones\Juego;
 use App\Models\Rasgos\TieneSlug;
 use Database\Factories\TorneoFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,58 +13,59 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
- * Un torneo: las reglas de la competencia y su estado.
+ * Un torneo: el juego, el formato, las reglas y su estado.
  *
+ * @property Juego $juego
  * @property EstadoTorneo $estado
  * @property FormatoTorneo $formato
+ * @property array<int, int>|null $premios
  */
 class Torneo extends Model
 {
     /** @use HasFactory<TorneoFactory> */
-    use HasFactory, SoftDeletes, TieneImagenes, TieneSlug;
+    use HasFactory, SoftDeletes, TieneSlug;
 
     protected $table = 'torneos';
 
     /**
+     * El estado no está aquí: lo mueven las acciones de la organización
+     * (publicar, iniciar, cancelar) y el avance de los resultados.
+     *
      * @var list<string>
      */
     protected $fillable = [
+        'juego',
         'nombre',
-        'temporada',
-        'categoria',
-        'descripcion',
         'formato',
-        'estado',
-        'ciudad',
-        'sede',
+        'reglas',
         'cupo_maximo_equipos',
-        'minimo_jugadores_por_equipo',
-        'maximo_jugadores_por_equipo',
-        'puntos_por_victoria',
-        'puntos_por_empate',
-        'puntos_por_derrota',
+        'mejor_de',
+        'mejor_de_final',
+        'cantidad_de_grupos',
+        'clasifican_por_grupo',
+        'rondas_suizo',
+        'partidas_battle_royale',
+        'check_in_minutos',
         'costo_inscripcion_centavos',
         'moneda',
+        'premios',
         'inscripciones_abren_en',
         'inscripciones_cierran_en',
         'inicia_en',
-        'finaliza_en',
     ];
 
     /**
      * @var array<string, mixed>
      */
     protected $attributes = [
-        'formato' => FormatoTorneo::LigaIda->value,
         'estado' => EstadoTorneo::Borrador->value,
         'cupo_maximo_equipos' => 16,
-        'minimo_jugadores_por_equipo' => 7,
-        'maximo_jugadores_por_equipo' => 25,
-        'puntos_por_victoria' => 3,
-        'puntos_por_empate' => 1,
-        'puntos_por_derrota' => 0,
+        'mejor_de' => 1,
+        'mejor_de_final' => 3,
+        'check_in_minutos' => 30,
         'costo_inscripcion_centavos' => 0,
         'moneda' => 'COP',
     ];
@@ -75,19 +76,23 @@ class Torneo extends Model
     protected function casts(): array
     {
         return [
+            'juego' => Juego::class,
             'formato' => FormatoTorneo::class,
             'estado' => EstadoTorneo::class,
             'cupo_maximo_equipos' => 'integer',
-            'minimo_jugadores_por_equipo' => 'integer',
-            'maximo_jugadores_por_equipo' => 'integer',
-            'puntos_por_victoria' => 'integer',
-            'puntos_por_empate' => 'integer',
-            'puntos_por_derrota' => 'integer',
+            'mejor_de' => 'integer',
+            'mejor_de_final' => 'integer',
+            'cantidad_de_grupos' => 'integer',
+            'clasifican_por_grupo' => 'integer',
+            'rondas_suizo' => 'integer',
+            'partidas_battle_royale' => 'integer',
+            'check_in_minutos' => 'integer',
             'costo_inscripcion_centavos' => 'integer',
+            'premios' => 'array',
             'inscripciones_abren_en' => 'datetime',
             'inscripciones_cierran_en' => 'datetime',
             'inicia_en' => 'datetime',
-            'finaliza_en' => 'datetime',
+            'finalizado_en' => 'datetime',
         ];
     }
 
@@ -100,11 +105,37 @@ class Torneo extends Model
     }
 
     /**
+     * @return BelongsTo<Equipo, $this>
+     */
+    public function campeon(): BelongsTo
+    {
+        return $this->belongsTo(Equipo::class, 'campeon_id')->withTrashed();
+    }
+
+    /**
      * @return HasMany<Inscripcion, $this>
      */
     public function inscripciones(): HasMany
     {
         return $this->hasMany(Inscripcion::class);
+    }
+
+    /**
+     * Los equipos que juegan: aprobados y con lugar en el cuadro.
+     *
+     * @return HasMany<Inscripcion, $this>
+     */
+    public function participantes(): HasMany
+    {
+        return $this->inscripciones()->aprobadas()->whereNotNull('semilla')->orderBy('semilla');
+    }
+
+    /**
+     * @return HasMany<Fase, $this>
+     */
+    public function fases(): HasMany
+    {
+        return $this->hasMany(Fase::class)->orderBy('orden');
     }
 
     /**
@@ -181,5 +212,38 @@ class Torneo extends Model
     public function inscripcionesQueOcupanCupo(): HasMany
     {
         return $this->inscripciones()->pagadas();
+    }
+
+    public function usaCheckIn(): bool
+    {
+        return $this->check_in_minutos > 0;
+    }
+
+    public function checkInAbreEn(): ?Carbon
+    {
+        if (! $this->usaCheckIn() || $this->inicia_en === null) {
+            return null;
+        }
+
+        return $this->inicia_en->copy()->subMinutes($this->check_in_minutos);
+    }
+
+    /**
+     * El check-in abre los minutos indicados antes de la hora de inicio y no
+     * cierra hasta que la organización inicia el torneo: quien llega tarde a la
+     * hora pero antes del arranque todavía entra.
+     */
+    public function checkInAbierto(): bool
+    {
+        $abre = $this->checkInAbreEn();
+
+        return $abre !== null
+            && $this->estado->esperaInicio()
+            && now()->gte($abre);
+    }
+
+    public function bolsaDePremiosCentavos(): int
+    {
+        return (int) array_sum($this->premios ?? []);
     }
 }

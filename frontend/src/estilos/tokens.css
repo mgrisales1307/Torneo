@@ -1,72 +1,112 @@
 /*
  * Tokens de diseño.
  *
- * Un único lugar donde viven los colores, los radios y las sombras. Todo lo
- * demás los usa por nombre: cambiar aquí el acento cambia el sitio entero, sin
- * buscar códigos de color repartidos por los archivos.
+ * Un único lugar donde viven la fuente, los colores, los radios y la escala
+ * de títulos. Todo lo demás los usa por nombre.
  *
- * La paleta es la del torneo: la tinta del pasto de noche, el papel de la
- * prensa deportiva y el dorado del trofeo.
+ * La interfaz es oscura, como la de las plataformas de competición: el color
+ * lo ponen las portadas de los juegos y el acento, no los fondos.
  */
 
+/*
+ * Pitagon Sans, la familia de juzt. Se sirve desde el propio proyecto, no
+ * desde un CDN: la aplicación no depende de un tercero y no se filtra la IP de
+ * quien nos visita. Cuatro pesos: 400 texto, 600 interfaz, 800 y 900 títulos.
+ */
+@font-face {
+  font-family: 'Pitagon Sans';
+  src: url('../assets/fuentes/PitagonSans-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pitagon Sans';
+  src: url('../assets/fuentes/PitagonSans-SemiBold.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pitagon Sans';
+  src: url('../assets/fuentes/PitagonSans-ExtraBold.otf') format('opentype');
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Pitagon Sans';
+  src: url('../assets/fuentes/PitagonSans-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  /* Marca */
-  --tinta: #0b1d17;
-  --tinta-suave: #143026;
-  --tinta-clara: #24463a;
-  --papel: #f2efe6;
-  --papel-hondo: #e8e4d9;
-  --blanco: #fffdf8;
-  --acento: #eab857;
-  --acento-suave: #f2d79a;
-  --cancha: #7fae44;
+  color-scheme: dark;
+
+  --fuente: 'Pitagon Sans', system-ui, 'Segoe UI', Arial, sans-serif;
+
+  /*
+   * Jerarquía de títulos de juzt, con sus mismos tamaños fluidos:
+   *
+   *   --tipo-titulo-pagina   el título de cada pantalla
+   *   --tipo-titulo-seccion  las secciones grandes de una página pública
+   *   --tipo-titulo-bloque   tarjetas, paneles y diálogos
+   *   --tipo-entradilla      el párrafo que acompaña a un título
+   *   --tipo-rotulo          la etiqueta en versales sobre un título o un dato
+   */
+  --tipo-titulo-pagina: clamp(3rem, 5.4vw, 6.6rem);
+  --tipo-titulo-seccion: clamp(2.5rem, 3.9vw, 4rem);
+  --tipo-titulo-bloque: clamp(1.55rem, 2vw, 1.9rem);
+  --tipo-entradilla: clamp(1.02rem, 1.15vw, 1.14rem);
+  --tipo-rotulo: 0.68rem;
+
+  /* Fondos, de atrás hacia delante */
+  --fondo: #08090d;
+  --fondo-alto: #0e1016;
+  --superficie: #14171f;
+  --superficie-alta: #1b1f29;
+  --superficie-activa: #232836;
 
   /* Texto */
-  --apagado: #6a746f;
-  --apagado-claro: #8a918e;
+  --texto: #f2f3f5;
+  --texto-suave: #c5c9d2;
+  --apagado: #8a909c;
+  --apagado-oscuro: #5f6571;
 
-  /* Estado */
-  --error: #a23b2a;
-  --exito: #2f6f4f;
-  --aviso: #b7791f;
-  --informacion: #2e5c7d;
+  /* Acento de la plataforma: neutral a los cinco juegos, para que no compita
+     con el color de ninguno. */
+  --acento: #d6ff3d;
+  --acento-tinta: #0b0d05;
+  --acento-suave: rgba(214, 255, 61, 0.12);
+
+  /* Estados */
+  --exito: #3ddc97;
+  --aviso: #ffb547;
+  --error: #ff5468;
+  --info: #5cc8ff;
 
   /* Trazos y relieve */
-  --linea: rgba(11, 29, 23, 0.16);
-  --linea-suave: rgba(11, 29, 23, 0.08);
-  --sombra-baja: 0 0.35rem 1.1rem rgba(11, 29, 23, 0.05);
-  --sombra-media: 0 0.9rem 2.4rem rgba(11, 29, 23, 0.09);
-  --sombra-alta: 0 1.4rem 3.4rem rgba(11, 29, 23, 0.14);
+  --borde: rgba(255, 255, 255, 0.08);
+  --borde-fuerte: rgba(255, 255, 255, 0.16);
+  --sombra: 0 1.2rem 3rem rgba(0, 0, 0, 0.45);
 
   /* Geometría */
-  --radio-chico: 0.55rem;
-  --radio: 0.9rem;
-  --radio-grande: 1.4rem;
-  --ancho-contenido: 76rem;
+  --radio-chico: 0.5rem;
+  --radio: 0.8rem;
+  --radio-grande: 1.2rem;
+  --ancho-contenido: 80rem;
+  --canal: clamp(1rem, 4vw, 3rem);
+  --alto-cabecera: 4.25rem;
 
-  /* Tipografía
-   *
-   * Una sola familia, Archivo, y tres voces sacadas de sus dos ejes —peso y
-   * ancho—. Antes había además una serif de display; se quitó porque para un
-   * torneo resultaba delgada y demasiado formal: el titular perdía fuerza.
-   *
-   *   --titulares  Archivo en 900 y estrechada al 76%, en versales. Es la voz
-   *                del cartel: pesada, apretada, con presencia. Así titula la
-   *                prensa deportiva.
-   *   --interfaz   Archivo en 400–600 y ancho normal. Todo el texto.
-   *   (datos)      Archivo en 84% con cifras tabulares, con la clase .datos.
-   *                Tablas, marcadores, minutos y dorsales.
-   *
-   * Las tres son el mismo woff2: cambiar de voz no cuesta una descarga más.
-   */
-  --titulares: 'Archivo Variable', system-ui, 'Segoe UI', Arial, sans-serif;
-  --interfaz: 'Archivo Variable', system-ui, 'Segoe UI', Arial, sans-serif;
-
-  /* Ancho al que se estrechan las cifras y las tablas. */
-  --ancho-datos: 84%;
-
-  /* Aire entre la cabecera y el contenido. Está aquí, y no suelto en la regla
-     de `.sitio__contenido`, porque la portada necesita restarlo para poder
-     subirse hasta el borde de la pantalla. */
-  --aire-contenido: clamp(1.75rem, 4vw, 3rem);
+  /* El color de cada juego. Lo usan sus portadas, sus torneos y sus cuadros. */
+  --juego-valorant: #ff4655;
+  --juego-lol: #c8aa6e;
+  --juego-dota2: #e2452e;
+  --juego-pubg: #f2a900;
+  --juego-freefire: #ff7a1a;
 }

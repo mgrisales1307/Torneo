@@ -26,7 +26,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Minutos que una orden de pago acepta ser pagada. Pasado ese tiempo el
-    | dueño del equipo genera una nueva: así un enlace de pago filtrado deja de
+    | capitán del equipo genera una nueva: así un enlace de pago filtrado deja de
     | servir, y el cupo del torneo no queda bloqueado indefinidamente.
     |
     */

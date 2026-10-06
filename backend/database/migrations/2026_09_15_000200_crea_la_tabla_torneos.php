@@ -1,7 +1,5 @@
 <?php
 
-use App\Enumeraciones\EstadoTorneo;
-use App\Enumeraciones\FormatoTorneo;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -17,8 +15,8 @@ return new class extends Migration
             $table->string('temporada', 60)->nullable();
             $table->string('categoria', 60)->nullable();
             $table->text('descripcion')->nullable();
-            $table->string('formato', 40)->default(FormatoTorneo::LigaIda->value);
-            $table->string('estado', 40)->default(EstadoTorneo::Borrador->value)->index();
+            $table->string('formato', 40)->default('liga_ida');
+            $table->string('estado', 40)->default('borrador')->index();
             $table->string('ciudad', 120)->nullable();
             $table->string('sede', 160)->nullable();
             $table->string('logo_ruta')->nullable();

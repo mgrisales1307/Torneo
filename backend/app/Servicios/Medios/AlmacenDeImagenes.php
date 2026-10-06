@@ -10,8 +10,8 @@ use Illuminate\Validation\Rules\Dimensions;
 use InvalidArgumentException;
 
 /**
- * Único punto por el que entran y salen las imágenes del proyecto: escudos,
- * uniformes, fotos de jugadores y logos de torneo.
+ * Único punto por el que entran y salen las imágenes del proyecto: logos de
+ * equipo y capturas de resultados.
  *
  * Decisiones que se aplican aquí y no se repiten en cada controlador:
  *

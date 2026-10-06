@@ -1,17 +1,4 @@
-/*
- * Las fuentes se sirven desde el propio proyecto (paquetes de Fontsource en
- * node_modules), no desde un CDN: la aplicación no depende de que Google Fonts
- * esté disponible, y no se filtra la IP de quien nos visita a un tercero.
- *
- * Se carga el archivo `wdth` de Archivo, que trae los dos ejes —peso y ancho—
- * en un solo woff2. Con esos dos ejes sale toda la tipografía del proyecto:
- * los titulares en pesado y estrecho, la interfaz en normal y las tablas en
- * estrecho con cifras tabulares. Una sola descarga, ninguna familia más.
- */
-@import '@fontsource-variable/archivo/wdth.css';
-
 @import './estilos/tokens.css';
 @import './estilos/base.css';
 @import './estilos/componentes.css';
 @import './estilos/paginas.css';
-@import './estilos/acceso.css';

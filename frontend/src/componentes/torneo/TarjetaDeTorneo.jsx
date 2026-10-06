@@ -1,41 +1,57 @@
 import { Link } from 'react-router-dom'
-import { CalendarDays, MapPin, Users } from 'lucide-react'
-import { fechaCorta } from '../../lib/formato'
+import { CalendarDays, Swords, Users } from 'lucide-react'
+import { colorDeJuego, juegoDe } from '../../lib/juegos'
+import { fechaYHora } from '../../lib/formato'
 import { Insignia } from '../ui/Basicos'
+import { EtiquetaDeJuego } from '../juego/PortadaDeJuego'
 
 export function TarjetaDeTorneo({ torneo }) {
-  const { inscripcion, reglas } = torneo
+  const visual = juegoDe(torneo.juego.valor)
+  const { equipos_inscritos: inscritos } = torneo.inscripcion
+  const cupo = torneo.ajustes.cupo_maximo_equipos
+  const llenado = Math.min(100, Math.round((inscritos / Math.max(cupo, 1)) * 100))
 
   return (
-    <article className="torneo-tarjeta">
-      <div className="tarjeta__titulo" style={{ marginBottom: 0 }}>
-        <h3>
-          <Link to={`/torneos/${torneo.slug}`}>{torneo.nombre}</Link>
-        </h3>
+    <Link className="tarjeta-torneo" to={`/torneos/${torneo.slug}`} style={colorDeJuego(torneo.juego.valor)}>
+      <div className="tarjeta-torneo__banda" aria-hidden="true">
+        {visual.portada && <img src={visual.portada} alt="" loading="lazy" />}
+      </div>
+
+      <span className="tarjeta-torneo__estado">
         <Insignia estado={torneo.estado} />
-      </div>
+      </span>
 
-      <div className="torneo-tarjeta__meta">
-        {torneo.ciudad && (
+      <div className="tarjeta-torneo__cuerpo">
+        <EtiquetaDeJuego juego={torneo.juego.valor} />
+        <h3>{torneo.nombre}</h3>
+
+        <div className="tarjeta-torneo__datos">
           <span>
-            <MapPin size={14} aria-hidden="true" /> {torneo.ciudad}
+            <Swords size={14} aria-hidden="true" /> {torneo.formato.etiqueta}
           </span>
-        )}
-        <span>
-          <CalendarDays size={14} aria-hidden="true" /> {fechaCorta(torneo.fechas.inicia_en)}
-        </span>
-        <span>
-          <Users size={14} aria-hidden="true" />
-          {inscripcion.equipos_inscritos} / {reglas.cupo_maximo_equipos} equipos
-        </span>
-      </div>
+          <span>
+            <CalendarDays size={14} aria-hidden="true" /> {fechaYHora(torneo.fechas.inicia_en)}
+          </span>
+        </div>
 
-      <div className="torneo-tarjeta__pie">
-        <strong>{inscripcion.costo_formateado}</strong>
-        <Link className="enlace-mas" to={`/torneos/${torneo.slug}`}>
-          Ver torneo →
-        </Link>
+        <div className="tarjeta-torneo__pie">
+          <div>
+            <p className="rotulo">{torneo.campeon ? 'Campeón' : torneo.premios.total_formateado ? 'Premios' : 'Inscripción'}</p>
+            <p className="tarjeta-torneo__premio">
+              {torneo.campeon?.nombre ?? torneo.premios.total_formateado ?? torneo.inscripcion.costo_formateado}
+            </p>
+          </div>
+
+          <div className="barra-cupos">
+            <span>
+              <Users size={12} aria-hidden="true" /> {inscritos}/{cupo}
+            </span>
+            <div className="barra-cupos__pista" aria-hidden="true">
+              <div className="barra-cupos__relleno" style={{ width: `${llenado}%` }} />
+            </div>
+          </div>
+        </div>
       </div>
-    </article>
+    </Link>
   )
 }

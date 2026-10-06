@@ -169,7 +169,7 @@ class GestorDeCobros
     private function referenciaUnica(): string
     {
         do {
-            $referencia = 'JZ-'.Str::upper(Str::random(14));
+            $referencia = 'NZ-'.Str::upper(Str::random(14));
         } while (Orden::query()->where('referencia', $referencia)->exists());
 
         return $referencia;
