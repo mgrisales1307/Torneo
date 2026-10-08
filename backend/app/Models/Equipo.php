@@ -55,6 +55,7 @@ class Equipo extends Model
     {
         return [
             'juego' => Juego::class,
+            'es_individual' => 'boolean',
         ];
     }
 
@@ -143,7 +144,8 @@ class Equipo extends Model
     {
         return $this->inscripciones()
             ->aprobadas()
-            ->whereHas('torneo', fn (Builder $torneo) => $torneo->where('estado', EstadoTorneo::EnCurso->value))
+            ->whereHas('torneo', fn (Builder $torneo) => $torneo->where('estado', EstadoTorneo::EnCurso->value)
+                ->orWhere(fn (Builder $automatico) => $automatico->where('flujo_automatico', true)->whereIn('estado', ['inscripciones_abiertas', 'inscripciones_cerradas'])))
             ->exists();
     }
 
@@ -157,6 +159,7 @@ class Equipo extends Model
     {
         return [
             'id' => $this->getKey(),
+            'es_individual' => (bool) $this->es_individual,
             'nombre' => $this->nombre,
             'slug' => $this->slug,
             'abreviatura' => $this->abreviatura,

@@ -2,16 +2,19 @@
 
 namespace App\Http\Controllers\Api\V1\Admin;
 
+use App\Enumeraciones\EstadoInscripcion;
 use App\Enumeraciones\EstadoTorneo;
 use App\Excepciones\ReglaDeNegocio;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\GuardarTorneoRequest;
 use App\Http\Resources\TorneoResource;
 use App\Models\Torneo;
+use App\Servicios\Inscripciones\GestorDeInscripciones;
 use App\Servicios\Torneos\InicioDeTorneo;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 /**
@@ -40,6 +43,7 @@ class TorneoAdminController extends Controller
     private const ESTRUCTURALES = [
         'juego', 'formato', 'cupo_maximo_equipos', 'mejor_de', 'mejor_de_final', 'cantidad_de_grupos',
         'clasifican_por_grupo', 'rondas_suizo', 'partidas_battle_royale', 'costo_inscripcion_centavos', 'moneda',
+        'modalidad', 'flujo_automatico', 'cuenta_regresiva_segundos', 'premios',
     ];
 
     public function __construct(private readonly InicioDeTorneo $inicio) {}
@@ -65,10 +69,10 @@ class TorneoAdminController extends Controller
 
         $torneo = new Torneo($peticion->validated());
         $torneo->creado_por_id = $peticion->user()->getKey();
-        $torneo->save();
+        $torneo->forceFill(['estado' => EstadoTorneo::InscripcionesAbiertas])->save();
 
         return response()->json([
-            'message' => 'Torneo creado como borrador. Publícalo para abrir las inscripciones.',
+            'message' => 'Torneo publicado. Las inscripciones ya están disponibles con pago simulado.',
             'data' => new TorneoResource($torneo->loadCount(['inscripcionesQueOcupanCupo', 'partidos'])),
         ], 201);
     }
@@ -89,7 +93,7 @@ class TorneoAdminController extends Controller
 
         $datos = $peticion->validated();
 
-        if ($torneo->estado->haEmpezado()) {
+        if ($torneo->estado->haEmpezado() || ($torneo->flujo_automatico && $torneo->inscripciones()->vigentes()->exists())) {
             $cambiados = array_filter(
                 array_intersect_key($datos, array_flip(self::ESTRUCTURALES)),
                 fn ($valor, string $campo): bool => $this->valorComparable($torneo->{$campo}) != $valor,
@@ -98,12 +102,13 @@ class TorneoAdminController extends Controller
 
             if ($cambiados !== []) {
                 throw ReglaDeNegocio::porqueSi(
-                    'El torneo ya empezó: el juego, el formato, el cupo y el costo no se pueden cambiar.'
+                    'Hay participantes inscritos: la modalidad, el formato, el cupo, el costo y los premios ya no se pueden cambiar.'
                 );
             }
         }
 
         $torneo->fill($datos)->save();
+        $torneo->actualizarCuentaRegresiva();
 
         return response()->json([
             'message' => 'Torneo actualizado.',
@@ -111,7 +116,7 @@ class TorneoAdminController extends Controller
         ]);
     }
 
-    public function cambiarEstado(Request $peticion, Torneo $torneo): JsonResponse
+    public function cambiarEstado(Request $peticion, Torneo $torneo, GestorDeInscripciones $inscripciones): JsonResponse
     {
         $this->authorize('actualizar', $torneo);
 
@@ -131,7 +136,21 @@ class TorneoAdminController extends Controller
             throw ReglaDeNegocio::porqueSi('Ya hay equipos inscritos: el torneo no puede volver a borrador.');
         }
 
-        $torneo->forceFill(['estado' => $nuevo])->save();
+        DB::transaction(function () use ($torneo, $nuevo, $inscripciones): void {
+            $actual = Torneo::query()->whereKey($torneo->getKey())->lockForUpdate()->firstOrFail();
+            if (! in_array($nuevo->value, self::TRANSICIONES[$actual->estado->value], true)) {
+                throw ReglaDeNegocio::porqueSi('El estado cambió. Actualiza la pantalla e inténtalo otra vez.');
+            }
+            if ($nuevo === EstadoTorneo::Cancelado) {
+                foreach ($actual->inscripciones()->vigentes()->get() as $inscripcion) {
+                    $inscripciones->devolver($inscripcion);
+                    $inscripcion->ordenes()->where('estado', 'pendiente')->update(['estado' => 'expirada']);
+                    $inscripcion->forceFill(['estado' => EstadoInscripcion::Retirada])->save();
+                }
+            }
+            $actual->forceFill(['estado' => $nuevo])->save();
+        }, 3);
+        $torneo->refresh();
 
         return response()->json([
             'message' => match ($nuevo) {

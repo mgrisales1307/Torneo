@@ -30,8 +30,9 @@ export function TarjetaDeTorneo({ torneo }) {
             <Swords size={14} aria-hidden="true" /> {torneo.formato.etiqueta}
           </span>
           <span>
-            <CalendarDays size={14} aria-hidden="true" /> {fechaYHora(torneo.fechas.inicia_en)}
+            <CalendarDays size={14} aria-hidden="true" /> {torneo.inicio?.por_cupo && !['en_curso', 'finalizado'].includes(torneo.estado.valor) ? 'Inicio al completar los cupos' : fechaYHora(torneo.fechas.inicia_en)}
           </span>
+          <span><Users size={14} aria-hidden="true" /> {torneo.modalidad === 'individual' ? 'Individual' : 'Por equipos'}</span>
         </div>
 
         <div className="tarjeta-torneo__pie">

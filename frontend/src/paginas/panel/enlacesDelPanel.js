@@ -9,6 +9,7 @@ export const ENLACES_DEL_JUGADOR = [
   { a: '/panel/equipos', texto: 'Equipos' },
   { a: '/panel/inscripciones', texto: 'Inscripciones' },
   { a: '/panel/cuentas', texto: 'Cuentas de juego' },
+  { a: '/panel/cartera', texto: 'Cartera' },
 ]
 
 export const ENLACES_DE_ORGANIZACION = [

@@ -28,6 +28,9 @@ class GuardarTorneoRequest extends FormRequest
             'nombre' => [$obligatorio, 'string', 'min:4', 'max:120'],
             'formato' => [$obligatorio, Rule::enum(FormatoTorneo::class)],
             'reglas' => ['nullable', 'string', 'max:5000'],
+            'modalidad' => ['sometimes', 'in:equipos,individual'],
+            'flujo_automatico' => ['sometimes', 'boolean'],
+            'cuenta_regresiva_segundos' => ['sometimes', 'integer', 'min:0', 'max:600'],
 
             'cupo_maximo_equipos' => [$obligatorio, 'integer', 'min:2', 'max:64'],
             'mejor_de' => ['sometimes', 'integer', 'in:1,3,5'],
@@ -92,6 +95,22 @@ class GuardarTorneoRequest extends FormRequest
                     $juego->equiposPorPartida(),
                 ));
             }
+            if ($cupo < $formato->minimoDeEquipos()) {
+                $validador->errors()->add('cupo_maximo_equipos', 'El cupo debe alcanzar el mínimo de participantes del formato.');
+            }
+            $inicio = $this->input('inicia_en', $torneo?->inicia_en);
+            $cierre = $this->input('inscripciones_cierran_en', $torneo?->inscripciones_cierran_en);
+            if ($inicio && $cierre && strtotime((string) $inicio) < strtotime((string) $cierre)) {
+                $validador->errors()->add('inicia_en', 'El inicio no puede ser anterior al cierre de inscripciones.');
+            }
+            $premios = $this->input('premios', $torneo?->premios) ?? [];
+            if (count($premios) > $cupo) {
+                $validador->errors()->add('premios', 'No puede haber más puestos premiados que participantes.');
+            }
+            $auto = $this->boolean('flujo_automatico', (bool) $torneo?->flujo_automatico);
+            if ($auto && $this->input('moneda', $torneo?->moneda ?? 'COP') !== 'COP') {
+                $validador->errors()->add('moneda', 'La cartera de demostración usa pesos colombianos (COP).');
+            }
 
             if ($formato === FormatoTorneo::GruposYEliminacion) {
                 foreach (['cantidad_de_grupos' => 'cantidad de grupos', 'clasifican_por_grupo' => 'clasificados por grupo'] as $campo => $nombre) {
@@ -99,19 +118,32 @@ class GuardarTorneoRequest extends FormRequest
                         $validador->errors()->add($campo, "Indica la $nombre.");
                     }
                 }
+                $grupos = (int) $this->input('cantidad_de_grupos', $torneo?->cantidad_de_grupos);
+                $clasifican = (int) $this->input('clasifican_por_grupo', $torneo?->clasifican_por_grupo);
+                if ($grupos > 0 && $clasifican > 0 && intdiv($cupo, $grupos) < max(2, $clasifican + 1)) {
+                    $validador->errors()->add('cantidad_de_grupos', 'Cada grupo debe tener al menos dos participantes y más participantes que puestos clasificados.');
+                }
+                if (count($premios) >= 3 && $grupos * $clasifican < 4) {
+                    $validador->errors()->add('premios', 'Para premiar el tercer puesto deben avanzar al menos cuatro participantes a las finales.');
+                }
             }
         }];
     }
 
     protected function prepareForValidation(): void
     {
+        if (! $this->route('torneo') instanceof Torneo) {
+            $this->merge(['flujo_automatico' => true, 'check_in_minutos' => 0]);
+        } elseif ($this->route('torneo')->flujo_automatico) {
+            $this->merge(['flujo_automatico' => true, 'check_in_minutos' => 0]);
+        }
         if ($this->has('moneda')) {
             $this->merge(['moneda' => mb_strtoupper((string) $this->input('moneda'))]);
         }
 
         if ($this->has('premios') && is_array($this->input('premios'))) {
             // Los puestos sin premio no se guardan: [500000, 0, 0] queda [500000].
-            $premios = array_map('intval', $this->input('premios'));
+            $premios = $this->input('premios');
 
             while ($premios !== [] && end($premios) === 0) {
                 array_pop($premios);

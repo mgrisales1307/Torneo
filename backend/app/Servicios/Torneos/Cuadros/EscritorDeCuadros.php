@@ -28,7 +28,7 @@ class EscritorDeCuadros
     public function eliminacion(Fase $fase, array $semillas, bool $doble): void
     {
         $torneo = $fase->torneo;
-        $nodos = $this->eliminacion->construir($semillas, $doble);
+        $nodos = $this->eliminacion->construir($semillas, $doble, count($torneo->premios ?? []) >= 3);
         $ids = [];
 
         foreach ($nodos as $nodo) {

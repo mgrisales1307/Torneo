@@ -34,12 +34,12 @@ class EquipoPolicy
 
     public function actualizar(Usuario $usuario, Equipo $equipo): bool
     {
-        return $equipo->esCapitan($usuario) || $usuario->perteneceAlStaff();
+        return ! $equipo->es_individual && ($equipo->esCapitan($usuario) || $usuario->perteneceAlStaff());
     }
 
     public function eliminar(Usuario $usuario, Equipo $equipo): bool
     {
-        return $equipo->esCapitan($usuario) || $usuario->esAdministrador();
+        return ! $equipo->es_individual && ($equipo->esCapitan($usuario) || $usuario->esAdministrador());
     }
 
     /**
@@ -48,7 +48,7 @@ class EquipoPolicy
      */
     public function gestionarPlantilla(Usuario $usuario, Equipo $equipo): bool
     {
-        return $equipo->esCapitan($usuario);
+        return ! $equipo->es_individual && $equipo->esCapitan($usuario);
     }
 
     /**

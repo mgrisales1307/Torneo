@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1\Publico;
 
+use App\Enumeraciones\EstadoTorneo;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\EquipoResumenResource;
 use App\Http\Resources\FaseResource;
 use App\Http\Resources\TorneoResource;
+use App\Models\Equipo;
 use App\Models\Fase;
 use App\Models\Inscripcion;
 use App\Models\Torneo;
+use App\Servicios\Torneos\ClasificacionFinal;
 use App\Servicios\Torneos\TablasDeClasificacion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -38,15 +41,20 @@ class TorneoPublicoController extends Controller
         return TorneoResource::collection($torneos);
     }
 
-    public function show(Torneo $torneo): JsonResponse
+    public function show(Torneo $torneo, ClasificacionFinal $clasificacion): JsonResponse
     {
         $this->authorize('ver', $torneo);
 
-        return response()->json([
-            'data' => new TorneoResource(
-                $torneo->load('campeon')->loadCount(['inscripcionesQueOcupanCupo', 'partidos'])
-            ),
-        ]);
+        $datos = (new TorneoResource($torneo->load('campeon')->loadCount(['inscripcionesQueOcupanCupo', 'partidos'])))->resolve();
+        $datos['clasificacion_final'] = [];
+        if ($torneo->estado === EstadoTorneo::Finalizado) {
+            $equipos = Equipo::withTrashed()->whereIn('id', $clasificacion->equipos($torneo))->get()->keyBy('id');
+            foreach ($clasificacion->equipos($torneo) as $indice => $equipoId) {
+                $datos['clasificacion_final'][] = ['puesto' => $indice + 1, 'equipo' => $equipos->get($equipoId)?->resumen(), 'premio_centavos' => (int) ($torneo->premios[$indice] ?? 0)];
+            }
+        }
+
+        return response()->json(['data' => $datos]);
     }
 
     /**

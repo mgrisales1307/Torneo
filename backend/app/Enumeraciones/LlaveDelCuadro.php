@@ -12,6 +12,7 @@ enum LlaveDelCuadro: string
     case Superior = 'superior';
     case Inferior = 'inferior';
     case GranFinal = 'gran_final';
+    case TercerPuesto = 'tercer_puesto';
 
     public function etiqueta(): string
     {
@@ -19,6 +20,7 @@ enum LlaveDelCuadro: string
             self::Superior => 'Llave superior',
             self::Inferior => 'Llave inferior',
             self::GranFinal => 'Gran final',
+            self::TercerPuesto => 'Tercer puesto',
         };
     }
 }

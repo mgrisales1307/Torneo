@@ -21,7 +21,7 @@ class CrearInscripcionRequest extends FormRequest
     {
         return [
             'equipo_id' => [
-                'required', 'integer',
+                $this->route('torneo')?->modalidad === 'individual' ? 'nullable' : 'required', 'integer',
                 Rule::exists('equipos', 'id')->whereNull('deleted_at'),
             ],
         ];

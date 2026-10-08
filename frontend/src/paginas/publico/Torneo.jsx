@@ -8,6 +8,7 @@ import {
   esProhibido,
   hacerCheckIn,
   inscribirEquipo,
+  inscribirmeIndividual,
   listarMisEquipos,
   listarMisInscripciones,
   mensajeDeError,
@@ -22,11 +23,12 @@ import { Cuadro } from '../../componentes/torneo/Cuadro'
 import { EquipoEnLinea, LogoDeEquipo } from '../../componentes/equipo/LogoDeEquipo'
 import { Aviso, Boton, Cargando, EstadoVacio, Insignia, Pestanas } from '../../componentes/ui/Basicos'
 import { Dialogo } from '../../componentes/ui/Dialogo'
+import { EstadoDeInicio } from '../../componentes/torneo/EstadoDeInicio'
 import NoEncontrada from './NoEncontrada'
 
 export default function Torneo() {
   const { slug } = useParams()
-  const torneo = useQuery({ queryKey: ['torneo', slug], queryFn: () => obtenerTorneo(slug) })
+  const torneo = useQuery({ queryKey: ['torneo', slug], queryFn: () => obtenerTorneo(slug), refetchInterval: 5000 })
   const [pestana, setPestana] = useState(null)
 
   const empezo = ['en_curso', 'finalizado'].includes(torneo.data?.estado.valor)
@@ -35,6 +37,7 @@ export default function Torneo() {
     queryKey: ['cuadro', slug],
     queryFn: () => obtenerCuadro(slug),
     enabled: empezo,
+    refetchInterval: torneo.data?.estado.valor === 'en_curso' ? 5000 : false,
   })
 
   if (torneo.isPending) return <Cargando />
@@ -47,7 +50,7 @@ export default function Torneo() {
 
   const opciones = [
     ...(empezo ? [{ valor: 'cuadro', etiqueta: 'Cuadro' }] : []),
-    { valor: 'equipos', etiqueta: `Equipos (${datos.inscripcion.equipos_inscritos})` },
+    { valor: 'equipos', etiqueta: `${datos.modalidad === 'individual' ? 'Jugadores' : 'Equipos'} (${datos.inscripcion.equipos_inscritos})` },
     { valor: 'reglas', etiqueta: 'Reglas y premios' },
   ]
 
@@ -71,14 +74,14 @@ export default function Torneo() {
             <strong>{datos.formato.etiqueta}</strong>
           </div>
           <div>
-            <span className="rotulo">Equipos</span>
+            <span className="rotulo">{datos.modalidad === 'individual' ? 'Jugadores' : 'Equipos'}</span>
             <strong>
               {datos.inscripcion.equipos_inscritos}/{datos.ajustes.cupo_maximo_equipos}
             </strong>
           </div>
           <div>
             <span className="rotulo">Inicio</span>
-            <strong>{fechaCompacta(datos.fechas.inicia_en)}</strong>
+            <strong>{datos.inicio?.por_cupo ? 'Al completar los cupos' : fechaCompacta(datos.fechas.inicia_en)}</strong>
           </div>
           <div>
             <span className="rotulo">Inscripción</span>
@@ -101,6 +104,7 @@ export default function Torneo() {
         </div>
 
         <MiParticipacion torneo={datos} />
+        <EstadoDeInicio torneo={datos} />
       </header>
 
       {datos.campeon && (
@@ -113,6 +117,7 @@ export default function Torneo() {
           </div>
         </div>
       )}
+      {datos.clasificacion_final?.length > 0 && <section className="tarjeta" style={{ marginBottom: '2rem' }}><h2 className="titulo-bloque">Clasificación final</h2><p className="apagado">Los premios virtuales se acreditan automáticamente a quien hizo cada inscripción.</p><div className="tabla-envoltura"><table className="tabla"><thead><tr><th>Puesto</th><th>{datos.modalidad === 'individual' ? 'Jugador' : 'Equipo'}</th><th>Premio</th></tr></thead><tbody>{datos.clasificacion_final.map((fila) => <tr key={fila.equipo.id}><td>{fila.puesto}</td><td><EquipoEnLinea equipo={fila.equipo} /></td><td>{datos.premios.puestos.find((premio) => premio.puesto === fila.puesto)?.formateado ?? '—'}</td></tr>)}</tbody></table></div></section>}
 
       <Pestanas opciones={opciones} activa={activa} alCambiar={setPestana} />
 
@@ -125,7 +130,7 @@ export default function Torneo() {
           <Cuadro fases={cuadro.data.data} tablas={cuadro.data.tablas} torneo={datos} />
         ))}
 
-      {activa === 'equipos' && <EquiposDelTorneo slug={slug} empezo={empezo} />}
+      {activa === 'equipos' && <EquiposDelTorneo slug={slug} empezo={empezo} individual={datos.modalidad === 'individual'} />}
 
       {activa === 'reglas' && <ReglasYPremios torneo={datos} />}
     </div>
@@ -203,7 +208,7 @@ function MiParticipacion({ torneo }) {
               )}
             </span>
 
-            {soyCapitan && mia.espera_pago && (
+            {mia.puedo_pagar && mia.espera_pago && (
               <Boton cargando={pagar.isPending} onClick={() => pagar.mutate()}>
                 Pagar {mia.monto_formateado}
               </Boton>
@@ -221,7 +226,7 @@ function MiParticipacion({ torneo }) {
           </>
         ) : (
           torneo.inscripcion.abierta && (
-            <Boton onClick={() => setDialogo(true)}>Inscribir equipo</Boton>
+            <Boton onClick={() => setDialogo(true)}>{torneo.modalidad === 'individual' ? 'Inscribirme' : 'Inscribir equipo'}</Boton>
           )
         )}
       </div>
@@ -230,10 +235,11 @@ function MiParticipacion({ torneo }) {
         abierto={dialogo}
         torneo={torneo}
         alCerrar={() => setDialogo(false)}
-        alInscribir={(mensaje) => {
+        alInscribir={(mensaje, referencia) => {
           setDialogo(false)
           setAviso({ tono: 'exito', texto: mensaje })
           refrescar()
+          if (referencia) navegar(`/panel/pagos/${referencia}`)
         }}
       />
     </div>
@@ -244,11 +250,16 @@ function DialogoDeInscripcion({ abierto, torneo, alCerrar, alInscribir }) {
   const [elegido, setElegido] = useState(null)
   const [error, setError] = useState('')
 
-  const equipos = useQuery({ queryKey: ['mis-equipos'], queryFn: listarMisEquipos, enabled: abierto })
+  const individual = torneo.modalidad === 'individual'
+  const equipos = useQuery({ queryKey: ['mis-equipos'], queryFn: listarMisEquipos, enabled: abierto && !individual })
 
   const inscribir = useMutation({
-    mutationFn: () => inscribirEquipo(torneo.slug, elegido),
-    onSuccess: (respuesta) => alInscribir(respuesta.message),
+    mutationFn: async () => {
+      const respuesta = individual ? await inscribirmeIndividual(torneo.slug) : await inscribirEquipo(torneo.slug, elegido)
+      const orden = respuesta.data.espera_pago ? await crearOrdenDePago(respuesta.data.id) : null
+      return { respuesta, referencia: orden?.data.referencia }
+    },
+    onSuccess: ({ respuesta, referencia }) => alInscribir(respuesta.message, referencia),
     onError: (fallo) => setError(mensajeDeError(fallo)),
   })
 
@@ -257,8 +268,8 @@ function DialogoDeInscripcion({ abierto, torneo, alCerrar, alInscribir }) {
   )
 
   return (
-    <Dialogo abierto={abierto} titulo="Inscribir equipo" descripcion={torneo.nombre} alCerrar={alCerrar}>
-      {equipos.isPending ? (
+    <Dialogo abierto={abierto} titulo={individual ? 'Inscripción individual' : 'Inscribir equipo'} descripcion={torneo.nombre} alCerrar={alCerrar}>
+      {individual ? <div className="formulario"><p>Participarás con tu apodo. Vincula tu cuenta de {torneo.juego.nombre} antes de inscribirte.</p><p>Inscripción: {torneo.inscripcion.costo_formateado}. El pago es simulado, sin dinero real.</p><Link to="/panel/cuentas">Ver mis cuentas de juego</Link>{error && <Aviso tono="error">{error}</Aviso>}<Boton cargando={inscribir.isPending} onClick={() => inscribir.mutate()}>Confirmar inscripción</Boton></div> : equipos.isError ? <Aviso tono="error">{mensajeDeError(equipos.error)}</Aviso> : equipos.isPending ? (
         <Cargando />
       ) : mios.length === 0 ? (
         <EstadoVacio
@@ -310,12 +321,12 @@ function DialogoDeInscripcion({ abierto, torneo, alCerrar, alInscribir }) {
   )
 }
 
-function EquiposDelTorneo({ slug, empezo }) {
-  const equipos = useQuery({ queryKey: ['equipos-del-torneo', slug], queryFn: () => obtenerEquiposDelTorneo(slug) })
+function EquiposDelTorneo({ slug, empezo, individual }) {
+  const equipos = useQuery({ queryKey: ['equipos-del-torneo', slug], queryFn: () => obtenerEquiposDelTorneo(slug), refetchInterval: empezo ? false : 5000 })
 
   if (equipos.isPending) return <Cargando />
   if (equipos.isError) return <Aviso tono="error">{mensajeDeError(equipos.error)}</Aviso>
-  if (equipos.data.length === 0) return <EstadoVacio titulo="Todavía no hay equipos aprobados" />
+  if (equipos.data.length === 0) return <EstadoVacio titulo={`Todavía no hay ${individual ? 'jugadores' : 'equipos'} confirmados`} />
 
   return (
     <div className="tabla-envoltura">
@@ -354,6 +365,10 @@ function ReglasYPremios({ torneo }) {
         <h2 className="titulo-bloque" style={{ marginBottom: '1rem' }}>
           Reglas
         </h2>
+        <p>{torneo.modalidad === 'individual' ? 'Participación individual.' : 'Participación por equipos.'} {torneo.puntuacion?.formula}.</p>
+        <p>{torneo.formato.valor === 'suizo' ? torneo.puntuacion?.suizo : torneo.juego.es_battle_royale ? torneo.puntuacion?.battle_royale : torneo.formato.valor === 'grupos_y_eliminacion' ? torneo.puntuacion?.grupos : 'El ganador avanza automáticamente; perder elimina al participante de esa llave.'}</p>
+        {torneo.formato.valor === 'eliminacion_doble' && torneo.flujo_automatico && <p>Si gana el finalista de la llave inferior, se juega una revancha de la gran final.</p>}
+        {torneo.puntuacion?.puestos.length > 0 && <div className="tabla-envoltura"><table className="tabla"><thead><tr><th>Posición</th><th>Puntos</th></tr></thead><tbody>{torneo.puntuacion.puestos.map((fila) => <tr key={fila.puesto}><td>{fila.puesto}</td><td>{fila.puntos}</td></tr>)}</tbody></table></div>}
         {torneo.reglas ? (
           <ul className="pila pila--chica">
             {torneo.reglas.split('\n').filter(Boolean).map((regla) => (
@@ -371,6 +386,7 @@ function ReglasYPremios({ torneo }) {
         <h2 className="titulo-bloque" style={{ marginBottom: '1rem' }}>
           Premios
         </h2>
+        <p className="apagado">Saldo virtual para quien realiza la inscripción. Puedes reutilizarlo en otros torneos o simular su retiro desde tu cartera.</p>
         {torneo.premios.puestos.length === 0 ? (
           <p className="apagado">Sin premio en dinero.</p>
         ) : (

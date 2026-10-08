@@ -8,7 +8,9 @@ use App\Excepciones\ReglaDeNegocio;
 use App\Models\Inscripcion;
 use App\Models\Orden;
 use App\Models\Pago;
+use App\Models\Torneo;
 use App\Models\Usuario;
+use App\Servicios\Carteras\GestorDeCarteras;
 use App\Servicios\Inscripciones\GestorDeInscripciones;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +33,7 @@ class GestorDeCobros
     public function __construct(
         private readonly FabricaDePasarelas $pasarelas,
         private readonly GestorDeInscripciones $inscripciones,
+        private readonly GestorDeCarteras $carteras,
     ) {}
 
     /**
@@ -47,6 +50,10 @@ class GestorDeCobros
         }
 
         return DB::transaction(function () use ($inscripcion, $usuario): Orden {
+            $inscripcion = Inscripcion::query()->whereKey($inscripcion->getKey())->lockForUpdate()->firstOrFail();
+            if (! $inscripcion->esperaPago()) {
+                throw ReglaDeNegocio::porqueSi('Esta inscripción ya no tiene un pago pendiente.');
+            }
             $pendientes = Orden::query()
                 ->where('inscripcion_id', $inscripcion->getKey())
                 ->pendientes()
@@ -80,6 +87,10 @@ class GestorDeCobros
     public function registrarNotificacion(NotificacionDePago $notificacion): Pago
     {
         return DB::transaction(function () use ($notificacion): Pago {
+            $consultaOrden = Orden::query()->where('referencia', $notificacion->referenciaDeOrden)->first();
+            if ($consultaOrden !== null) {
+                Torneo::query()->whereKey($consultaOrden->inscripcion->torneo_id)->lockForUpdate()->firstOrFail();
+            }
             $orden = Orden::query()
                 ->where('referencia', $notificacion->referenciaDeOrden)
                 ->lockForUpdate()
@@ -142,6 +153,32 @@ class GestorDeCobros
 
             return $pago;
         });
+    }
+
+    public function pagarConCartera(Inscripcion $inscripcion, Usuario $usuario): Orden
+    {
+        return DB::transaction(function () use ($inscripcion, $usuario): Orden {
+            Torneo::query()->whereKey($inscripcion->torneo_id)->lockForUpdate()->firstOrFail();
+            $inscripcion = Inscripcion::query()->whereKey($inscripcion->getKey())->lockForUpdate()->firstOrFail();
+            if ($inscripcion->estado->estaPagada()) {
+                return $inscripcion->ordenes()->where('estado', EstadoOrden::Pagada->value)->latest('id')->firstOrFail();
+            }
+            if (! $inscripcion->esperaPago()) {
+                throw ReglaDeNegocio::porqueSi('Esta inscripción no admite pagos.');
+            }
+            $orden = $this->ordenPara($inscripcion, $usuario);
+            $this->carteras->mover($usuario->getKey(), $inscripcion->moneda, -$inscripcion->monto_centavos, 'inscripcion',
+                'Inscripción en '.$inscripcion->torneo->nombre, 'inscripcion:'.$inscripcion->ciclo, $inscripcion->torneo_id, $inscripcion->getKey());
+            $this->inscripciones->marcarComoPagada($inscripcion);
+            $orden->forceFill(['estado' => EstadoOrden::Pagada, 'pagada_en' => now()])->save();
+            (new Pago)->forceFill([
+                'orden_id' => $orden->getKey(), 'pasarela' => 'cartera', 'referencia_externa' => 'cartera:'.$inscripcion->ciclo,
+                'estado' => EstadoPago::Aprobado, 'monto_centavos' => $inscripcion->monto_centavos, 'moneda' => $inscripcion->moneda,
+                'metodo' => 'saldo_virtual', 'procesado_en' => now(),
+            ])->save();
+
+            return $orden;
+        }, 3);
     }
 
     private function crearOrden(Inscripcion $inscripcion, Usuario $usuario): Orden

@@ -33,6 +33,7 @@ class EquipoController extends Controller
     {
         $equipos = Equipo::query()
             ->delMiembro($peticion->user())
+            ->where('es_individual', false)
             ->with(['miembros', 'inscripciones' => fn ($consulta) => $consulta->vigentes()->with('torneo')])
             ->withCount('miembros')
             ->orderBy('juego')

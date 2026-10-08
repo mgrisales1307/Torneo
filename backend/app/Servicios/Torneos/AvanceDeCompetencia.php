@@ -5,6 +5,7 @@ namespace App\Servicios\Torneos;
 use App\Enumeraciones\EstadoFase;
 use App\Enumeraciones\EstadoPartido;
 use App\Enumeraciones\EstadoTorneo;
+use App\Enumeraciones\LlaveDelCuadro;
 use App\Enumeraciones\TipoDeFase;
 use App\Excepciones\ReglaDeNegocio;
 use App\Models\Fase;
@@ -26,6 +27,7 @@ class AvanceDeCompetencia
         private readonly EscritorDeCuadros $escritor,
         private readonly EmparejadorSuizo $suizo,
         private readonly TablasDeClasificacion $tablas,
+        private readonly PremiosDeTorneo $premios,
     ) {}
 
     public function alFinalizar(Partido $partido): void
@@ -48,6 +50,15 @@ class AvanceDeCompetencia
     public function deshacer(Partido $partido): void
     {
         $fase = $partido->fase;
+        if ($partido->llave === LlaveDelCuadro::GranFinal && $partido->ronda === 1 && $partido->siguiente_ganador_id !== null) {
+            $revancha = $partido->siguienteGanador;
+            if ($revancha->estado->yaSeJugo() || $revancha->reportes()->exists()) {
+                throw ReglaDeNegocio::porqueSi('La revancha ya tiene resultado o reportes: esta primera final no se puede cambiar.');
+            }
+            $partido->forceFill(['siguiente_ganador_id' => null, 'siguiente_ganador_ranura' => null])->save();
+            $partido->unsetRelation('siguienteGanador');
+            $revancha->delete();
+        }
 
         match ($fase->tipo) {
             TipoDeFase::EliminacionSimple, TipoDeFase::EliminacionDoble => $this->sacarDelCuadro($partido),
@@ -63,8 +74,26 @@ class AvanceDeCompetencia
 
     private function avanzarEnElCuadro(Partido $partido, Fase $fase): void
     {
+        if ($fase->tipo === TipoDeFase::EliminacionDoble && $fase->torneo->flujo_automatico
+            && $partido->llave === LlaveDelCuadro::GranFinal && $partido->ronda === 1 && $partido->ganador_id === $partido->equipo_b_id) {
+            $revancha = (new Partido)->forceFill([
+                'torneo_id' => $partido->torneo_id, 'fase_id' => $fase->getKey(), 'llave' => LlaveDelCuadro::GranFinal,
+                'ronda' => 2, 'numero' => 1, 'mejor_de' => $partido->mejor_de,
+                'equipo_a_id' => $partido->equipo_a_id, 'equipo_b_id' => $partido->equipo_b_id, 'estado' => EstadoPartido::PorJugar,
+            ]);
+            $revancha->save();
+            $partido->forceFill(['siguiente_ganador_id' => $revancha->getKey(), 'siguiente_ganador_ranura' => 'a'])->save();
+            // Una corrección puede reabrir una final que ya entregó premios.
+            // La revancha exige devolverlos antes de volver a decidir el podio.
+            $this->premios->entregar($fase->torneo);
+
+            return;
+        }
         if ($partido->siguiente_ganador_id === null) {
-            $this->cerrar($fase, $partido->ganador_id);
+            if (! $this->quedanPartidos($fase)) {
+                $final = $fase->partidos()->whereNull('siguiente_ganador_id')->where('llave', '!=', LlaveDelCuadro::TercerPuesto->value)->orderByDesc('ronda')->first();
+                $this->cerrar($fase, $final?->ganador_id);
+            }
 
             return;
         }
@@ -235,6 +264,7 @@ class AvanceDeCompetencia
             'campeon_id' => $campeonId,
             'finalizado_en' => now(),
         ])->save();
+        $this->premios->entregar($fase->torneo);
     }
 
     private function reabrir(Fase $fase): void

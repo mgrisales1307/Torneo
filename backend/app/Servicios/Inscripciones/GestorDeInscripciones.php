@@ -8,7 +8,9 @@ use App\Models\Equipo;
 use App\Models\Inscripcion;
 use App\Models\Torneo;
 use App\Models\Usuario;
+use App\Servicios\Carteras\GestorDeCarteras;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 /**
  * Dueño de las transiciones de una inscripción. Ningún controlador cambia el
@@ -21,6 +23,8 @@ use Illuminate\Support\Facades\DB;
  */
 class GestorDeInscripciones
 {
+    public function __construct(private readonly GestorDeCarteras $carteras) {}
+
     /**
      * Inscribe un equipo en un torneo.
      *
@@ -28,9 +32,9 @@ class GestorDeInscripciones
      * el torneo bloqueado: si dos capitanes piden el último lugar en el mismo
      * instante, uno de los dos recibe el error en vez de quedar los dos dentro.
      */
-    public function inscribir(Torneo $torneo, Equipo $equipo): Inscripcion
+    public function inscribir(Torneo $torneo, Equipo $equipo, ?Usuario $usuario = null): Inscripcion
     {
-        return DB::transaction(function () use ($torneo, $equipo): Inscripcion {
+        return DB::transaction(function () use ($torneo, $equipo, $usuario): Inscripcion {
             /** @var Torneo $torneo */
             $torneo = Torneo::query()->whereKey($torneo->getKey())->lockForUpdate()->firstOrFail();
 
@@ -45,6 +49,9 @@ class GestorDeInscripciones
 
             $this->verificarVentana($torneo);
             $this->verificarPlantilla($torneo, $equipo);
+            if (($torneo->modalidad === 'individual') !== (bool) $equipo->es_individual) {
+                throw ReglaDeNegocio::porqueSi('La modalidad de la inscripción no coincide con la del torneo.');
+            }
 
             $inscripcion = Inscripcion::query()
                 ->where('torneo_id', $torneo->getKey())
@@ -56,14 +63,19 @@ class GestorDeInscripciones
             }
 
             $inscripcion ??= new Inscripcion;
+            if ($inscripcion->exists) {
+                $inscripcion->ordenes()->where('estado', 'pendiente')->update(['estado' => 'expirada']);
+            }
 
             $inscripcion->forceFill([
                 'torneo_id' => $torneo->getKey(),
                 'equipo_id' => $equipo->getKey(),
+                'usuario_inscriptor_id' => $usuario?->getKey() ?? $equipo->capitan_id,
+                'ciclo' => (string) Str::uuid(),
                 'monto_centavos' => $torneo->costo_inscripcion_centavos,
                 'moneda' => $torneo->moneda,
                 'estado' => $torneo->esGratuito()
-                    ? EstadoInscripcion::PendienteRevision
+                    ? ($torneo->flujo_automatico ? EstadoInscripcion::Aprobada : EstadoInscripcion::PendienteRevision)
                     : EstadoInscripcion::PendientePago,
                 'pagada_en' => $torneo->esGratuito() ? now() : null,
                 'check_in_en' => null,
@@ -74,6 +86,8 @@ class GestorDeInscripciones
                 'notas_revision' => null,
             ])->save();
 
+            $torneo->actualizarCuentaRegresiva();
+
             return $inscripcion;
         });
     }
@@ -83,6 +97,21 @@ class GestorDeInscripciones
      */
     public function marcarComoPagada(Inscripcion $inscripcion): Inscripcion
     {
+        if ($inscripcion->torneo->flujo_automatico) {
+            return DB::transaction(function () use ($inscripcion): Inscripcion {
+                $torneo = Torneo::query()->whereKey($inscripcion->torneo_id)->lockForUpdate()->firstOrFail();
+                $inscripcion = Inscripcion::query()->whereKey($inscripcion->getKey())->lockForUpdate()->firstOrFail();
+                if ($inscripcion->estado !== EstadoInscripcion::PendientePago) {
+                    return $inscripcion;
+                }
+                $this->verificarVentana($torneo);
+                $this->verificarPlantilla($torneo, $inscripcion->equipo);
+                $inscripcion->forceFill(['estado' => EstadoInscripcion::Aprobada, 'pagada_en' => now()])->save();
+                $torneo->actualizarCuentaRegresiva();
+
+                return $inscripcion;
+            }, 3);
+        }
         if ($inscripcion->estado !== EstadoInscripcion::PendientePago) {
             return $inscripcion;
         }
@@ -125,6 +154,7 @@ class GestorDeInscripciones
                 'revisado_en' => now(),
                 'notas_revision' => $notas,
             ])->save();
+            $torneo->actualizarCuentaRegresiva();
 
             return $inscripcion;
         });
@@ -132,22 +162,29 @@ class GestorDeInscripciones
 
     public function rechazar(Inscripcion $inscripcion, Usuario $revisor, string $notas): Inscripcion
     {
-        if ($inscripcion->estado->estaCerrada()) {
-            throw ReglaDeNegocio::porqueSi('Esta inscripción ya está cerrada.');
-        }
+        return DB::transaction(function () use ($inscripcion, $revisor, $notas): Inscripcion {
+            $torneo = Torneo::query()->whereKey($inscripcion->torneo_id)->lockForUpdate()->firstOrFail();
+            $inscripcion = Inscripcion::query()->whereKey($inscripcion->getKey())->lockForUpdate()->firstOrFail();
+            if ($inscripcion->estado->estaCerrada()) {
+                throw ReglaDeNegocio::porqueSi('Esta inscripción ya está cerrada.');
+            }
 
-        if ($inscripcion->estaAprobada() && $inscripcion->torneo->estado->haEmpezado()) {
-            throw ReglaDeNegocio::porqueSi('No se puede rechazar a un equipo que ya está jugando el torneo.');
-        }
+            if ($inscripcion->estaAprobada() && $inscripcion->torneo->estado->haEmpezado()) {
+                throw ReglaDeNegocio::porqueSi('No se puede rechazar a un equipo que ya está jugando el torneo.');
+            }
 
-        $inscripcion->forceFill([
-            'estado' => EstadoInscripcion::Rechazada,
-            'revisado_por_id' => $revisor->getKey(),
-            'revisado_en' => now(),
-            'notas_revision' => $notas,
-        ])->save();
+            $inscripcion->forceFill([
+                'estado' => EstadoInscripcion::Rechazada,
+                'revisado_por_id' => $revisor->getKey(),
+                'revisado_en' => now(),
+                'notas_revision' => $notas,
+            ])->save();
+            $this->devolver($inscripcion);
+            $inscripcion->ordenes()->where('estado', 'pendiente')->update(['estado' => 'expirada']);
+            $torneo->actualizarCuentaRegresiva();
 
-        return $inscripcion;
+            return $inscripcion;
+        }, 3);
     }
 
     /**
@@ -155,22 +192,31 @@ class GestorDeInscripciones
      */
     public function retirar(Inscripcion $inscripcion): Inscripcion
     {
-        if ($inscripcion->estado->estaCerrada()) {
-            throw ReglaDeNegocio::porqueSi('Esta inscripción ya está cerrada.');
+        return DB::transaction(function () use ($inscripcion): Inscripcion {
+            $torneo = Torneo::query()->whereKey($inscripcion->torneo_id)->lockForUpdate()->firstOrFail();
+            $inscripcion = Inscripcion::query()->whereKey($inscripcion->getKey())->lockForUpdate()->firstOrFail();
+            if ($inscripcion->estado->estaCerrada()) {
+                throw ReglaDeNegocio::porqueSi('Esta inscripción ya está cerrada.');
+            }
+            if ($torneo->estado->haEmpezado()) {
+                throw ReglaDeNegocio::porqueSi('El torneo ya empezó: comunícate con la organización para retirar al equipo.');
+            }
+            $this->devolver($inscripcion);
+            $inscripcion->ordenes()->where('estado', 'pendiente')->update(['estado' => 'expirada']);
+            $inscripcion->forceFill(['estado' => EstadoInscripcion::Retirada, 'revisado_en' => now()])->save();
+            $torneo->actualizarCuentaRegresiva();
+
+            return $inscripcion;
+        }, 3);
+    }
+
+    public function devolver(Inscripcion $inscripcion): void
+    {
+        if ($inscripcion->pagada_en !== null && $inscripcion->monto_centavos > 0) {
+            $this->carteras->mover($inscripcion->usuario_inscriptor_id ?? $inscripcion->equipo->capitan_id, $inscripcion->moneda,
+                $inscripcion->monto_centavos, 'devolucion', 'Devolución de '.$inscripcion->torneo->nombre,
+                'devolucion:'.($inscripcion->ciclo ?? $inscripcion->getKey()), $inscripcion->torneo_id, $inscripcion->getKey());
         }
-
-        if ($inscripcion->torneo->estado->haEmpezado()) {
-            throw ReglaDeNegocio::porqueSi(
-                'El torneo ya empezó: comunícate con la organización para retirar al equipo.'
-            );
-        }
-
-        $inscripcion->forceFill([
-            'estado' => EstadoInscripcion::Retirada,
-            'revisado_en' => now(),
-        ])->save();
-
-        return $inscripcion;
     }
 
     /**
@@ -239,11 +285,12 @@ class GestorDeInscripciones
         $juego = $torneo->juego;
         $miembros = $equipo->miembros()->with('cuentasDeJuego')->get();
 
-        if ($miembros->count() < $juego->titulares()) {
+        $titulares = $torneo->modalidad === 'individual' ? 1 : $juego->titulares();
+        if ($miembros->where('pivot.es_suplente', false)->count() < $titulares) {
             throw ReglaDeNegocio::porqueSi(sprintf(
                 '%s necesita al menos %d jugadores y tiene %d.',
                 $equipo->nombre,
-                $juego->titulares(),
+                $titulares,
                 $miembros->count(),
             ));
         }

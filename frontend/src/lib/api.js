@@ -177,6 +177,10 @@ export const sacarMiembro = (slug, usuarioId) =>
 export const listarMisInscripciones = () => datos(api.get(`${BASE}/panel/inscripciones`)).then((r) => r.data)
 export const inscribirEquipo = (slugTorneo, equipoId) =>
   datos(api.post(`${BASE}/panel/torneos/${slugTorneo}/inscripciones`, { equipo_id: equipoId }))
+export const inscribirmeIndividual = (slugTorneo) => datos(api.post(`${BASE}/panel/torneos/${slugTorneo}/inscripciones`, {}))
+export const obtenerCartera = (page = 1) => datos(api.get(`${BASE}/panel/cartera`, { params: { page } }))
+export const retirarDeCartera = (monto_centavos, referencia) => datos(api.post(`${BASE}/panel/cartera/retiros`, { monto_centavos, referencia }))
+export const pagarConCartera = (inscripcionId) => datos(api.post(`${BASE}/panel/inscripciones/${inscripcionId}/pagar-cartera`))
 export const retirarInscripcion = (id) => datos(api.delete(`${BASE}/panel/inscripciones/${id}`))
 export const hacerCheckIn = (id) => datos(api.post(`${BASE}/panel/inscripciones/${id}/check-in`))
 

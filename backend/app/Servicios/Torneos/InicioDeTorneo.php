@@ -43,6 +43,15 @@ class InicioDeTorneo
             if (! $torneo->estado->esperaInicio()) {
                 throw ReglaDeNegocio::porqueSi('Solo se inicia un torneo publicado que todavía no empezó.');
             }
+            if ($torneo->flujo_automatico) {
+                $torneo->actualizarCuentaRegresiva();
+                if ($torneo->lleno_en === null) {
+                    throw ReglaDeNegocio::porqueSi('El torneo debe completar todos sus cupos confirmados antes de iniciar.');
+                }
+                if ($torneo->inicioDisponibleEn()->isFuture()) {
+                    throw ReglaDeNegocio::porqueSi('Espera a que termine la cuenta regresiva para iniciar el torneo.');
+                }
+            }
 
             $porRevisar = $torneo->inscripciones()->where('estado', EstadoInscripcion::PendienteRevision->value)->count();
 
@@ -121,7 +130,7 @@ class InicioDeTorneo
      */
     private function sembrar(Torneo $torneo, Collection $participantes): array
     {
-        $puntajes = $this->ranking->puntajes($torneo->juego);
+        $puntajes = $torneo->modalidad === 'individual' ? [] : $this->ranking->puntajes($torneo->juego);
         $base = $torneo->juego->esBattleRoyale() ? 0 : RankingDeEquipos::ELO_INICIAL;
 
         $ordenadas = $participantes

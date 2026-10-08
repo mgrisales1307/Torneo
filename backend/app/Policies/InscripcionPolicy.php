@@ -17,7 +17,9 @@ class InscripcionPolicy
      */
     public function pagar(Usuario $usuario, Inscripcion $inscripcion): bool
     {
-        return $this->esSuCapitan($usuario, $inscripcion);
+        return $inscripcion->usuario_inscriptor_id !== null
+            ? $usuario->getKey() === $inscripcion->usuario_inscriptor_id
+            : $this->esSuCapitan($usuario, $inscripcion);
     }
 
     public function retirar(Usuario $usuario, Inscripcion $inscripcion): bool

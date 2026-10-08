@@ -31,6 +31,7 @@ class DatabaseSeeder extends Seeder
 
         if ($baseNueva) {
             $this->call(DemostracionSeeder::class);
+            $this->call(ExposicionSeeder::class);
         }
     }
 }

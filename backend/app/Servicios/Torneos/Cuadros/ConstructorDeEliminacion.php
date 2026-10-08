@@ -44,7 +44,7 @@ class ConstructorDeEliminacion
      *     siguiente_perdedor: array{clave: string, ranura: string}|null,
      * }>
      */
-    public function construir(array $semillas, bool $doble): array
+    public function construir(array $semillas, bool $doble, bool $tercerPuesto = false): array
     {
         $cantidad = count($semillas);
 
@@ -67,6 +67,12 @@ class ConstructorDeEliminacion
             $nodos[] = $this->nodo(LlaveDelCuadro::GranFinal, 1, 0, [
                 ['ganador', $this->clave(LlaveDelCuadro::Superior, $rondas, 0)],
                 ['ganador', $this->clave(LlaveDelCuadro::Inferior, 2 * ($rondas - 1), 0)],
+            ]);
+        }
+        if (! $doble && $tercerPuesto && $cantidad >= 4) {
+            $nodos[] = $this->nodo(LlaveDelCuadro::TercerPuesto, $rondas, 0, [
+                ['perdedor', $this->clave(LlaveDelCuadro::Superior, $rondas - 1, 0)],
+                ['perdedor', $this->clave(LlaveDelCuadro::Superior, $rondas - 1, 1)],
             ]);
         }
 

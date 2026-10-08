@@ -9,6 +9,7 @@ use App\Excepciones\ReglaDeNegocio;
 use App\Models\Equipo;
 use App\Models\Partido;
 use App\Models\ReporteDeResultado;
+use App\Models\Torneo;
 use App\Models\Usuario;
 use App\Servicios\Medios\AlmacenDeImagenes;
 use Illuminate\Http\UploadedFile;
@@ -203,6 +204,7 @@ class RegistroDeResultados
 
     private function bloquear(Partido $partido): Partido
     {
+        Torneo::query()->whereKey($partido->torneo_id)->lockForUpdate()->firstOrFail();
         /** @var Partido $bloqueado */
         $bloqueado = Partido::query()->whereKey($partido->getKey())->lockForUpdate()->firstOrFail();
 

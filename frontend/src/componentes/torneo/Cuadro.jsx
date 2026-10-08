@@ -6,7 +6,7 @@ import { fechaYHora } from '../../lib/formato'
 import { EquipoEnLinea } from '../equipo/LogoDeEquipo'
 import { Insignia } from '../ui/Basicos'
 
-const ORDEN_DE_LLAVES = ['superior', 'inferior', 'gran_final']
+const ORDEN_DE_LLAVES = ['superior', 'inferior', 'gran_final', 'tercer_puesto']
 
 /**
  * Todas las fases del torneo, cada una con la vista que le corresponde: el
@@ -74,7 +74,8 @@ function Eliminacion({ fase }) {
 }
 
 function nombreDeColumna(llave, ronda, ultima, doble) {
-  if (llave === 'gran_final') return 'Gran final'
+  if (llave === 'gran_final') return ronda === 2 ? 'Revancha de la gran final' : 'Gran final'
+  if (llave === 'tercer_puesto') return 'Tercer puesto'
 
   if (doble) {
     return ronda === ultima ? `Final ${llave === 'superior' ? 'superior' : 'inferior'}` : `Ronda ${ronda}`

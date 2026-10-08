@@ -1407,3 +1407,9 @@ a.partido-fila:hover {
 .campeon svg {
   color: var(--acento);
 }
+/* Preparación y cartera de la demostración local. */
+.estado-inicio { display: grid; gap: .75rem; padding: 1.25rem; border: 1px solid var(--borde); border-radius: .75rem; background: var(--superficie); margin-block: 1rem; }
+.estado-inicio progress { width: 100%; height: .6rem; accent-color: var(--acento); }
+.estado-inicio p { margin: 0; }
+.saldo-cartera { font-size: clamp(2rem, 5vw, 3.5rem); margin-block: 1rem; overflow-wrap: anywhere; }
+.movimiento-positivo { color: #06d6a0; }

@@ -41,6 +41,9 @@ class Torneo extends Model
         'nombre',
         'formato',
         'reglas',
+        'modalidad',
+        'flujo_automatico',
+        'cuenta_regresiva_segundos',
         'cupo_maximo_equipos',
         'mejor_de',
         'mejor_de_final',
@@ -62,6 +65,9 @@ class Torneo extends Model
      */
     protected $attributes = [
         'estado' => EstadoTorneo::Borrador->value,
+        'modalidad' => 'equipos',
+        'flujo_automatico' => false,
+        'cuenta_regresiva_segundos' => 60,
         'cupo_maximo_equipos' => 16,
         'mejor_de' => 1,
         'mejor_de_final' => 3,
@@ -79,6 +85,9 @@ class Torneo extends Model
             'juego' => Juego::class,
             'formato' => FormatoTorneo::class,
             'estado' => EstadoTorneo::class,
+            'flujo_automatico' => 'boolean',
+            'cuenta_regresiva_segundos' => 'integer',
+            'lleno_en' => 'datetime',
             'cupo_maximo_equipos' => 'integer',
             'mejor_de' => 'integer',
             'mejor_de_final' => 'integer',
@@ -216,7 +225,20 @@ class Torneo extends Model
 
     public function usaCheckIn(): bool
     {
-        return $this->check_in_minutos > 0;
+        return ! $this->flujo_automatico && $this->check_in_minutos > 0;
+    }
+
+    public function inicioDisponibleEn(): ?Carbon
+    {
+        return $this->lleno_en?->copy()->addSeconds($this->cuenta_regresiva_segundos);
+    }
+
+    public function actualizarCuentaRegresiva(): void
+    {
+        $completo = $this->inscripciones()->aprobadas()->count() >= $this->cupo_maximo_equipos;
+        if ($this->flujo_automatico && $this->estado->esperaInicio()) {
+            $this->forceFill(['lleno_en' => $completo ? ($this->lleno_en ?? now()) : null])->save();
+        }
     }
 
     public function checkInAbreEn(): ?Carbon

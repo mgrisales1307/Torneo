@@ -22,6 +22,7 @@ import { Aviso, Boton, Cargando, EstadoVacio, Insignia, Pestanas } from '../../c
 import { NavegacionDelPanel } from '../panel/NavegacionDelPanel'
 import { ENLACES_DE_ORGANIZACION } from '../panel/enlacesDelPanel'
 import { ListaDeInscripciones } from './ListaDeInscripciones'
+import { EstadoDeInicio } from '../../componentes/torneo/EstadoDeInicio'
 
 const ACCIONES_DE_ESTADO = {
   inscripciones_abiertas: { texto: 'Abrir inscripciones', variante: 'solido' },
@@ -39,7 +40,7 @@ export default function TorneoAdmin() {
   const [aviso, setAviso] = useState(null)
   const [errores, setErrores] = useState({})
 
-  const torneo = useQuery({ queryKey: ['torneo-admin', slug], queryFn: () => obtenerTorneoAdmin(slug) })
+  const torneo = useQuery({ queryKey: ['torneo-admin', slug], queryFn: () => obtenerTorneoAdmin(slug), refetchInterval: 5000 })
 
   function refrescar(respuesta) {
     cliente.invalidateQueries({ queryKey: ['torneo-admin', slug] })
@@ -93,8 +94,8 @@ export default function TorneoAdmin() {
         </div>
         <h1 className="titulo-pagina">{datos.nombre}</h1>
         <p className="apagado">
-          {datos.formato.etiqueta} · {datos.inscripcion.equipos_inscritos}/{datos.ajustes.cupo_maximo_equipos} equipos · inicia{' '}
-          {fechaYHora(datos.fechas.inicia_en)}
+          {datos.formato.etiqueta} · {datos.inscripcion.equipos_inscritos}/{datos.ajustes.cupo_maximo_equipos} {datos.modalidad === 'individual' ? 'jugadores' : 'equipos'} · {' '}
+          {datos.inicio?.por_cupo ? 'Inicio al completar los cupos' : `Inicia ${fechaYHora(datos.fechas.inicia_en)}`}
         </p>
 
         <div className="fila">
@@ -102,8 +103,9 @@ export default function TorneoAdmin() {
             <Boton
               iconoIzquierda={<Play size={15} />}
               cargando={iniciar.isPending}
+              disabled={datos.inicio?.por_cupo && !datos.inicio.puede_iniciar}
               onClick={() => {
-                if (window.confirm('Se arma el cuadro con los equipos aprobados (y con check-in). ¿Iniciar?')) iniciar.mutate()
+                if (window.confirm('Se arma el cuadro con los participantes confirmados. ¿Iniciar?')) iniciar.mutate()
               }}
             >
               Iniciar torneo
@@ -128,6 +130,7 @@ export default function TorneoAdmin() {
           </Link>
         </div>
       </header>
+      <EstadoDeInicio torneo={datos} />
 
       <NavegacionDelPanel enlaces={ENLACES_DE_ORGANIZACION} />
 
@@ -179,15 +182,17 @@ export default function TorneoAdmin() {
 }
 
 function InscripcionesDelTorneo({ torneoId }) {
+  const [pagina, setPagina] = useState(1)
   const inscripciones = useQuery({
-    queryKey: ['inscripciones-admin', 'torneo', torneoId],
-    queryFn: () => listarInscripcionesAdmin({ torneo: torneoId }),
+    queryKey: ['inscripciones-admin', 'torneo', torneoId, pagina],
+    queryFn: () => listarInscripcionesAdmin({ torneo: torneoId, page: pagina }),
+    refetchInterval: 5000,
   })
 
   if (inscripciones.isPending) return <Cargando />
   if (inscripciones.isError) return <Aviso tono="error">{mensajeDeError(inscripciones.error)}</Aviso>
 
-  return <ListaDeInscripciones inscripciones={inscripciones.data.data} mostrarTorneo={false} />
+  return <><ListaDeInscripciones inscripciones={inscripciones.data.data} mostrarTorneo={false} /><div className="fila"><Boton variante="contorno" disabled={pagina === 1} onClick={() => setPagina(pagina - 1)}>Anterior</Boton><span>Página {pagina} de {inscripciones.data.meta.last_page}</span><Boton variante="contorno" disabled={pagina >= inscripciones.data.meta.last_page} onClick={() => setPagina(pagina + 1)}>Siguiente</Boton></div></>
 }
 
 const PRIORIDAD = { en_disputa: 0, reportado: 1, por_jugar: 2, pendiente: 3, finalizado: 4 }
@@ -197,7 +202,7 @@ const PRIORIDAD = { en_disputa: 0, reportado: 1, por_jugar: 2, pendiente: 3, fin
  * se abre en su página, donde la organización carga o corrige el resultado.
  */
 function PartidosDelTorneo({ slug }) {
-  const cuadro = useQuery({ queryKey: ['cuadro', slug], queryFn: () => obtenerCuadro(slug) })
+  const cuadro = useQuery({ queryKey: ['cuadro', slug], queryFn: () => obtenerCuadro(slug), refetchInterval: 5000 })
 
   if (cuadro.isPending) return <Cargando />
   if (cuadro.isError) return <Aviso tono="error">{mensajeDeError(cuadro.error)}</Aviso>

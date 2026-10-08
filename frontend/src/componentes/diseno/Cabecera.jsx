@@ -93,6 +93,7 @@ export function Cabecera() {
                   <Link className="menu-usuario__accion" to="/panel" role="menuitem">
                     <LayoutDashboard size={15} /> Mi panel
                   </Link>
+                  <Link className="menu-usuario__accion" to="/panel/cartera" role="menuitem">Cartera y premios</Link>
                   <Link className="menu-usuario__accion" to={`/jugadores/${usuario.apodo}`} role="menuitem">
                     <UserRound size={15} /> Mi perfil público
                   </Link>

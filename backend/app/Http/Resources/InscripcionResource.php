@@ -19,6 +19,7 @@ class InscripcionResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'puedo_pagar' => $request->user()?->can('pagar', $this->resource) ?? false,
             'estado' => [
                 'valor' => $this->estado->value,
                 'etiqueta' => $this->estado->etiqueta(),

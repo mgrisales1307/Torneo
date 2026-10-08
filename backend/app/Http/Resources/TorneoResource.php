@@ -23,6 +23,22 @@ class TorneoResource extends JsonResource
             'id' => $this->id,
             'nombre' => $this->nombre,
             'slug' => $this->slug,
+            'modalidad' => $this->modalidad,
+            'flujo_automatico' => (bool) $this->flujo_automatico,
+            'inicio' => [
+                'por_cupo' => (bool) $this->flujo_automatico,
+                'lleno_en' => $this->lleno_en?->toIso8601String(),
+                'disponible_en' => $this->inicioDisponibleEn()?->toIso8601String(),
+                'cuenta_regresiva_segundos' => $this->cuenta_regresiva_segundos,
+                'puede_iniciar' => $this->estado->esperaInicio() && (! $this->flujo_automatico || ($this->lleno_en !== null && ! $this->inicioDisponibleEn()->isFuture())),
+            ],
+            'puntuacion' => [
+                'formula' => $this->juego->esBattleRoyale() ? 'Puntos por posición + 1 punto por baja' : 'La serie se gana al alcanzar '.(intdiv($this->mejor_de, 2) + 1).' victorias de mapa',
+                'puestos' => $this->juego->esBattleRoyale() ? array_map(fn (int $puesto): array => ['puesto' => $puesto, 'puntos' => $this->juego->puntosPorPosicion($puesto)], range(1, $this->juego->equiposPorPartida())) : [],
+                'grupos' => '3 puntos por victoria; desempate por diferencia de mapas, mapas ganados y semilla.',
+                'suizo' => 'Victorias (incluido descanso); desempate por Buchholz, diferencia de mapas y semilla.',
+                'battle_royale' => 'Puntos; desempate por partidas ganadas, bajas y semilla.',
+            ],
             'juego' => [
                 'valor' => $this->juego->value,
                 'nombre' => $this->juego->nombre(),

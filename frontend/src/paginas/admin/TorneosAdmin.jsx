@@ -17,8 +17,9 @@ export default function TorneosAdmin() {
   const [creando, setCreando] = useState(false)
   const [errores, setErrores] = useState({})
   const [error, setError] = useState('')
+  const [pagina, setPagina] = useState(1)
 
-  const torneos = useQuery({ queryKey: ['torneos-admin'], queryFn: () => listarTorneosAdmin() })
+  const torneos = useQuery({ queryKey: ['torneos-admin', pagina], queryFn: () => listarTorneosAdmin({ page: pagina }), refetchInterval: 10000 })
 
   const crear = useMutation({
     mutationFn: crearTorneo,
@@ -59,7 +60,7 @@ export default function TorneosAdmin() {
               <tr>
                 <th>Torneo</th>
                 <th>Formato</th>
-                <th className="numero">Equipos</th>
+                <th className="numero">Participantes</th>
                 <th>Inicio</th>
                 <th>Estado</th>
               </tr>
@@ -73,11 +74,11 @@ export default function TorneosAdmin() {
                       <EtiquetaDeJuego juego={torneo.juego.valor} />
                     </Link>
                   </td>
-                  <td>{torneo.formato.etiqueta}</td>
+                  <td>{torneo.formato.etiqueta}<p className="apagado">{torneo.modalidad === 'individual' ? 'Individual' : 'Por equipos'}</p></td>
                   <td className="numero">
                     {torneo.inscripcion.equipos_inscritos}/{torneo.ajustes.cupo_maximo_equipos}
                   </td>
-                  <td>{fechaYHora(torneo.fechas.inicia_en)}</td>
+                  <td>{torneo.inicio?.por_cupo && !['en_curso', 'finalizado'].includes(torneo.estado.valor) ? 'Al completar el cupo' : fechaYHora(torneo.fechas.inicia_en)}</td>
                   <td>
                     <Insignia estado={torneo.estado} />
                   </td>
@@ -87,6 +88,7 @@ export default function TorneosAdmin() {
           </table>
         </div>
       )}
+      {torneos.data?.meta.last_page > 1 && <div className="fila"><Boton variante="contorno" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>Anterior</Boton><span>Página {pagina} de {torneos.data.meta.last_page}</span><Boton variante="contorno" disabled={pagina >= torneos.data.meta.last_page} onClick={() => setPagina(pagina + 1)}>Siguiente</Boton></div>}
 
       <Dialogo abierto={creando} titulo="Nuevo torneo" ancho alCerrar={() => setCreando(false)}>
         <FormularioDeTorneo

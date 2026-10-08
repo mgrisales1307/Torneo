@@ -49,6 +49,14 @@ class PagoController extends Controller
         ]);
     }
 
+    public function cartera(Request $peticion, Inscripcion $inscripcion): JsonResponse
+    {
+        $this->authorize('pagar', $inscripcion);
+        $orden = $this->cobros->pagarConCartera($inscripcion, $peticion->user());
+
+        return response()->json(['message' => 'Inscripción pagada con tu saldo virtual.', 'data' => new OrdenResource($orden->load(['inscripcion.torneo', 'inscripcion.equipo']))]);
+    }
+
     /**
      * Cierra el ciclo del pago en desarrollo.
      *
@@ -83,7 +91,7 @@ class PagoController extends Controller
 
         return response()->json([
             'message' => $pago->fueAprobado()
-                ? 'Pago aprobado. Tu inscripción pasó a revisión de la organización.'
+                ? ($orden->inscripcion->torneo->flujo_automatico ? 'Pago simulado aprobado. Tu cupo está confirmado.' : 'Pago aprobado. Tu inscripción pasó a revisión de la organización.')
                 : 'El pago fue rechazado. Puedes generar una nueva orden e intentarlo otra vez.',
             'data' => new OrdenResource($orden->load(['inscripcion.torneo', 'inscripcion.equipo'])),
         ]);

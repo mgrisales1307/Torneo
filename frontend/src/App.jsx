@@ -21,6 +21,7 @@ import EquipoDelPanel from './paginas/panel/EquipoDelPanel'
 import Inscripciones from './paginas/panel/Inscripciones'
 import Cuentas from './paginas/panel/Cuentas'
 import Pago from './paginas/panel/Pago'
+import Cartera from './paginas/panel/Cartera'
 
 import ResumenOrganizacion from './paginas/admin/ResumenOrganizacion'
 import TorneosAdmin from './paginas/admin/TorneosAdmin'
@@ -77,6 +78,7 @@ export default function App() {
             <Route path="panel/equipos/:slug" element={<EquipoDelPanel />} />
             <Route path="panel/inscripciones" element={<Inscripciones />} />
             <Route path="panel/cuentas" element={<Cuentas />} />
+            <Route path="panel/cartera" element={<Cartera />} />
             <Route path="panel/pagos/:referencia" element={<Pago />} />
           </Route>
 

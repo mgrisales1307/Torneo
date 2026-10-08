@@ -60,7 +60,7 @@ class InscripcionAdminController extends Controller
     {
         $this->authorize('revisar', $inscripcion);
 
-        $this->gestor->rechazar($inscripcion, $peticion->user(), (string) $peticion->validated('notas'));
+        $inscripcion = $this->gestor->rechazar($inscripcion, $peticion->user(), (string) $peticion->validated('notas'));
 
         return response()->json([
             'message' => 'Inscripción rechazada.',

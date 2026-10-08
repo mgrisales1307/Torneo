@@ -16,6 +16,21 @@ use Illuminate\Support\Str;
  */
 class GestorDeEquipos
 {
+    public function individualPara(Usuario $usuario, Juego $juego): Equipo
+    {
+        return DB::transaction(function () use ($usuario, $juego): Equipo {
+            Usuario::query()->whereKey($usuario->getKey())->lockForUpdate()->firstOrFail();
+            $equipo = Equipo::query()->where('capitan_id', $usuario->getKey())->where('juego', $juego->value)->where('es_individual', true)->first();
+            if ($equipo !== null) {
+                return $equipo;
+            }
+            $equipo = $this->crear($usuario, ['juego' => $juego->value, 'nombre' => $usuario->apodo, 'abreviatura' => mb_substr($usuario->apodo, 0, 5)]);
+            $equipo->forceFill(['es_individual' => true])->save();
+
+            return $equipo;
+        });
+    }
+
     /**
      * @param  array{juego: string, nombre: string, abreviatura: string, color?: string|null}  $datos
      */
@@ -50,6 +65,9 @@ class GestorDeEquipos
 
             if ($equipo === null) {
                 throw ReglaDeNegocio::porqueSi('No hay ningún equipo con ese código.', 'codigo');
+            }
+            if ($equipo->es_individual) {
+                throw ReglaDeNegocio::porqueSi('Una participación individual no admite miembros.', 'codigo');
             }
 
             if ($equipo->tieneMiembro($usuario)) {
@@ -120,6 +138,9 @@ class GestorDeEquipos
 
     public function cederCapitania(Equipo $equipo, Usuario $nuevo): void
     {
+        if ($equipo->es_individual) {
+            throw ReglaDeNegocio::porqueSi('La participación individual pertenece a su jugador.');
+        }
         $this->verificarQueEsMiembro($equipo, $nuevo);
 
         $equipo->forceFill(['capitan_id' => $nuevo->getKey()])->save();

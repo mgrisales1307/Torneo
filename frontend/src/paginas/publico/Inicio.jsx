@@ -34,7 +34,7 @@ export default function Inicio() {
         <h1 className="titulo-pagina portada__titulo" id="titulo-portada">
           Torneos de <em>esports</em>
         </h1>
-        <p className="entradilla">Arma tu equipo, inscríbete y compite.</p>
+        <p className="entradilla">Compite por tu cuenta o con tu equipo. Inscripciones, premios y cartera con dinero virtual.</p>
         <div className="fila">
           <Link className="boton boton--solido" to="/torneos">
             Ver torneos <ArrowRight size={16} aria-hidden="true" />

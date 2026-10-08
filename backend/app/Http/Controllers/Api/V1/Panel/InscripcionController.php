@@ -8,6 +8,7 @@ use App\Http\Resources\InscripcionResource;
 use App\Models\Equipo;
 use App\Models\Inscripcion;
 use App\Models\Torneo;
+use App\Servicios\Equipos\GestorDeEquipos;
 use App\Servicios\Inscripciones\GestorDeInscripciones;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -36,20 +37,22 @@ class InscripcionController extends Controller
         return InscripcionResource::collection($inscripciones);
     }
 
-    public function store(CrearInscripcionRequest $peticion, Torneo $torneo): JsonResponse
+    public function store(CrearInscripcionRequest $peticion, Torneo $torneo, GestorDeEquipos $equipos): JsonResponse
     {
         /** @var Equipo $equipo */
-        $equipo = Equipo::query()->findOrFail($peticion->validated('equipo_id'));
+        $equipo = $torneo->modalidad === 'individual'
+            ? $equipos->individualPara($peticion->user(), $torneo->juego)
+            : Equipo::query()->findOrFail($peticion->validated('equipo_id'));
 
         $this->authorize('inscribir', $equipo);
         $this->authorize('ver', $torneo);
 
-        $inscripcion = $this->gestor->inscribir($torneo, $equipo);
+        $inscripcion = $this->gestor->inscribir($torneo, $equipo, $peticion->user());
 
         return response()->json([
             'message' => $inscripcion->esperaPago()
                 ? 'Inscripción creada. Paga para reservar el cupo.'
-                : 'Inscripción creada. La organización la revisará.',
+                : ($torneo->flujo_automatico ? 'Inscripción confirmada. Ya tienes tu cupo.' : 'Inscripción creada. La organización la revisará.'),
             'data' => new InscripcionResource($inscripcion->load(['torneo', 'equipo'])),
         ], 201);
     }
@@ -72,7 +75,7 @@ class InscripcionController extends Controller
     {
         $this->authorize('retirar', $inscripcion);
 
-        $this->gestor->retirar($inscripcion);
+        $inscripcion = $this->gestor->retirar($inscripcion);
 
         return response()->json([
             'message' => 'El equipo quedó retirado del torneo.',

@@ -21,6 +21,8 @@ function inicial(torneo) {
     juego: torneo?.juego.valor ?? 'valorant',
     nombre: torneo?.nombre ?? '',
     formato: torneo?.formato.valor ?? 'eliminacion_simple',
+    modalidad: torneo?.modalidad ?? 'equipos',
+    cuenta_regresiva_segundos: String(torneo?.inicio?.cuenta_regresiva_segundos ?? 60),
     cupo_maximo_equipos: String(torneo?.ajustes.cupo_maximo_equipos ?? 16),
     mejor_de: String(torneo?.ajustes.mejor_de ?? 1),
     mejor_de_final: String(torneo?.ajustes.mejor_de_final ?? 3),
@@ -28,7 +30,7 @@ function inicial(torneo) {
     clasifican_por_grupo: String(torneo?.ajustes.clasifican_por_grupo ?? 2),
     rondas_suizo: String(torneo?.ajustes.rondas_suizo ?? ''),
     partidas_battle_royale: String(torneo?.ajustes.partidas_battle_royale ?? 4),
-    check_in_minutos: String(torneo?.check_in.minutos ?? 30),
+    check_in_minutos: String(torneo?.check_in.minutos ?? 0),
     costo: aPesos(torneo?.inscripcion.costo_centavos ?? 0),
     premios: [0, 1, 2].map((indice) => aPesos(torneo?.premios.puestos[indice]?.centavos ?? 0)),
     inscripciones_abren_en: paraInputDeFecha(torneo?.inscripcion.abren_en),
@@ -73,6 +75,8 @@ export function FormularioDeTorneo({ torneo, errores = {}, error, cargando, alGu
     const datos = {
       nombre: formulario.nombre,
       reglas: formulario.reglas || null,
+      modalidad: formulario.modalidad,
+      cuenta_regresiva_segundos: Number(formulario.cuenta_regresiva_segundos),
       check_in_minutos: Number(formulario.check_in_minutos || 0),
       premios: formulario.premios.map(aCentavos),
       inscripciones_abren_en: fecha(formulario.inscripciones_abren_en),
@@ -102,6 +106,11 @@ export function FormularioDeTorneo({ torneo, errores = {}, error, cargando, alGu
 
   return (
     <form className="formulario-torneo" onSubmit={enviar} noValidate>
+      <Aviso tono="info">Las inscripciones se confirman automáticamente con un pago simulado. Al completar el cupo empieza la cuenta regresiva y puedes iniciar el torneo. Los premios se abonan a la cartera sin intervención manual.</Aviso>
+      <div className="formulario__fila">
+        <CampoDeSeleccion etiqueta="Participación" name="modalidad" value={formulario.modalidad} onChange={cambiar} disabled={empezo} opciones={[{ valor: 'equipos', etiqueta: 'Por equipos' }, { valor: 'individual', etiqueta: 'Individual / 1v1' }]} error={errores.modalidad} />
+        <Campo etiqueta="Cuenta regresiva al llenar el cupo (segundos)" name="cuenta_regresiva_segundos" type="number" min={0} max={600} value={formulario.cuenta_regresiva_segundos} onChange={cambiar} disabled={empezo} error={errores.cuenta_regresiva_segundos} pista="Después de este plazo, el administrador inicia el torneo." />
+      </div>
       <fieldset>
         <legend>Torneo</legend>
         <div className="formulario__fila">
@@ -228,7 +237,7 @@ export function FormularioDeTorneo({ torneo, errores = {}, error, cargando, alGu
             onChange={cambiar}
             error={errores.inicia_en}
           />
-          <Campo
+          {torneo && !torneo.flujo_automatico && <Campo
             etiqueta="Check-in (minutos antes)"
             name="check_in_minutos"
             type="number"
@@ -238,12 +247,12 @@ export function FormularioDeTorneo({ torneo, errores = {}, error, cargando, alGu
             value={formulario.check_in_minutos}
             onChange={cambiar}
             error={errores.check_in_minutos}
-          />
+          />}
         </div>
       </fieldset>
 
       <fieldset>
-        <legend>Dinero (pesos)</legend>
+        <legend>Inscripción y premios virtuales (pesos)</legend>
         <Campo
           etiqueta="Inscripción"
           name="costo"
@@ -266,6 +275,8 @@ export function FormularioDeTorneo({ torneo, errores = {}, error, cargando, alGu
               min={0}
               step={10000}
               value={premio}
+              disabled={empezo}
+              error={errores[`premios.${indice}`] ?? errores.premios}
               onChange={(evento) =>
                 setFormulario((actual) => ({
                   ...actual,

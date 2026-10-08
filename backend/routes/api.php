@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\Admin\TorneoAdminController;
 use App\Http\Controllers\Api\V1\Admin\UsuarioAdminController;
 use App\Http\Controllers\Api\V1\AutenticacionController;
 use App\Http\Controllers\Api\V1\NotificacionDePagoController;
+use App\Http\Controllers\Api\V1\Panel\CarteraController;
 use App\Http\Controllers\Api\V1\Panel\CuentaDeJuegoController;
 use App\Http\Controllers\Api\V1\Panel\EquipoController;
 use App\Http\Controllers\Api\V1\Panel\InscripcionController;
@@ -112,6 +113,9 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
         */
 
         Route::prefix('panel')->name('panel.')->group(function (): void {
+            Route::get('/cartera', [CarteraController::class, 'show'])->name('cartera.show');
+            Route::post('/cartera/retiros', [CarteraController::class, 'retirar'])->middleware('throttle:pagos')->name('cartera.retirar');
+            Route::post('/inscripciones/{inscripcion}/pagar-cartera', [PagoController::class, 'cartera'])->middleware('throttle:pagos')->name('pagos.cartera');
             Route::get('/cuentas', [CuentaDeJuegoController::class, 'index'])->name('cuentas.index');
             Route::put('/cuentas/{juego}', [CuentaDeJuegoController::class, 'update'])->name('cuentas.update');
             Route::delete('/cuentas/{juego}', [CuentaDeJuegoController::class, 'destroy'])->name('cuentas.destroy');

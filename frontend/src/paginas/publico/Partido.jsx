@@ -11,17 +11,18 @@ import {
   obtenerPartido,
   reportarResultado,
   resolverPartido,
+  programarPartido,
 } from '../../lib/api'
-import { fechaYHora } from '../../lib/formato'
+import { fechaYHora, paraInputDeFecha } from '../../lib/formato'
 import { colorDeJuego } from '../../lib/juegos'
 import { EquipoEnLinea, LogoDeEquipo } from '../../componentes/equipo/LogoDeEquipo'
 import { AtajosDeMarcador, EntradaDeMarcador, FormularioDeSala } from '../../componentes/torneo/Resultados'
-import { Aviso, Boton, Cargando, CampoDeTexto, Insignia, Tarjeta } from '../../componentes/ui/Basicos'
+import { Aviso, Boton, Cargando, Campo, CampoDeTexto, Insignia, Tarjeta } from '../../componentes/ui/Basicos'
 import NoEncontrada from './NoEncontrada'
 
 export default function Partido() {
   const { id } = useParams()
-  const consulta = useQuery({ queryKey: ['partido', id], queryFn: () => obtenerPartido(id) })
+  const consulta = useQuery({ queryKey: ['partido', id], queryFn: () => obtenerPartido(id), refetchInterval: 10000 })
 
   if (consulta.isPending) return <Cargando />
   if (esNoEncontrado(consulta.error) || esProhibido(consulta.error)) return <NoEncontrada />
@@ -55,6 +56,7 @@ export default function Partido() {
       {!esBattleRoyale && partido.reportes?.length > 0 && <Reportes partido={partido} />}
 
       {!esBattleRoyale && puedoResolver && partido.equipo_a && partido.equipo_b && <Resolucion partido={partido} />}
+      {puedoResolver && partido.torneo.estado === 'en_curso' && <Programacion key={`fecha-${partido.id}`} partido={partido} />}
     </div>
   )
 }
@@ -109,7 +111,7 @@ function LadoDelMarcador({ equipo, perdedor }) {
   }
 
   return (
-    <Link className={`marcador-grande__equipo ${perdedor ? 'marcador-grande__equipo--perdedor' : ''}`} to={`/equipos/${equipo.slug}`}>
+    <Link className={`marcador-grande__equipo ${perdedor ? 'marcador-grande__equipo--perdedor' : ''}`} to={equipo.es_individual ? `/jugadores/${encodeURIComponent(equipo.nombre)}` : `/equipos/${equipo.slug}`}>
       <LogoDeEquipo equipo={equipo} />
       <strong>{equipo.nombre}</strong>
     </Link>
@@ -140,7 +142,7 @@ function ReporteDelCapitan({ partido, miEquipo }) {
       }),
     onSuccess: (respuesta) => {
       setAviso({ tono: respuesta.data.estado.valor === 'en_disputa' ? 'atencion' : 'exito', texto: respuesta.message })
-      cliente.invalidateQueries({ queryKey: ['partido', String(partido.id)] })
+      cliente.invalidateQueries()
       cliente.invalidateQueries({ queryKey: ['mis-partidos'] })
     },
     onError: (fallo) => setAviso({ tono: 'error', texto: mensajeDeError(fallo) }),
@@ -246,7 +248,7 @@ function Resolucion({ partido }) {
     mutationFn: () => resolverPartido(partido.id, { victorias_a: Number(marcador.a), victorias_b: Number(marcador.b) }),
     onSuccess: (respuesta) => {
       setAviso({ tono: 'exito', texto: respuesta.message })
-      cliente.invalidateQueries({ queryKey: ['partido', String(partido.id)] })
+      cliente.invalidateQueries()
     },
     onError: (fallo) => setAviso({ tono: 'error', texto: mensajeDeError(fallo) }),
   })
@@ -320,7 +322,7 @@ function SalaDeBattleRoyale({ partido, puedoResolver }) {
       {puedoResolver && (
         <Tarjeta titulo={partido.resultados?.length > 0 ? 'Corregir partida' : 'Cargar partida'}>
           {aviso && <Aviso tono={aviso.tono}>{aviso.texto}</Aviso>}
-          {equipos.isPending ? (
+          {equipos.isError ? <Aviso tono="error">{mensajeDeError(equipos.error)}</Aviso> : equipos.isPending ? (
             <Cargando />
           ) : (
             <FormularioDeSala
@@ -334,4 +336,16 @@ function SalaDeBattleRoyale({ partido, puedoResolver }) {
       )}
     </>
   )
+}
+
+function Programacion({ partido }) {
+  const cliente = useQueryClient()
+  const [fecha, setFecha] = useState(() => paraInputDeFecha(partido.programado_para))
+  const [aviso, setAviso] = useState(null)
+  const guardar = useMutation({
+    mutationFn: () => programarPartido(partido.id, fecha ? new Date(fecha).toISOString() : null),
+    onSuccess: (respuesta) => { cliente.invalidateQueries(); setAviso({ tono: 'exito', texto: respuesta.message }) },
+    onError: (error) => setAviso({ tono: 'error', texto: mensajeDeError(error) }),
+  })
+  return <Tarjeta titulo="Programación"><form className="formulario" onSubmit={(evento) => { evento.preventDefault(); guardar.mutate() }}>{aviso && <Aviso tono={aviso.tono}>{aviso.texto}</Aviso>}<Campo etiqueta="Fecha y hora del partido" name="fecha-partido" type="datetime-local" value={fecha} onChange={(evento) => setFecha(evento.target.value)} /><Boton type="submit" variante="contorno" cargando={guardar.isPending}>Guardar horario</Boton></form></Tarjeta>
 }

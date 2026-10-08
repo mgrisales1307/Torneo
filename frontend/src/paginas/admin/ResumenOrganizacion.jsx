@@ -8,7 +8,7 @@ import { NavegacionDelPanel } from '../panel/NavegacionDelPanel'
 import { ENLACES_DE_ORGANIZACION } from '../panel/enlacesDelPanel'
 
 export default function ResumenOrganizacion() {
-  const resumen = useQuery({ queryKey: ['resumen-admin'], queryFn: obtenerResumenAdmin })
+  const resumen = useQuery({ queryKey: ['resumen-admin'], queryFn: obtenerResumenAdmin, refetchInterval: 10000 })
 
   if (resumen.isPending) return <Cargando />
   if (resumen.isError) return <Aviso tono="error">{mensajeDeError(resumen.error)}</Aviso>
@@ -48,12 +48,13 @@ export default function ResumenOrganizacion() {
             <strong>{cifras.equipos}</strong>
           </div>
           <div>
-            <span className="rotulo">Recaudado</span>
+            <span className="rotulo">Pagos simulados</span>
             <strong style={{ fontSize: '1.4rem' }}>{cifras.recaudado_formateado}</strong>
           </div>
         </div>
 
         <div className="rejilla rejilla--anchas">
+          <Tarjeta titulo="Marcadores por cargar"><div className="lista-detalle">{(resumen.data.por_cargar ?? []).length === 0 ? <p className="apagado">No hay partidos pendientes.</p> : resumen.data.por_cargar.map((partido) => <div key={partido.id}><Link to={`/partidos/${partido.id}`}>{partido.equipo_a ? `${partido.equipo_a.nombre} vs ${partido.equipo_b?.nombre ?? 'Por definir'}` : `Partida ${partido.ronda}`}</Link><span>{partido.torneo.nombre}</span></div>)}</div></Tarjeta>
           <Tarjeta titulo="Disputas">
             {disputas.length === 0 ? (
               <p className="apagado">Ninguna.</p>

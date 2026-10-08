@@ -17,6 +17,8 @@ export default function Inscripciones() {
 
   function refrescar(respuesta) {
     cliente.invalidateQueries({ queryKey: ['mis-inscripciones'] })
+    cliente.invalidateQueries({ queryKey: ['cartera'] })
+    cliente.invalidateQueries({ queryKey: ['torneo'] })
     setAviso({ tono: 'exito', texto: respuesta.message })
   }
 
@@ -83,7 +85,7 @@ export default function Inscripciones() {
                   <Insignia estado={inscripcion.estado} />
                   {inscripcion.check_in_en && <Insignia tono="exito">Check-in</Insignia>}
 
-                  {capitan && inscripcion.espera_pago && (
+                  {inscripcion.puedo_pagar && inscripcion.espera_pago && (
                     <Boton tamano="chico" cargando={pagar.isPending} onClick={() => pagar.mutate(inscripcion.id)}>
                       Pagar
                     </Boton>

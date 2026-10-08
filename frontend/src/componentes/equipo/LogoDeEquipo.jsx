@@ -32,7 +32,7 @@ export function EquipoEnLinea({ equipo, enlazar = true, tamano }) {
   )
 
   return enlazar ? (
-    <Link className="equipo-en-linea" to={`/equipos/${equipo.slug}`}>
+    <Link className="equipo-en-linea" to={equipo.es_individual ? `/jugadores/${encodeURIComponent(equipo.nombre)}` : `/equipos/${equipo.slug}`}>
       {contenido}
     </Link>
   ) : (

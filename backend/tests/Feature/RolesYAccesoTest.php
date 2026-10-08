@@ -110,15 +110,15 @@ class RolesYAccesoTest extends TestCase
             'costo_inscripcion_centavos' => 10_000_000,
             'premios' => [50_000_000, 20_000_000, 0],
         ])->assertCreated()
-            ->assertJsonPath('data.estado.valor', 'borrador')
+            ->assertJsonPath('data.estado.valor', 'inscripciones_abiertas')
             ->assertJsonPath('data.premios.total_formateado', '$ 700.000');
 
         $slug = $respuesta->json('data.slug');
 
         $this->actingAs($empleado)
-            ->postJson("/api/v1/admin/torneos/$slug/estado", ['estado' => 'inscripciones_abiertas'])
+            ->postJson("/api/v1/admin/torneos/$slug/estado", ['estado' => 'inscripciones_cerradas'])
             ->assertOk()
-            ->assertJsonPath('data.estado.valor', 'inscripciones_abiertas');
+            ->assertJsonPath('data.estado.valor', 'inscripciones_cerradas');
 
         // «En curso» no se pone a mano: se llega iniciando el torneo.
         $this->actingAs($empleado)

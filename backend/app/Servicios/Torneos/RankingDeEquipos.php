@@ -73,7 +73,7 @@ class RankingDeEquipos
     private function porElo(Juego $juego): array
     {
         $partidos = Partido::query()
-            ->whereHas('torneo', fn ($torneo) => $torneo->where('juego', $juego->value))
+            ->whereHas('torneo', fn ($torneo) => $torneo->where('juego', $juego->value)->where('modalidad', 'equipos'))
             ->finalizados()
             ->duelos()
             ->whereNotNull('ganador_id')
@@ -119,7 +119,7 @@ class RankingDeEquipos
         $resultados = ResultadoBattleRoyale::query()
             ->whereHas('partido', fn ($partido) => $partido
                 ->finalizados()
-                ->whereHas('torneo', fn ($torneo) => $torneo->where('juego', $juego->value)))
+                ->whereHas('torneo', fn ($torneo) => $torneo->where('juego', $juego->value)->where('modalidad', 'equipos')))
             ->get(['equipo_id', 'posicion', 'bajas', 'puntos']);
 
         $filas = [];

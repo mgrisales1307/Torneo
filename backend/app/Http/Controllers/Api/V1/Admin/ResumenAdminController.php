@@ -42,7 +42,7 @@ class ResumenAdminController extends Controller
                     EstadoTorneo::InscripcionesCerradas->value,
                     EstadoTorneo::EnCurso->value,
                 ])->count(),
-                'equipos' => Equipo::query()->count(),
+                'equipos' => Equipo::query()->where('es_individual', false)->count(),
                 'jugadores' => Usuario::query()->count(),
                 'inscripciones_por_revisar' => (clone $porRevisar)->count(),
                 'disputas' => (clone $disputas)->count(),
@@ -53,6 +53,9 @@ class ResumenAdminController extends Controller
             'por_revisar' => InscripcionResource::collection(
                 $porRevisar->with(['torneo', 'equipo'])->latest('pagada_en')->limit(8)->get()
             ),
+            'por_cargar' => PartidoResource::collection(Partido::query()->where('estado', EstadoPartido::PorJugar->value)
+                ->whereHas('torneo', fn ($consulta) => $consulta->where('estado', EstadoTorneo::EnCurso->value))
+                ->with(['equipoA', 'equipoB', 'torneo'])->orderBy('id')->limit(8)->get()),
 
             'disputas' => PartidoResource::collection(
                 $disputas->with(['equipoA', 'equipoB', 'torneo'])->orderBy('updated_at')->limit(8)->get()

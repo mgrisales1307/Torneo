@@ -14,7 +14,7 @@ class PartidoPolicy
 {
     public function reportar(Usuario $usuario, Partido $partido): bool
     {
-        return $this->equipoQueCapitanea($usuario, $partido) !== null;
+        return ! $partido->torneo->flujo_automatico && $this->equipoQueCapitanea($usuario, $partido) !== null;
     }
 
     /**

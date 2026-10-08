@@ -3,9 +3,11 @@
 Plataforma de torneos de **Valorant, League of Legends, Dota 2, PUBG:
 Battlegrounds y Free Fire**. Cualquiera puede seguir los cuadros, las tablas y
 el ranking sin cuenta. Los jugadores arman equipos, se unen con un código,
-vinculan su cuenta de cada juego, se inscriben, hacen check-in y reportan sus
-partidos. La organización crea los torneos, revisa inscripciones, arranca los
-cuadros y resuelve las disputas.
+vinculan su cuenta de cada juego y se inscriben individualmente o con su equipo.
+El administrador crea torneos, los inicia cuando se llenan y carga los marcadores.
+La plataforma confirma las inscripciones, calcula clasificaciones, avanza los
+cuadros y entrega los premios a la cartera automáticamente. Todo el dinero es
+virtual: los pagos y retiros son simulados, sin tarjetas ni transferencias.
 
 - **backend/** — API en Laravel 13 con autenticación por Sanctum (sesión en cookie).
 - **frontend/** — SPA en React 19 + Vite, con React Router y TanStack Query.
@@ -110,6 +112,42 @@ aplicación, así que la demostración nunca contradice las reglas. Se siembra
 **solo en una base recién creada**: el arranque del contenedor ejecuta
 `migrate --seed` cada vez, y si la condición fuera más laxa, un reinicio le
 devolvería los datos de prueba a quien acaba de borrarlos.
+
+### Guion de exposición del flujo automático
+
+La base local ya contiene los escenarios de `ExposicionSeeder`. Para agregarlos
+a otra base existente, sin borrar datos ni duplicar los torneos:
+
+```bash
+docker compose exec api php artisan db:seed --class=ExposicionSeeder
+```
+
+1. Entra con `jugador@juegoszone.com` / `jugador123`. En **Cartera** verás
+   el premio de **Copa del ganador — Premio en cartera**: $50.000 virtuales.
+2. Abre **Arena 1v1 — Último cupo**, inscríbete y elige pago simulado o cartera.
+   El cuarto cupo confirmado activa la cuenta regresiva de 60 segundos.
+3. Entra con `admin@juegoszone.com` / `admin123`, abre **Organización → Torneos**,
+   y pulsa **Iniciar** cuando termine el contador. También tienes
+   **Duelo de campeones — Listo para iniciar** con todos sus cupos completos.
+4. Abre los partidos del cuadro y carga sus marcadores. Las siguientes rondas,
+   el partido por el tercer puesto y el cierre se generan automáticamente.
+5. Consulta la clasificación final y vuelve a **Cartera** con el ganador:
+   el premio ya está acreditado. Se puede usar para otra inscripción o hacer
+   un retiro simulado. Ninguna operación mueve dinero real.
+
+También hay ejemplos en curso de doble eliminación (**Neón Masters**, con
+revancha automática si gana la llave inferior), grupos (**Grieta Champions**),
+suizo (**Roshan Challenge**) y battle royale por equipos (**Booyah Showcase**).
+**Booyah Abierto** permite inscribir una escuadra y **Erangel Solo** permite
+inscribirse individualmente en battle royale. Parcero capitanea **Cóndores Demo**,
+una escuadra completa con cuentas de Free Fire vinculadas.
+
+Los nuevos torneos se publican al crearlos. El administrador solo necesita definir
+sus reglas, iniciar la competición y cargar resultados. Los premios van a quien
+inscribió, aunque después cambie la capitanía. Retirar una inscripción antes del
+inicio o cancelar el torneo devuelve el importe virtual. Repetir una petición no
+duplica pagos ni premios. Una corrección que intenta recuperar un premio ya
+gastado se rechaza para conservar los saldos y resultados consistentes.
 
 ### Portadas de los juegos
 
@@ -219,7 +257,7 @@ backend/
     Publico/                Lo que ve cualquier visitante.
     Panel/                  El panel del jugador.
     Admin/                  El panel de la organización.
-  tests/                    118 pruebas: los algoritmos y el flujo completo.
+  tests/                    139 pruebas: los algoritmos y el flujo completo.
 
 frontend/src/
   paginas/publico/          Portada, juego, torneos, torneo, partido, equipo y jugador.
@@ -257,20 +295,22 @@ de PUBG Global Series y la de Free Fire World Series, más un punto por baja).
 ```
   crear equipo  →  compartir el código  →  cada uno vincula su cuenta del juego
                                                          │
-  inscribirse  →  pagar  →  la organización aprueba  →  check-in  →  cuadro
+  inscribirse → pago simulado o cartera → cupo confirmado → torneo lleno
+  → cuenta regresiva → administrador inicia → carga marcadores
+  → avance y clasificación automáticos → premios en cartera
 ```
 
 - **Capitán** no es un rol de la cuenta: es un cargo dentro de cada equipo.
-  Solo el capitán inscribe, paga, hace el check-in y reporta resultados, y
-  puede ceder la capitanía.
+  El capitán inscribe al equipo. La persona que inscribió paga y recibe el premio.
+  En la modalidad individual se inscribe directamente el jugador.
 - Para inscribirse, el equipo necesita la **plantilla titular completa** y que
   **todos** tengan su cuenta del juego vinculada. Nadie puede jugar el mismo
   torneo con dos equipos.
-- Mientras el equipo juega un torneo, la plantilla y las cuentas **no cambian**.
-- El **check-in** abre los minutos que diga el torneo antes de su inicio. Al
-  arrancar, los aprobados que no lo hicieron quedan fuera.
+- Desde la confirmación del cupo hasta el cierre del torneo, la plantilla y las cuentas **no cambian**.
+- Los torneos nuevos no requieren revisión manual ni check-in. Los torneos históricos
+  conservan su flujo anterior para no alterar las competiciones ya existentes.
 
-Una inscripción pasa por `pendiente_pago` → `pendiente_revision` → `aprobada`,
+Una inscripción nueva pasa por `pendiente_pago` → `aprobada`,
 y puede terminar en `rechazada` o `retirada`. El estado no se cambia a mano en
 ningún controlador: lo mueve `GestorDeInscripciones`.
 
@@ -283,7 +323,7 @@ siembra a los equipos por el ranking del juego y arma la primera fase.
 | Formato | Cómo se arma |
 | --- | --- |
 | Eliminación simple | Cuadro a potencia de dos con orden de siembra clásico (1 contra 16, 8 contra 9…). Los byes caen en las mejores semillas. |
-| Eliminación doble | Igual, más una llave inferior que recibe a los que pierden arriba, y una gran final. |
+| Eliminación doble | Igual, más una llave inferior y una gran final. Si gana quien viene de abajo se crea la revancha automáticamente. |
 | Grupos y eliminación | Reparto en serpiente, todos contra todos en cada grupo y, al terminar, eliminatorias con los clasificados (el primero de un grupo cruza con el último clasificado de otro). |
 | Sistema suizo | Cada ronda empareja récords iguales sin repetir rivales. Si son impares, descansa el peor clasificado y cuenta como victoria. |
 | Battle royale | Todos en cada partida; la tabla suma puntos por puesto y por bajas. |
@@ -293,6 +333,11 @@ aparece ya en la ronda siguiente. Cada partido sabe a dónde van su ganador y su
 perdedor, así que avanzar en el cuadro es seguir un puntero.
 
 ### Los resultados
+
+En los torneos nuevos, solo la organización carga los marcadores. Una serie
+terminada avanza automáticamente al ganador y recalcula las tablas; battle
+royale requiere el puesto y las bajas de todos los participantes de cada partida.
+Los siguientes reportes por capitanes corresponden únicamente al flujo histórico.
 
 ```
   por_jugar ──un capitán reporta──► reportado ──el rival confirma──► finalizado
@@ -308,7 +353,8 @@ de acuerdo.
 
 El marcador tiene que ser posible para la serie (al mejor de 3: 2-0 o 2-1). La
 organización puede corregir un resultado mientras el partido siguiente no se
-haya jugado; corregir la final reabre el torneo y cambia al campeón.
+haya jugado. Una corrección de la final recalcula el campeón y ajusta sus premios
+de forma transaccional; no permite saldos negativos.
 
 ### Tablas y ranking
 
@@ -498,8 +544,6 @@ La lista completa: `docker compose exec api php artisan route:list --except-vend
   partida sin que nadie lo reporte.
 - **Plazo para confirmar.** Que un reporte sin respuesta se dé por bueno pasado
   un tiempo, con una tarea programada.
-- **Gran final con revancha** en la eliminación doble, para cuando gana quien
-  viene de la llave inferior.
 - **Pasarela de pago real.** Implementar `PasarelaDePagos` con el proveedor que
   se elija y cambiar `PASARELA_PAGOS` en el entorno.
 - **Notificaciones** por correo cuando abre el check-in o el rival reporta.

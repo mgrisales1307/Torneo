@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreditCard, ShieldCheck } from 'lucide-react'
-import { mensajeDeError, obtenerOrden, pagarConLaPasarelaSimulada } from '../../lib/api'
+import { mensajeDeError, obtenerOrden, pagarConLaPasarelaSimulada, obtenerCartera, pagarConCartera } from '../../lib/api'
 import { fechaYHora } from '../../lib/formato'
 import { Aviso, Boton, Cargando, Insignia, Tarjeta } from '../../componentes/ui/Basicos'
 
@@ -20,14 +20,19 @@ export default function Pago() {
   const [aviso, setAviso] = useState(null)
 
   const orden = useQuery({ queryKey: ['orden', referencia], queryFn: () => obtenerOrden(referencia) })
+  const cartera = useQuery({ queryKey: ['cartera', 1], queryFn: () => obtenerCartera(1) })
 
   const pagar = useMutation({
     mutationFn: (resultado) => pagarConLaPasarelaSimulada(referencia, resultado),
     onSuccess: (respuesta) => {
-      cliente.invalidateQueries({ queryKey: ['orden', referencia] })
-      cliente.invalidateQueries({ queryKey: ['mis-inscripciones'] })
+      cliente.invalidateQueries()
       setAviso({ tono: respuesta.data.estado.valor === 'pagada' ? 'exito' : 'atencion', texto: respuesta.message })
     },
+    onError: (fallo) => setAviso({ tono: 'error', texto: mensajeDeError(fallo) }),
+  })
+  const usarSaldo = useMutation({
+    mutationFn: () => pagarConCartera(orden.data.inscripcion.id),
+    onSuccess: (respuesta) => { cliente.invalidateQueries(); setAviso({ tono: 'exito', texto: respuesta.message }) },
     onError: (fallo) => setAviso({ tono: 'error', texto: mensajeDeError(fallo) }),
   })
 
@@ -54,7 +59,7 @@ export default function Pago() {
             <strong>{inscripcion?.torneo?.nombre}</strong>
           </div>
           <div>
-            <span>Equipo</span>
+            <span>{inscripcion?.torneo?.modalidad === 'individual' ? 'Jugador' : 'Equipo'}</span>
             <strong>{inscripcion?.equipo?.nombre}</strong>
           </div>
           <div>
@@ -70,7 +75,7 @@ export default function Pago() {
         {datos.estado.valor === 'pagada' ? (
           <div style={{ marginTop: '1.5rem', display: 'grid', gap: '1rem', justifyItems: 'start' }}>
             <Aviso tono="exito">
-              Pago confirmado. Tu inscripción quedó en revisión de la organización.
+              {inscripcion?.torneo.flujo_automatico ? 'Cupo confirmado. Al completar el torneo comienza la cuenta regresiva.' : 'Pago confirmado. Tu inscripción quedó en revisión de la organización.'}
             </Aviso>
             <Link className="boton boton--solido" to="/panel/inscripciones">
               Volver a mis inscripciones
@@ -96,13 +101,19 @@ export default function Pago() {
               <Boton
                 iconoIzquierda={<CreditCard size={16} />}
                 cargando={pagar.isPending}
+                disabled={usarSaldo.isPending}
                 onClick={() => pagar.mutate('aprobado')}
               >
-                Pagar {datos.monto_formateado}
+                Confirmar pago simulado · {datos.monto_formateado}
               </Boton>
-              <Boton variante="contorno" disabled={pagar.isPending} onClick={() => pagar.mutate('rechazado')}>
+              <Boton variante="contorno" disabled={pagar.isPending || usarSaldo.isPending} onClick={() => pagar.mutate('rechazado')}>
                 Simular pago rechazado
               </Boton>
+            </div>
+            <div className="pila pila--chica" style={{ marginTop: '1.5rem' }}>
+              {cartera.isError ? <Aviso tono="error">{mensajeDeError(cartera.error)}</Aviso> : <p>Tu cartera: {cartera.data?.saldo_formateado ?? 'Cargando saldo…'}</p>}
+              <Boton variante="contorno" disabled={pagar.isPending || !cartera.data || cartera.data.saldo_centavos < datos.monto_centavos} cargando={usarSaldo.isPending} onClick={() => usarSaldo.mutate()}>Pagar con saldo virtual</Boton>
+              <Link to="/panel/cartera">Ver cartera y movimientos</Link>
             </div>
           </>
         ) : (
