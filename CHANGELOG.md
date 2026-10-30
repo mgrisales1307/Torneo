@@ -1,6 +1,6 @@
 # Historial de cambios
 
-## Sin publicar — 2026-10-29
+## Cambios en main — 2026-10-29 (sin versión etiquetada)
 
 ### Añadido
 
@@ -24,6 +24,13 @@
 Configuración local. Metabase de producción y migraciones en Supabase pendientes
 de seguir el procedimiento documentado. Se registran las versiones realmente
 comprobadas y el fallo de red al descargar imágenes nuevas en la guía de métricas.
+
+### Incidencia conocida
+
+El dashboard se comprobó en el navegador integrado, pero su marco queda vacío
+en Chrome. El acceso directo a Metabase está disponible; la causa y la validación
+visual completa en Chrome siguen pendientes. El error de ruta tras actualizar
+Git se resolvió reiniciando el servidor Vite.
 
 ## Estado previo
 

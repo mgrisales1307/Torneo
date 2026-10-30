@@ -1,6 +1,26 @@
 # Métricas web y Metabase
 
-![Dashboard local integrado en NexZone](imagenes/metricas.png)
+![Dashboard comprobado en el navegador integrado durante la verificación local](imagenes/metricas.png)
+
+## Estado verificado — 2026-10-29
+
+- Metabase local responde y muestra el formulario de acceso en
+  `http://localhost:3001`. Las credenciales se consultan en `.env.metricas`;
+  no se incluyen contraseñas reales en esta documentación ni en Git.
+- Se comprobaron la sincronización, las 14 preguntas, el aprovisionamiento sin
+  duplicados y los permisos de solo lectura del almacén agregado.
+- La captura anterior corresponde a la verificación en el navegador integrado.
+  **En Chrome se observó el marco de Metabase vacío y su causa sigue pendiente
+  de diagnóstico.** No se considera terminada la validación visual en Chrome.
+- Los accesos a Organización y Métricas están disponibles en Mi panel para
+  administrador y empleado. El error de ruta observado tras actualizar Git se
+  resolvió reiniciando Vite, que estaba sirviendo una copia anterior de las rutas.
+- Metabase en producción no se desplegó; sus pasos están en
+  [despliegue](despliegue.md).
+
+Mientras se resuelve la incrustación en Chrome, acceder directamente a Metabase
+y abrir **NexZone · Métricas → NexZone · Métricas de la plataforma**. Un marco
+vacío no significa que los indicadores valgan cero ni que falten datos.
 
 ## Arranque local
 
@@ -165,6 +185,8 @@ una imagen que no pudo descargarse.
 | --- | --- |
 | Metabase iniciando | Revisar `logs`; esperar migraciones y `/api/health` sano |
 | Panel sin configurar | Ejecutar `metricas:preparar` con el entorno correcto |
+| La ruta muestra «Esta página no existe» tras actualizar Git | Comprobar que se sirve este checkout; detener Vite y volver a ejecutar `npm run dev` si mantiene las rutas anteriores |
+| La ruta abre, pero el marco de Metabase queda vacío en Chrome | Incidencia pendiente de diagnóstico; usar el acceso directo en `http://localhost:3001`. No considerar aprobada la integración visual en ese navegador |
 | No se ve tráfico | Aceptar métricas, navegar y sincronizar; DNT/GPC o bloqueadores pueden impedir captura |
 | Rendimiento sin muestras | Interactuar y ocultar la pestaña; comprobar soporte del navegador |
 | Error de firma | API y Metabase deben compartir `METABASE_SECRET_KEY` |

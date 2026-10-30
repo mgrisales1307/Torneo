@@ -37,6 +37,11 @@ Guía de indicadores, copias, versiones y solución de errores:
 **[docs/metricas.md](docs/metricas.md)**. La puesta en producción de Metabase
 queda documentada; esta integración se entrega configurada localmente.
 
+**Estado de verificación:** el dashboard se comprobó en el navegador integrado;
+la visualización incrustada en Chrome presenta un marco vacío y sigue pendiente
+de diagnóstico. El acceso directo a Metabase está disponible. Consulta el
+[estado y las incidencias de métricas](docs/metricas.md#estado-verificado--2026-10-29).
+
 ## Producción: Vercel y Supabase
 
 Aplicación: [nexzone-torneo.vercel.app](https://nexzone-torneo.vercel.app).

@@ -20,9 +20,12 @@ Nunca usar `migrate:fresh`, seeders o reimportación SQLite sobre producción.
 ## Estado de esta entrega
 
 La analítica se configura localmente por instrucción del usuario. No se publicó
-Metabase ni se aplicaron las tablas nuevas a Supabase en esta entrega. El sitio
-de producción conserva su configuración. Para desplegar esta función hay que
-completar las dependencias que siguen; no basta con subir el frontend.
+Metabase ni se aplicaron las tablas nuevas a Supabase en esta entrega. Se publicó
+el código en `main` y pasó CI; eso no equivale a validar producción. No se
+ejecutaron comandos de despliegue ni migraciones de producción para esta
+integración. Para desplegarla hay que completar las dependencias que siguen;
+no basta con subir el frontend. La incidencia de visualización en Chrome descrita
+en [métricas](metricas.md) también debe resolverse antes de aceptar la entrega visual.
 
 ## Plan de Metabase en producción
 

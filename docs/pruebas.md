@@ -52,6 +52,15 @@ proveedor cambian entre versiones. Repetir el flujo siguiente tras actualizarlo.
 frontend correctos. La verificación local utiliza las versiones registradas en
 [métricas](metricas.md). No se afirma una validación de producción.
 
+La ejecución de [CI en GitHub](https://github.com/mgrisales1307/Torneo/actions/runs/40982125857)
+para el commit `79d66b0` terminó correctamente en backend y frontend.
+Esa CI comprueba el código; no ejecuta Metabase ni valida su incrustación en Chrome.
+
+La verificación visual del dashboard se realizó en el navegador integrado.
+Posteriormente se observó un marco vacío en Chrome: esa comprobación sigue
+pendiente y **no se da por aprobado el flujo visual completo en ese navegador**.
+El acceso directo a Metabase y el formulario de inicio de sesión sí se comprobaron.
+
 Se aplicaron correcciones compatibles del lockfile del frontend y la auditoría
 final de npm informó cero vulnerabilidades conocidas. La auditoría de Composer
 no pudo consultar Packagist por un timeout de red; ese resultado no equivale a
