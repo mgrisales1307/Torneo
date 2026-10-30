@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { Route, Routes, useLocation } from 'react-router-dom'
 import { Sitio } from './componentes/diseno/Sitio'
 import { RutaProtegida } from './componentes/diseno/RutaProtegida'
+import { MetricasDeNavegacion } from './componentes/diseno/MetricasDeNavegacion'
 
 import Inicio from './paginas/publico/Inicio'
 import Juego from './paginas/publico/Juego'
@@ -29,6 +30,7 @@ import TorneoAdmin from './paginas/admin/TorneoAdmin'
 import InscripcionesAdmin from './paginas/admin/InscripcionesAdmin'
 import DisputasAdmin from './paginas/admin/DisputasAdmin'
 import UsuariosAdmin from './paginas/admin/UsuariosAdmin'
+import MetricasOrganizacion from './paginas/admin/MetricasOrganizacion'
 
 /**
  * Mapa de la aplicación.
@@ -58,6 +60,7 @@ export default function App() {
   return (
     <>
       <AlCambiarDePagina />
+      <MetricasDeNavegacion />
 
       <Routes>
         <Route path="/ingreso" element={<Ingreso />} />
@@ -89,6 +92,7 @@ export default function App() {
             <Route path="organizacion/inscripciones" element={<InscripcionesAdmin />} />
             <Route path="organizacion/disputas" element={<DisputasAdmin />} />
             <Route path="organizacion/usuarios" element={<UsuariosAdmin />} />
+            <Route path="organizacion/metricas" element={<MetricasOrganizacion />} />
           </Route>
 
           <Route path="*" element={<NoEncontrada />} />

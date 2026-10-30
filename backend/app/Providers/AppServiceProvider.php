@@ -54,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('registro', fn (Request $peticion): Limit => Limit::perHour(10)->by($peticion->ip()));
+        RateLimiter::for('metricas', fn (Request $peticion): Limit => Limit::perMinute(30)->by($peticion->ip()));
 
         RateLimiter::for('pagos', fn (Request $peticion): Limit => Limit::perMinute(20)
             ->by($peticion->user()?->getAuthIdentifier() ?? $peticion->ip()));

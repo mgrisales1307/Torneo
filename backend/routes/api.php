@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\InscripcionAdminController;
+use App\Http\Controllers\Api\V1\Admin\MetricasAdminController;
+use App\Http\Controllers\Api\V1\MetricaController;
 use App\Http\Controllers\Api\V1\Admin\PartidoAdminController;
 use App\Http\Controllers\Api\V1\Admin\ResumenAdminController;
 use App\Http\Controllers\Api\V1\Admin\TorneoAdminController;
@@ -50,6 +52,8 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
     */
 
     Route::get('/inicio', InicioController::class)->name('inicio');
+    Route::post('/metricas/eventos', MetricaController::class)->middleware('throttle:metricas')->name('metricas.eventos');
+    Route::get('/metricas/configuracion', fn () => response()->json(['habilitadas' => config('metricas.habilitadas')]))->name('metricas.configuracion');
 
     Route::get('/juegos', [JuegoController::class, 'index'])->name('juegos.index');
     Route::get('/juegos/{juego}', [JuegoController::class, 'show'])->name('juegos.show');
@@ -170,6 +174,7 @@ Route::prefix('v1')->middleware('throttle:api')->group(function (): void {
 
         Route::prefix('admin')->name('admin.')->middleware('rol:admin,empleado')->group(function (): void {
             Route::get('/resumen', ResumenAdminController::class)->name('resumen');
+            Route::get('/metricas', MetricasAdminController::class)->name('metricas');
 
             Route::get('/torneos', [TorneoAdminController::class, 'index'])->name('torneos.index');
             Route::post('/torneos', [TorneoAdminController::class, 'store'])->name('torneos.store');

@@ -1,0 +1,157 @@
+openapi: 3.1.0
+info:
+  title: NexZone — API de métricas
+  version: 1.0.0
+  description: Cookies Sanctum y CSRF; no autenticación Bearer. Contrato de analítica, no de toda la API de negocio.
+servers:
+  - url: /api/v1
+paths:
+  /metricas/configuracion:
+    get:
+      operationId: obtenerConfiguracionMetricas
+      summary: Consultar si la captura está habilitada
+      responses:
+        '200':
+          description: Configuración pública sin secretos
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [habilitadas]
+                properties:
+                  habilitadas:
+                    type: boolean
+        '429':
+          $ref: '#/components/responses/Limite'
+  /metricas/eventos:
+    post:
+      operationId: registrarMetrica
+      summary: Registrar visita o muestra con consentimiento
+      description: DNT/GPC o captura deshabilitada devuelve 204 sin guardar. UUID repetidos no duplican visitas; rendimiento puede actualizar su valor con la misma sesión y tipo.
+      parameters:
+        - in: header
+          name: X-XSRF-TOKEN
+          required: true
+          schema:
+            type: string
+        - in: header
+          name: DNT
+          schema:
+            type: string
+            enum: ['0', '1']
+        - in: header
+          name: Sec-GPC
+          schema:
+            type: string
+            enum: ['1']
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Evento'
+      responses:
+        '204':
+          description: Evento procesado o captura omitida por privacidad/configuración
+        '419':
+          description: CSRF ausente o vencido
+        '422':
+          description: Entrada inválida o sin consentimiento
+        '429':
+          $ref: '#/components/responses/Limite'
+  /admin/metricas:
+    get:
+      operationId: obtenerMetricasAdmin
+      summary: Obtener el token del dashboard fijo de organización
+      description: Solo admin y empleado. No persistir el JWT; renovar antes de diez minutos. No acepta IDs elegidos por el cliente.
+      security:
+        - sesion: []
+      responses:
+        '200':
+          description: Panel configurado o estado sin configurar
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+              example: no-store, private
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required: [configurado]
+                    properties:
+                      configurado:
+                        const: false
+                  - type: object
+                    required: [configurado, url, jwt, actualizado_en]
+                    properties:
+                      configurado:
+                        const: true
+                      url:
+                        type: string
+                        format: uri
+                      jwt:
+                        type: string
+                      actualizado_en:
+                        type: [string, 'null']
+                        format: date-time
+        '401':
+          description: Sin sesión
+        '403':
+          description: Rol no permitido
+        '429':
+          $ref: '#/components/responses/Limite'
+components:
+  securitySchemes:
+    sesion:
+      type: apiKey
+      in: cookie
+      name: nexzone_session
+      description: Nombre predeterminado; SESSION_COOKIE puede sobrescribirlo.
+  responses:
+    Limite:
+      description: Límite excedido; respetar Retry-After
+  schemas:
+    Evento:
+      type: object
+      required: [id, sesion, consentimiento, tipo, pagina, dispositivo]
+      properties:
+        id:
+          type: string
+          format: uuid
+        sesion:
+          type: string
+          format: uuid
+        consentimiento:
+          type: boolean
+          const: true
+        tipo:
+          type: string
+          enum: [pagina, lcp, cls, inp]
+        pagina:
+          type: string
+          enum: [inicio, juego, torneos, torneo, partido, equipo, jugador, ingreso, registro, panel, otra]
+        dispositivo:
+          type: string
+          enum: [movil, tableta, escritorio]
+        valor:
+          type: number
+          minimum: 0
+          maximum: 600000
+          description: Obligatorio para lcp/cls/inp; excluido para pagina. CLS máximo 100.
+      allOf:
+        - if:
+            properties:
+              tipo:
+                enum: [lcp, cls, inp]
+          then:
+            required: [valor]
+        - if:
+            properties:
+              tipo:
+                const: cls
+          then:
+            properties:
+              valor:
+                maximum: 100

@@ -213,6 +213,21 @@ export function reportarResultado(partidoId, { victorias_a, victorias_b, detalle
 /* --------------------------------------------------- Panel de organización */
 
 export const obtenerResumenAdmin = () => datos(api.get(`${BASE}/admin/resumen`))
+export const obtenerMetricasAdmin = () => datos(api.get(`${BASE}/admin/metricas`))
+export const obtenerConfiguracionMetricas = () => datos(api.get(`${BASE}/metricas/configuracion`))
+
+/** keepalive permite terminar la muestra al ocultar la pestaña, conservando CSRF. */
+export async function registrarMetrica(evento, sigueAutorizada) {
+  await asegurarCsrf()
+  if (!sigueAutorizada()) return
+  const cookie = document.cookie.split('; ').find((valor) => valor.startsWith('XSRF-TOKEN='))
+  if (!cookie) return
+  await fetch(`${BASE}/metricas/eventos`, {
+    method: 'POST', credentials: 'same-origin', keepalive: true,
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-XSRF-TOKEN': decodeURIComponent(cookie.slice('XSRF-TOKEN='.length)) },
+    body: JSON.stringify(evento),
+  })
+}
 export const listarTorneosAdmin = (parametros = {}) => datos(api.get(`${BASE}/admin/torneos`, { params: parametros }))
 export const obtenerTorneoAdmin = (slug) => datos(api.get(`${BASE}/admin/torneos/${slug}`))
 export const crearTorneo = (formulario) => datos(api.post(`${BASE}/admin/torneos`, formulario))

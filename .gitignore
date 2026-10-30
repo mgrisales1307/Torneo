@@ -10,3 +10,12 @@
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Despliegue y configuración privada
+.vercel/
+**/.vercel/
+
+.vercel
+.env*
+!.env.example
+!.env.metricas.example

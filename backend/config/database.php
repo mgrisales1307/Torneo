@@ -102,8 +102,22 @@ return [
             'charset' => env('DB_CHARSET', 'utf8'),
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'search_path' => env('DB_SCHEMA', 'public'),
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+        ],
+
+        // Almacén agregado independiente: nunca reutiliza credenciales del negocio.
+        'metricas' => [
+            'driver' => 'pgsql',
+            'host' => env('METRICAS_DB_HOST', '127.0.0.1'),
+            'port' => env('METRICAS_DB_PORT', '5432'),
+            'database' => env('METRICAS_DB_DATABASE', 'metricas'),
+            'username' => env('METRICAS_DB_USERNAME', 'metricas_escritor'),
+            'password' => env('METRICAS_DB_PASSWORD', ''),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'search_path' => 'public',
+            'sslmode' => env('METRICAS_DB_SSLMODE', 'require'),
         ],
 
         'sqlsrv' => [

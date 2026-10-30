@@ -659,3 +659,103 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
+/* Analítica: se mantiene el lenguaje visual del panel y el consentimiento móvil. */
+.metricas-pagina .encabezado-pagina,
+.metricas-pagina .panel-navegacion {
+  margin-bottom: 0;
+}
+
+.metricas-contexto,
+.metricas-contexto > div {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.metricas-contexto {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.metricas-contexto > div {
+  color: var(--acento);
+  font-size: 0.85rem;
+}
+
+.panel-metabase {
+  min-height: 50rem;
+  background: var(--superficie);
+  border-radius: var(--radio);
+  overflow: hidden;
+  padding: 0.75rem;
+}
+
+.panel-metabase metabase-dashboard {
+  display: block;
+  min-height: 50rem;
+}
+
+.metricas-lectura {
+  border-top: 1px solid var(--borde);
+  padding-top: 1.25rem;
+  line-height: 1.7;
+}
+
+.metricas-lectura summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.metricas-lectura p { margin-top: 0.75rem; }
+
+.preferencias-metricas {
+  position: fixed;
+  bottom: 0.65rem;
+  left: 0.75rem;
+  z-index: 45;
+  padding: 0.65rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio-chico);
+  background: var(--superficie);
+  color: var(--texto-suave);
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.consentimiento-metricas {
+  position: fixed;
+  bottom: 3.5rem;
+  left: 1rem;
+  right: 1rem;
+  z-index: 46;
+  max-width: 54rem;
+  margin: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--borde-fuerte);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 12px 50px #0008;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.consentimiento-metricas p {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  margin-top: 0.4rem;
+}
+
+.consentimiento-metricas .fila { flex-shrink: 0; }
+
+@media (max-width: 700px) {
+  .consentimiento-metricas {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  .consentimiento-metricas .fila { flex-wrap: wrap; }
+  .panel-metabase { padding: 0.25rem; }
+}

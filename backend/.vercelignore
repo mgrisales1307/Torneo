@@ -1,0 +1,13 @@
+.env
+.env.*
+vendor
+node_modules
+.claude
+.ai
+tests
+database
+storage
+bootstrap/cache/*.php
+public/storage
+public/hot
+.phpunit.cache

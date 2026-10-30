@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $middleware->trustProxies(at: '*');
+
         // Sanctum en modo SPA: las peticiones que llegan desde el frontend
         // declarado en SANCTUM_STATEFUL_DOMAINS usan la sesión por cookie y
         // pasan por la verificación CSRF, como cualquier formulario web.

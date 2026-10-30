@@ -12,6 +12,88 @@ virtual: los pagos y retiros son simulados, sin tarjetas ni transferencias.
 - **backend/** — API en Laravel 13 con autenticación por Sanctum (sesión en cookie).
 - **frontend/** — SPA en React 19 + Vite, con React Router y TanStack Query.
 
+- **Métricas integradas:** Metabase dentro de **Organización → Métricas**, con
+  tráfico, dispositivos, rendimiento y actividad de torneos; captura opcional,
+  datos agregados y actualización cada cinco minutos.
+- **[Documentación técnica completa](docs/README.md):** arquitectura, API,
+  instalación de Metabase, despliegue, seguridad, pruebas y mantenimiento.
+- **[Contribución](CONTRIBUTING.md)** · **[Seguridad](SECURITY.md)** ·
+  **[Historial](CHANGELOG.md)**.
+
+### Activar Metabase local
+
+```bash
+node docker/metricas/preparar.mjs
+docker compose --env-file .env.metricas -f compose.yaml -f compose.metricas.yaml up -d --build
+# Cuando http://localhost:3001/api/health esté sano:
+docker compose --env-file .env.metricas -f compose.yaml -f compose.metricas.yaml exec api php artisan metricas:sincronizar
+docker compose --env-file .env.metricas -f compose.yaml -f compose.metricas.yaml exec api php artisan metricas:preparar
+```
+
+Inicia el frontend como se explica abajo. Metabase se administra en
+`http://localhost:3001`, con credenciales privadas en `.env.metricas`;
+el dashboard aparece dentro de NexZone para `admin` y `empleado`.
+Guía de indicadores, copias, versiones y solución de errores:
+**[docs/metricas.md](docs/metricas.md)**. La puesta en producción de Metabase
+queda documentada; esta integración se entrega configurada localmente.
+
+## Producción: Vercel y Supabase
+
+Aplicación: [nexzone-torneo.vercel.app](https://nexzone-torneo.vercel.app).
+Supabase: [nexzone-torneo](https://supabase.com/dashboard/project/kevyxkvfhohlhlyssdvk), región São Paulo.
+
+Laravel y la SPA compilada se publican juntos para conservar las cookies de
+Sanctum en el mismo origen. Vercel ejecuta PHP 8.5 mediante el runtime comunitario
+`vercel-php@0.9.0`. PostgreSQL utiliza el esquema privado `nexzone`, con RLS y
+el rol limitado `nexzone_app`, a través del pooler de sesión y TLS. Las imágenes
+persisten en el bucket `medios` de Supabase Storage; las credenciales se guardan
+como variables sensibles de Vercel y nunca se compilan en el frontend.
+
+La migración del 8 de octubre de 2026 conservó **24 tablas, 329 registros y
+88 archivos**, comprobados campo por campo y mediante SHA-256. La copia SQLite,
+el inventario y los medios están en
+`backend/storage/app/private/despliegue/20261008T235300Z/`, excluidos de Git y
+del despliegue. El entorno local continúa utilizando su propia SQLite.
+
+Para volver a publicar desde una terminal con Node y Vercel CLI autenticado:
+
+```bash
+cd frontend
+npm ci
+npm run build
+cd ..
+node docker/api/preparar-vercel.mjs
+```
+
+El último comando muestra una carpeta temporal sin bases, copias ni secretos.
+Entra en esa carpeta; si no tiene la vinculación local, ejecuta `vercel link`
+y selecciona el proyecto existente **nexzone-torneo**. Después:
+
+```bash
+vercel deploy --prod --skip-domain
+# Comprueba la URL devuelta antes de promoverla.
+vercel promote URL_DEL_DESPLIEGUE
+vercel alias set URL_DEL_DESPLIEGUE nexzone-torneo.vercel.app
+```
+
+En Windows con el repositorio dentro de WSL, ejecuta el preparador con **Node
+de Windows**: evita enviar enlaces de WSL directamente al CLI de Windows.
+La configuración de Vercel está en `backend/vercel.json`; no despliegues el
+backend sin incluir el frontend compilado.
+
+Las variables necesarias son `APP_KEY`, `APP_ENV`, `APP_DEBUG`, `APP_URL`,
+`FRONTEND_URL`, `SANCTUM_STATEFUL_DOMAINS`, las `DB_*`, las `SESSION_*`,
+`CACHE_STORE`, `QUEUE_CONNECTION`, `LOG_CHANNEL`, `LOG_LEVEL`, `DISCO_MEDIOS`,
+`CAPTURA_MAX_KB` y las `SUPABASE_*` del disco en `config/filesystems.php`.
+La `APP_KEY` original se conservó. En producción las capturas admiten hasta
+**4 MiB** para ajustarse al límite de petición de Vercel; los pagos y retiros
+continúan siendo simulados.
+
+No ejecutes `migrate:fresh`, seeders ni el exportador de SQLite contra producción
+para actualizar el código. Las futuras migraciones deben aplicarse con un rol
+administrativo, sobre el esquema `nexzone` y con una copia previa. El rol de
+Laravel tiene únicamente permisos de lectura y escritura de datos.
+
 ---
 
 ## Requisitos
@@ -257,7 +339,7 @@ backend/
     Publico/                Lo que ve cualquier visitante.
     Panel/                  El panel del jugador.
     Admin/                  El panel de la organización.
-  tests/                    139 pruebas: los algoritmos y el flujo completo.
+  tests/                    Pruebas del dominio, despliegue, permisos y métricas.
 
 frontend/src/
   paginas/publico/          Portada, juego, torneos, torneo, partido, equipo y jugador.

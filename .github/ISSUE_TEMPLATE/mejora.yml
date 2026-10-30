@@ -1,0 +1,17 @@
+name: Proponer una mejora
+description: Una necesidad concreta y su resultado observable
+title: "[Mejora] "
+body:
+  - type: textarea
+    id: necesidad
+    attributes:
+      label: Necesidad y personas afectadas
+    validations:
+      required: true
+  - type: textarea
+    id: aceptacion
+    attributes:
+      label: Criterios de aceptación
+      description: Cómo se comprueba que funciona, incluidos permisos y límites relevantes.
+    validations:
+      required: true

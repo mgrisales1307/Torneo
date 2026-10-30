@@ -1,16 +1,34 @@
-# React + Vite
+# Interfaz de NexZone
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 + Vite, React Router, TanStack Query, Axios y Lucide. El diseño y los
+nombres de la aplicación están en español. Fuentes y recursos se sirven localmente.
 
-Currently, two official plugins are available:
+Con la API de Docker encendida, desde esta carpeta:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm ci
+npm run dev
+```
 
-## React Compiler
+Abrir `http://localhost:5173`. El proxy reenvía `/api`, `/sanctum` y `/storage`;
+no se requiere una URL de API en variables `VITE_*`. Cookies y CSRF se gestionan
+en `src/lib/api.js`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm test
+npm run lint
+npm run build
+```
 
-## Expanding the ESLint configuration
+Pantallas en `src/paginas/{publico,acceso,panel,admin}` y piezas reutilizables en
+`src/componentes`. `App.jsx` declara las rutas; la autorización real se comprueba
+en Laravel.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+`MetricasDeNavegacion` solicita permiso y observa rutas sin enviar identidades.
+`web-vitals` y el componente Metabase se cargan bajo demanda. La pantalla
+`/organizacion/metricas` obtiene tokens efímeros del servidor, nunca claves.
+Configurar el servicio con [la guía de métricas](../docs/metricas.md).
+
+Más información: [arquitectura](../docs/arquitectura.md), [API](../docs/api.md),
+[pruebas](../docs/pruebas.md), [contribución](../CONTRIBUTING.md) y
+[documentación completa](../docs/README.md).

@@ -18,4 +18,5 @@ export const ENLACES_DE_ORGANIZACION = [
   { a: '/organizacion/inscripciones', texto: 'Inscripciones' },
   { a: '/organizacion/disputas', texto: 'Disputas' },
   { a: '/organizacion/usuarios', texto: 'Usuarios' },
+  { a: '/organizacion/metricas', texto: 'Métricas' },
 ]

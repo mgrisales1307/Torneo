@@ -1,0 +1,28 @@
+name: Reportar un error
+description: Un comportamiento reproducible de NexZone
+title: "[Error] "
+body:
+  - type: textarea
+    id: comportamiento
+    attributes:
+      label: Comportamiento esperado y observado
+    validations:
+      required: true
+  - type: textarea
+    id: pasos
+    attributes:
+      label: Pasos para reproducir
+      description: Incluir rol, pantalla y datos ficticios suficientes; nunca contraseñas, tokens o datos personales.
+    validations:
+      required: true
+  - type: input
+    id: entorno
+    attributes:
+      label: Entorno y versión
+      placeholder: Local o revisión; navegador, sistema y commit
+    validations:
+      required: true
+  - type: textarea
+    id: evidencia
+    attributes:
+      label: Evidencia anonimizada

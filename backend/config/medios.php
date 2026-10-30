@@ -40,7 +40,7 @@ return [
 
         // La captura del marcador final: sale de una pantalla, así que admite
         // resoluciones de monitor y de móvil.
-        'captura' => ['kb' => 6144, 'minimo_px' => 200, 'maximo_px' => 4000],
+        'captura' => ['kb' => (int) env('CAPTURA_MAX_KB', 6144), 'minimo_px' => 200, 'maximo_px' => 4000],
     ],
 
     /*

@@ -2,16 +2,20 @@
 #
 # La imagen trae PHP y Composer, así que quien clone el repositorio no
 # necesita instalarlos: basta con Docker.
-FROM php:8.4-cli
+ARG IMAGEN_PHP=php:8.4-cli
+FROM ${IMAGEN_PHP}
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN if ! php -r 'exit(extension_loaded("pdo_pgsql") && extension_loaded("pdo_sqlite") && extension_loaded("zip") ? 0 : 1);'; then \
+    apt-get update && apt-get install -y --no-install-recommends \
         git \
         gosu \
         libsqlite3-dev \
+        libpq-dev \
         libzip-dev \
         unzip \
-    && docker-php-ext-install -j"$(nproc)" pdo_sqlite zip \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install -j"$(nproc)" pdo_sqlite pdo_pgsql zip \
+    && rm -rf /var/lib/apt/lists/*; \
+    fi
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
