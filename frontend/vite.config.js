@@ -10,7 +10,7 @@ export default defineConfig({
     environment: 'jsdom',
     globals: false,
     setupFiles: ['./src/pruebas/preparacion.js'],
-    include: ['src/**/*.prueba.jsx'],
+    include: ['src/**/*.prueba.{js,jsx}'],
   },
 
   server: {

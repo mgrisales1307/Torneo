@@ -21,7 +21,7 @@ export default function Registro() {
   const [errores, setErrores] = useState({})
   const [error, setError] = useState('')
 
-  if (!cargandoSesion && estaAutenticado) {
+  if (!cargandoSesion && estaAutenticado && !registrarse.isPending && !registrarse.isSuccess) {
     return <Navigate to="/panel" replace />
   }
 

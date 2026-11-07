@@ -90,6 +90,10 @@ enum Juego: string
         };
     }
 
+    /**
+     * Texto de ejemplo que se muestra en el campo. La vinculación es simulada:
+     * no se valida el formato ni se verifica la cuenta con el juego.
+     */
     public function ejemploDeCuenta(): string
     {
         return match ($this) {
@@ -97,24 +101,6 @@ enum Juego: string
             self::Dota2 => '76561198012345678',
             self::Pubg => 'Nombre_PUBG',
             self::FreeFire => '123456789',
-        };
-    }
-
-    /**
-     * Expresión con la que se valida la cuenta.
-     *
-     * - Riot ID: nombre de 3 a 16 caracteres, almohadilla y etiqueta de 3 a 5.
-     * - Steam ID: el SteamID64, 17 cifras que siempre empiezan por 7656119.
-     * - PUBG: de 4 a 16 letras, cifras, guion o guion bajo.
-     * - Free Fire: el UID, de 8 a 12 cifras.
-     */
-    public function formatoDeCuenta(): string
-    {
-        return match ($this) {
-            self::Valorant, self::LeagueOfLegends => '/^[^#]{3,16}#[\p{L}\p{N}]{3,5}$/u',
-            self::Dota2 => '/^7656119\d{10}$/',
-            self::Pubg => '/^[A-Za-z0-9_-]{4,16}$/',
-            self::FreeFire => '/^\d{8,12}$/',
         };
     }
 

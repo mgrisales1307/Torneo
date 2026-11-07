@@ -7,7 +7,11 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * Vincula la cuenta de un juego: el formato depende del juego de la ruta.
+ * Vincula la cuenta de un juego.
+ *
+ * La vinculación es SIMULADA: no se verifica contra Riot, Steam ni ningún
+ * otro servicio, así que no se exige un formato concreto. Basta con un texto
+ * razonable, y que no lo use ya otra persona en ese juego.
  */
 class GuardarCuentaDeJuegoRequest extends FormRequest
 {
@@ -20,8 +24,7 @@ class GuardarCuentaDeJuegoRequest extends FormRequest
 
         return [
             'identificador' => [
-                'required', 'string', 'max:60',
-                'regex:'.$juego->formatoDeCuenta(),
+                'required', 'string', 'min:3', 'max:60',
                 Rule::unique('cuentas_de_juego', 'identificador')
                     ->where('juego', $juego->value)
                     ->whereNot('usuario_id', $this->user()->getKey()),
@@ -51,11 +54,8 @@ class GuardarCuentaDeJuegoRequest extends FormRequest
         $juego = $this->juego();
 
         return [
-            'identificador.regex' => sprintf(
-                'Ese no parece un %s válido. Ejemplo: %s.',
-                $juego->nombreDeCuenta(),
-                $juego->ejemploDeCuenta(),
-            ),
+            'identificador.min' => sprintf('Escribe al menos 3 caracteres para tu %s.', $juego->nombreDeCuenta()),
+            'identificador.max' => sprintf('Tu %s no puede pasar de 60 caracteres.', $juego->nombreDeCuenta()),
             'identificador.unique' => sprintf('Ese %s ya está vinculado a otra cuenta.', $juego->nombreDeCuenta()),
         ];
     }

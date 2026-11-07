@@ -9,6 +9,9 @@ import { ENLACES_DEL_JUGADOR } from './enlacesDelPanel'
 /**
  * La cuenta del jugador en cada juego. Sin ella, sus equipos no se pueden
  * inscribir en los torneos de ese juego.
+ *
+ * La vinculación es simulada: no se verifica con el juego, y vale cualquier
+ * texto de entre 3 y 60 caracteres.
  */
 export default function Cuentas() {
   const juegos = useQuery({ queryKey: ['juegos'], queryFn: listarJuegos, staleTime: Infinity })
@@ -21,6 +24,11 @@ export default function Cuentas() {
       </header>
 
       <NavegacionDelPanel enlaces={ENLACES_DEL_JUGADOR} />
+
+      <Aviso tono="info">
+        Vinculación simulada: tu cuenta no se verifica con el juego. Escribe el nombre o ID que quieras (mínimo 3
+        caracteres) para poder inscribirte.
+      </Aviso>
 
       {juegos.isPending || cuentas.isPending ? (
         <Cargando />
